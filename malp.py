@@ -15,6 +15,11 @@ import numpy as np
 import os
 import pickle
 
+from joblib import Parallel, delayed
+import multiprocessing
+
+NUM_CORES = multiprocessing.cpu_count()
+
 from sklearn import ensemble, linear_model, multiclass
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 
@@ -290,9 +295,13 @@ class Atlas(object):
             
             # if threshold argument is set, threshold mappings by frequency
             if 'threshold' in kwargs:
-                
                 cutoff = kwargs['threshold']
+            elif self.threshold:
+                cutoff = self.threshold
+            else:
+                cutoff = 0
                 
+            if cutoff > 0:
                 threshed = {}.fromkeys(freqMaps.keys())
                 for k in threshed.keys():
                     # if the vertex actual maps to labels (not midline)
@@ -624,7 +633,7 @@ def treeSoftMax(metaEstimator,mappings,members,memberData):
                 vals = temporaryVals[i]
                 
                 probs = estimateProbs[i,:][inds]
-                maxProb = list([np.argmax(aappesprobs)])
+                maxProb = list([np.argmax(probs)])
                 labels.append([vals[j] for j in maxProb])
         
         predLabels.append(labels)
@@ -699,7 +708,56 @@ class MultiAtlas(object):
         **swargs : optional Atlas-class arguments in 
     """
     
-    def __init__(self,trainObject,maps,globalFeatures,**kwargs):
+    def __init__(self,feats):
+        
+        """
+        Method to initialize Mutli-Atlas label propagation scheme.
+        """
+        
+        self.features = feats
+        
+    def fit(self,trainObject,maps,**kwargs):
+        
+        """
+        Method to fit a set of Atlas objects.
+        """
+        
+        intialz_options = ['full','splitby']
+        fit_options = ['threshold']
+        
+        if kwargs:
+            print(kwargs)
+            
+            iniArgs = {}
+            fitArgs = {}
+            
+            for k in kwargs:
+                if k in intialz_options:
+                    iniArgs[k] = kwargs[k]
+                elif k in fit_options:
+                    fitArgs[k] = kwargs[k]
+            
+        # intiialize component training data sets
+        self._initializeTraining(trainObject,maps,self.features,**iniArgs)
+        
+        # fit atlas on each component
+        BaseAtlas = Atlas(feats=self.features)
+
+        fittedAtlases = Parallel(n_jobs=NUM_CORES)(delayed(self._baseFit)(BaseAtlas,
+                                d,self.maps,fitArgs) for d in self.datasets)
+        
+        self.fittedAtlases = fittedAtlases
+        
+    def _baseFit(baseAtlas,data,maps,args):
+        
+        atl = copy.deepcopy(baseAtlas)
+        mps = copy.deepcopy(maps)
+        
+        atl.fit(data,mps,**args)
+        
+        return atl
+
+    def _initializeTraining(self,trainObject,maps,globalFeatures,**kwargs):
         
         if isinstance(trainObject,str):
             trainData = ld.loadPick(trainObject)
@@ -720,38 +778,18 @@ class MultiAtlas(object):
         subjects = trainData.keys()
 
         if 'full' in kwargs:
+            
             datasets = []
             
-            sample = np.random.choice(subjects,size=kwargs['full'],replace=False)
-            tempData = {}
-            
-            for s in sample:
-                td = copy.deepcopy(tempData)
+            subjectsSet = np.random.choice(subjects,size=kwargs['full'],replace=False)
+            td = {}.fromkeys(subjectsSet)
+             
+            for s in subjectsSet:
                 td[s] = trainData[s]
                 datasets.append(td)
-        
+
         self.datasets = datasets
         self.globalFeatures = globalFeatures
         self.maps = maps
         
-    def fit(self,testData,testMatch):
-        
-        """
-        Fit each of the training brains.
-        """
-        
-        base = Atlas(feats = self.globalFeatures)
-        components = []
-        k = {'threshold': 0.025}
-        
-        for d in self.datasets:
-            
-            temp = copy.deepcopy(base)
-            temp.initialize(d,self.maps,**k)
-            temp.fit()
-            temp.loadTest(testData,testMatch,self.globalFeatures,**k)
-            temp.predict()
-            components.append(temp)
-            
-        self.components = components
-            
+    
