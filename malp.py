@@ -11,6 +11,7 @@ import libraries as lb
 import loaded as ld
 
 import copy
+import inspect
 import numpy as np
 import os
 import pickle
@@ -18,10 +19,20 @@ import pickle
 from joblib import Parallel, delayed
 import multiprocessing
 
-NUM_CORES = multiprocessing.cpu_count()
-
 from sklearn import ensemble, linear_model, multiclass
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
+
+
+# number of subjects per Atlas object
+ATLAS_SIZE = 1
+# Valid Atlas key-value parameters
+ATLAS_INITIALIZATION = ['threshold','random']
+
+MALP_INITIALIZATION = ['atlases','size']
+
+# number of cores to parallelize over
+NUM_CORES = multiprocessing.cpu_count()
+
 
 class Atlas(object):
     
@@ -160,26 +171,20 @@ class Atlas(object):
             
         """
         
-        if kwargs:
-            swargs = {}   
-            isTrue = []
-            
-            for key in kwargs:
-                if key in ['threshold','random']:
-                    isTrue.append(key)
-                    swargs[key] = kwargs[key]
-                    
-            for key in isTrue:
-                del(kwargs[key])
-        
-        self._initializeTraining(trainObject,mergedMaps,**swargs)
-        
         self.model_type = model_type
-        self.classifier = classifier
         
-        if kwargs:
-            kwargs = cu.parseKwargs(kwargs)
-            classifier.set_params(kwargs)
+        initArgs = cu.parseKwargs(ATLAS_INITIALIZATION,kwargs)
+        self._initializeTraining(trainObject,mergedMaps,**initArgs)
+
+        # get valid arguments for supplied classifier
+        classifier_params = inspect.getargspec(classifier.__init__)
+        # get dictionary of valid classifier arguments, supplied by user
+        classArgs = cu.parseKwargs(classifier_params,kwargs)
+        # update classifier arguments
+        classifier.set_params(**classArgs)
+        # save model
+        self.classifier = classifier
+
             
         model_selector = {'oVo': OneVsOneClassifier(classifier),
                           'oVr': OneVsRestClassifier(classifier),
@@ -649,48 +654,7 @@ def treeSoftMax(metaEstimator,mappings,members,memberData):
         classification.append(maxProb)
         
     return classification
-        
-def singleTreeSoftMax(estimator,candidates_map,candidates_model,data):
-    
-    """
-    Method to restrict individual decision tree soft-max prediction to labels 
-    generated in the surface registration step.
-    
-    A given test vertex maps to a set of labels in the training data.  We
-    expect that a classifier SHOULD produce one of these labels, but it might
-    not.  As such, we constrain the soft-max prediction step to consider only
-    mapped labels.
-    
-    Parameters:
-    - - - - -
-        estimator : single tree
-        
-        candidates_map : labels a vertex maps to using surface registration
-                            
-        candidates_model : candidates considered in the overarching classifier
-        
-        data : test data to classify
-    """
 
-    cMap = candidates_map
-    cMod = candidates_model
-    
-    # get indices of candidate model labels if those labels are in the
-    # candidate mapping labels
-    tups = [(k,v) for k,v in enumerate(cMod) if v in cMap]
-    
-    inds = [t[0] for t in tups]
-    vals = [v[1] for v in tups]
-    
-    # get classification probabilities associated with each of the model labels
-    probs = estimator.predict_proba(data)[:,inds]
-    # compute which index maximizes the classification probability
-    maxProb = np.argmax(probs,axis=1)
-    
-    # compute label corresponding to max index
-    labels = [vals[i] for i in maxProb]
-    
-    return labels
 
 class MultiAtlas(object):
     
@@ -708,56 +672,66 @@ class MultiAtlas(object):
         **swargs : optional Atlas-class arguments in 
     """
     
-    def __init__(self,feats):
+    def __init__(self,feats,threshold=0.025,scale=True):
         
         """
         Method to initialize Mutli-Atlas label propagation scheme.
+        
+        Parameters:
+        - - - - -
+            features : features to include in each Atlas
+            scale : scale training data, and apply transformation to test data
+            threshold : threshold the MergedMapping object
         """
         
         self.features = feats
-        
+        self.scale = True
+        self.threshold = threshold
+
     def fit(self,trainObject,maps,**kwargs):
         
         """
         Method to fit a set of Atlas objects.
         """
-        
-        intialz_options = ['full','splitby']
-        fit_options = ['threshold']
-        
-        if kwargs:
-            print(kwargs)
-            
-            iniArgs = {}
-            fitArgs = {}
-            
-            for k in kwargs:
-                if k in intialz_options:
-                    iniArgs[k] = kwargs[k]
-                elif k in fit_options:
-                    fitArgs[k] = kwargs[k]
-            
+
+        initArgs = cu.parseKwargs(MALP_INITIALIZATION,kwargs)
+        fitArgs = cu.parseKwargs(ATLAS_INITIALIZATION,kwargs)
+
         # intiialize component training data sets
-        self._initializeTraining(trainObject,maps,self.features,**iniArgs)
+        self._initializeTraining(trainObject,maps,self.features,**initArgs)
         
         # fit atlas on each component
         BaseAtlas = Atlas(feats=self.features)
 
         fittedAtlases = Parallel(n_jobs=NUM_CORES)(delayed(self._baseFit)(BaseAtlas,
-                                d,self.maps,fitArgs) for d in self.datasets)
+                                d,self.maps,**fitArgs) for d in self.datasets)
         
         self.fittedAtlases = fittedAtlases
         
-    def _baseFit(baseAtlas,data,maps,args):
+    def _baseFit(self,baseAtlas,data,maps,**args):
         
         atl = copy.deepcopy(baseAtlas)
-        mps = copy.deepcopy(maps)
-        
-        atl.fit(data,mps,**args)
+
+        atl.fit(data,maps,**args)
         
         return atl
 
     def _initializeTraining(self,trainObject,maps,globalFeatures,**kwargs):
+        
+        """
+        Private method to load and initialize training data.
+        
+        Parameters:
+        - - - - -
+            trainObject : training data (either '.p' file, or dictionary)
+            
+            maps : merged MatchingLibraries corresponding to training data
+            
+            globalFeatures : list of features to include in models -- applies
+                                to all sub-Atlases
+
+            **kwargs : optional arguments in MALP_INITIALIZATION
+        """
         
         if isinstance(trainObject,str):
             trainData = ld.loadPick(trainObject)
@@ -776,16 +750,40 @@ class MultiAtlas(object):
             raise ValueError('Training data cannot be empty.')
             
         subjects = trainData.keys()
+        
+        initArgs = cu.parseKwargs(MALP_INITIALIZATION,kwargs)
+        
+        if initArgs:
+            if initArgs.has_key('size'):
+                size = initArgs['size']
+                
+                if size >= 1 and size <= len(subjects):
+                    self.atlas_size = size
+            
+            if initArgs.has_key('atlases'):
+                numAtlas = initArgs['atlases']
+                
+                if numAtlas >= 1 and numAtlas <= len(subjects):
+                    self.atlases = numAtlas
+            else:
+                self.atlases = len(subjects)
+    
+        datasets = []
+        
+        if self.atlas_size == 1:
+            subjectSet = np.random.choice(subjects,size=self.atlases,
+                                          replace=False)
 
-        if 'full' in kwargs:
-            
-            datasets = []
-            
-            subjectsSet = np.random.choice(subjects,size=kwargs['full'],replace=False)
-            td = {}.fromkeys(subjectsSet)
-             
-            for s in subjectsSet:
-                td[s] = trainData[s]
+            for s in subjectSet:
+                td = {s: trainData[s]}
+                datasets.append(td)
+        else:
+            for a in np.arange(self.atlases):
+                subjectSet = np.random.choice(subjects,size=self.atlas_size,
+                                              replace=False)
+                
+                td = {s: trainData[s] for s in subjectSet}
+                
                 datasets.append(td)
 
         self.datasets = datasets
