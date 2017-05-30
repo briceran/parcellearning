@@ -149,7 +149,7 @@ class Atlas(object):
         if not cond:
             raise ValueError('Training data is incorrect.')
             
-    def fit(self, trainObject, mergedMaps, model_type = 'ori',
+    def fit(self, trainObject, mergedMaps, model_type = 'ori',verbose=False,
             classifier = ensemble.RandomForestClassifier(n_jobs=-1),
             **kwargs):
         
@@ -196,11 +196,10 @@ class Atlas(object):
         
         thr = self.threshold
         
-        
         print 'Fitting model with model_type: ' + model_type
         print 'Fitting model with threshold: ' + str(thr)+ '\n'
-        
-        status = np.asarray([0.25,0.5,0.75,1]); 
+    
+        status = np.asarray([0.5,1]); 
         c = 1
 
         for l in self.labels:
@@ -220,12 +219,13 @@ class Atlas(object):
                 models[l].fit(learned,np.squeeze(y))
                 
                 # to keep track of fitting procedure
-                frac = 1.*c/len(self.labels)
-                inds = frac >= status
-                if sum(inds) > 0:
-                    print 'Fitting ' + str(100*np.squeeze(status[inds])) + '% complete.'
-                    status = status[~inds]
-                c+=1
+                if verbose:
+                    frac = 1.*c/len(self.labels)
+                    inds = frac >= status
+                    if sum(inds) > 0:
+                        print 'Fitting ' + str(100*np.squeeze(status[inds])) + '% complete.'
+                        status = status[~inds]
+                    c+=1
         
         self.models = models
         self._fit = True
@@ -483,8 +483,7 @@ class Atlas(object):
             storage : dictionary of classification label counts
         """
 
-        predicted = {}
-        predicted = predicted.fromkeys(storage.keys())
+        predicted = {}.fromkeys(storage.keys())
 
         for v,m in storage.items():
             if m:
@@ -686,37 +685,9 @@ class MultiAtlas(object):
         
         self.features = feats
         self.scale = True
-        self.threshold = threshold
+        self.threshold = threshold    
 
-    def fit(self,trainObject,maps,**kwargs):
-        
-        """
-        Method to fit a set of Atlas objects.
-        """
-
-        initArgs = cu.parseKwargs(MALP_INITIALIZATION,kwargs)
-        fitArgs = cu.parseKwargs(ATLAS_INITIALIZATION,kwargs)
-
-        # intiialize component training data sets
-        self._initializeTraining(trainObject,maps,self.features,**initArgs)
-        
-        # fit atlas on each component
-        BaseAtlas = Atlas(feats=self.features)
-
-        fittedAtlases = Parallel(n_jobs=NUM_CORES)(delayed(self._baseFit)(BaseAtlas,
-                                d,self.maps,**fitArgs) for d in self.datasets)
-        
-        self.fittedAtlases = fittedAtlases
-        
-    def _baseFit(self,baseAtlas,data,maps,**args):
-        
-        atl = copy.deepcopy(baseAtlas)
-
-        atl.fit(data,maps,**args)
-        
-        return atl
-
-    def _initializeTraining(self,trainObject,maps,globalFeatures,**kwargs):
+    def initializeTraining(self,trainObject,**kwargs):
         
         """
         Private method to load and initialize training data.
@@ -724,9 +695,7 @@ class MultiAtlas(object):
         Parameters:
         - - - - -
             trainObject : training data (either '.p' file, or dictionary)
-            
-            maps : merged MatchingLibraries corresponding to training data
-            
+                        
             globalFeatures : list of features to include in models -- applies
                                 to all sub-Atlases
 
@@ -787,7 +756,60 @@ class MultiAtlas(object):
                 datasets.append(td)
 
         self.datasets = datasets
-        self.globalFeatures = globalFeatures
-        self.maps = maps
+        
+
+def parallelFitting(multiAtlas,maps,verbose=False,**kwargs):
+
+    """
+    Method to fit a set of Atlas objects.
+    """
+    
+    fitArgs = cu.parseKwargs(ATLAS_INITIALIZATION,kwargs)
+
+    # fit atlas on each component
+    BaseAtlas = Atlas(feats=multiAtlas.features)
+    
+    fittedAtlases = Parallel(n_jobs=NUM_CORES)(delayed(atlasFit)(BaseAtlas,
+                            d,maps,verbose=verbose,
+                            **fitArgs) for d in multiAtlas.datasets)
+    
+    return fittedAtlases
+    
+def atlasFit(baseAtlas,data,maps,verbose=False,**args):
+    
+    """
+    Single model fitting step.
+    """
+
+    atl = copy.deepcopy(baseAtlas)
+    
+    atl.fit(data,maps,**args)
+    
+    return atl
+
+
+def parallelPredicting(models,testObject,testMappings,*args,**kwargs):
+    
+    """
+    Method to predicted test labels in parallel
+    """
+    
+    predictedLabels = Parallel(n_jobs=NUM_CORES)(delayed(atlasPredict)(models[i],
+                               testObject,testMappings,
+                               *args,**kwargs) for i,m in enumerate(models))
+    
+    return predictedLabels
+
+def atlasPredict(model,testObject,testMappings,*args,**kwargs):
+    
+    """
+    Single model prediction step.
+    """
+    
+    model.predict(testObject,testMappings,*args,**kwargs)
+    
+    return model.predicted
+
+    
         
     
