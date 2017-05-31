@@ -39,11 +39,20 @@ class Atlas(object):
         
         scale : standardized the training data (default == True)
         
-        threshold : mapping frequency threshold of merged maps (only labels 
-                    with mapping frequencies greater than threshold are included
-                    in the models)
+        thresh_train : threshold to apply to training subject matches
         
-        random : number of subjects to include in the training model
+        thresh_test : threshold to apply to test subject matches
+        
+        softmax_type : type of classification constraining based on surface
+                        registration mappings.  BASE for none, TREES at the
+                        tree level, and FORESTS at the forest level
+        
+        random : number of training subjects to include in model
+        
+        load : if test subject label-verte memberships has been generated
+                previously, can provide file
+                
+        save : path to save label-vertex memberships
 
     """
     
@@ -645,7 +654,7 @@ class MultiAtlas(object):
 
     """
     
-    def __init__(self,atlas_size = 1,atlases=None):
+    def __init__(self,features,atlas_size = 1,atlases=None):
         
         """
         Method to initialize Mutli-Atlas label propagation scheme.
@@ -654,8 +663,8 @@ class MultiAtlas(object):
         - - - - -
         
             features : features to include in each Atlas
-            scale : scale training data, and apply transformation to test data
-            threshold : threshold the MergedMapping object
+            atlas_size : number of traiing subjects per atlas
+            atlases : number of atlases to generate
             
         """
         
