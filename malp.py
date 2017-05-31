@@ -663,12 +663,12 @@ class MultiAtlas(object):
     
     Parameters:
     - - - - -
-        trainObject : input training data (either '.p' file, or dictionary)
+        feats : features to include in the models
         
-        model : classification model to use -- spans the set of all Atlases
+        threshold : threhsold to apply to mappings
         
-        **kwargs : optional meta-class arguments in ['splitby','full']
-        **swargs : optional Atlas-class arguments in 
+        scale : standardize the training data
+
     """
     
     def __init__(self,feats,threshold=0.025,scale=True):
@@ -685,7 +685,7 @@ class MultiAtlas(object):
         
         self.features = feats
         self.scale = True
-        self.threshold = threshold    
+        self.threshold = threshold
 
     def initializeTraining(self,trainObject,**kwargs):
         
@@ -722,22 +722,27 @@ class MultiAtlas(object):
         
         initArgs = cu.parseKwargs(MALP_INITIALIZATION,kwargs)
         
+        # by default, number of training subjects per atlas is
+        # defined by global variable ATLAS_SIZE, and number of 
+        # atlases is the number of training subjects in the 
+        # training data object
+        self.atlas_size = ATLAS_SIZE
+        self.atlases = len(subjects)
+        
+        # these can be overridden 
         if initArgs:
             if initArgs.has_key('size'):
                 size = initArgs['size']
                 
                 if size >= 1 and size <= len(subjects):
                     self.atlas_size = size
-            else:
-                self.atlas_size = ATLAS_SIZE
-            
+                    
             if initArgs.has_key('atlases'):
                 numAtlas = initArgs['atlases']
                 
                 if numAtlas >= 1 and numAtlas <= len(subjects):
                     self.atlases = numAtlas
-            else:
-                self.atlases = len(subjects)
+
     
         datasets = []
         
