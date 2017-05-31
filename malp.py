@@ -57,10 +57,14 @@ class Atlas(object):
     """
     
     def __init__(self,feats,scale=True,thresh_train = 0.05,thresh_test = 0.05,
-                 softmax_type='BASE',random=None,load=None,save=None):
+                 softmax_type='BASE',exclude_testing=None,
+                 random=None,load=None,save=None):
 
         if not feats:
             raise ValueError('Feature list cannot be empty.')
+            
+        if scale not in [True, False]:
+            raise ValueError('Scale must be boolean.')
             
         if thresh_train < 0 or thresh_train > 1:
             raise ValueError('Threshold value must be within [0,1].')
@@ -71,8 +75,8 @@ class Atlas(object):
         if softmax_type not in PREDICTION_KEYS:
             raise ValueError('softmax_type must be either BASE,TREES, or FORESTS.')
             
-        if scale not in [True, False]:
-            raise ValueError('Scale must be boolean.')
+        if exclude_testing is not None and not isinstance(exclude_testing,str):
+            raise ValueError('exclude_testing must by a string or None.')
             
         if random is not None and random < 0:
             raise ValueError('Random must be a positive integer or None.')
@@ -88,6 +92,7 @@ class Atlas(object):
         self.thresh_train = thresh_train
         self.thresh_test = thresh_test
         self.softmax_type = softmax_type
+        self.exclude_testing = exclude_testing
         self.random = random
         self.load = load
         self.save = save
@@ -125,7 +130,7 @@ class Atlas(object):
             kwargs : optional arguments for classifier
 
         """
-        
+
         threshold = self.thresh_train
         
         self.model_type = model_type
@@ -212,6 +217,9 @@ class Atlas(object):
             raise ValueError('Training data cannot be empty.')
             
         subjects = trainData.keys()
+        
+        if self.exclude_testing:
+            subjects = set(subjects)-set(self.exclude_testing)
         
         # if random is set, sample subsect of training data (no replacement)
         # otherwise, set sample to number of training subjects
@@ -420,7 +428,7 @@ class Atlas(object):
         self.testMatch = testMatch
         self.testObject = testObject
         
-        # if the traiing data has been scaled, apply scaling 
+        # if the training data has been scaled, apply scaling 
         # transformation to test data and merge features
         data = testObject.data
         
@@ -677,6 +685,7 @@ class MultiAtlas(object):
         
         self.atlas_size = atlas_size
         self.atlases = atlases
+        self.features = features
         
     def set_params(self,**kwargs):
         
