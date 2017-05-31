@@ -22,13 +22,6 @@ import multiprocessing
 from sklearn import ensemble, linear_model, multiclass
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 
-
-# Number of subjects per Atlas object
-ATLAS_SIZE = 1
-# Valid Atlas key-value parameters
-ATLAS_INITIALIZATION = ['random']
-# Valid MultiAtlas key-value parameters
-MALP_INITIALIZATION = ['atlases','size']
 # number of cores to parallelize over
 NUM_CORES = multiprocessing.cpu_count()
 # Valid prediction key-value parameters
@@ -652,7 +645,7 @@ class MultiAtlas(object):
 
     """
     
-    def __init__(self, atlas_size = ATLAS_SIZE):
+    def __init__(self,atlas_size = 1,atlases=None):
         
         """
         Method to initialize Mutli-Atlas label propagation scheme.
@@ -666,9 +659,30 @@ class MultiAtlas(object):
             
         """
         
+        if atlas_size < 1:
+            raise ValueError('Before initializing training data, atlas_size '\
+                             'must be at least 1.')
+        
+        if atlases is not None and atlases < 0:
+            raise ValueError('atlases must be positive integer or None.')
+        
         self.atlas_size = atlas_size
+        self.atlases = atlases
+        
+    def set_params(self,**kwargs):
+        
+        """
+        Update parameters with user-specified dictionary.
+        """
+        
+        args, varargs, varkw, defaults = inspect.getargspec(self.__init__)
+        
+        if kwargs:
+            for key in kwargs:
+                if key in args:
+                    setattr(self,key,kwargs[key])
 
-    def initializeTraining(self,trainObject,**kwargs):
+    def initializeTraining(self,trainObject):
         
         """
         Private method to load and initialize training data.
@@ -697,32 +711,16 @@ class MultiAtlas(object):
             
         if not trainData:
             raise ValueError('Training data cannot be empty.')
-        
-        initArgs = cu.parseKwargs(MALP_INITIALIZATION,kwargs)
-        
-        # by default, number of training subjects per atlas is
-        # defined by global variable ATLAS_SIZE, and number of 
-        # atlases is the number of training subjects in the 
-        # training data object
+            
         subjects = trainData.keys()
-        self.atlases = len(subjects)
         
-        # these can be overridden 
-        if initArgs:
-            if initArgs.has_key('size'):
-                size = initArgs['size']
-                
-                if size >= 1 and size <= len(subjects):
-                    self.atlas_size = size
-                    
-            if initArgs.has_key('atlases'):
-                numAtlas = initArgs['atlases']
-                
-                if numAtlas >= 1 and numAtlas <= len(subjects):
-                    self.atlases = numAtlas
+        if not self.atlases:
+            self.atlases = len(subjects)
+        else:
+            self.atlases = min(self.atlases,len(subjects))
 
-    
         datasets = []
+        
         
         if self.atlas_size == 1:
             subjectSet = np.random.choice(subjects,size=self.atlases,
