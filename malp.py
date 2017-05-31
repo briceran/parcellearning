@@ -758,7 +758,9 @@ class MultiAtlas(object):
         self.datasets = datasets
         
 
-def parallelFitting(multiAtlas,maps,verbose=False,**kwargs):
+def parallelFitting(multiAtlas,maps,
+                    classifier = ensemble.RandomForestClassifier(n_jobs=-1),
+                    verbose=False,**kwargs):
 
     """
     Method to fit a set of Atlas objects.
@@ -770,12 +772,13 @@ def parallelFitting(multiAtlas,maps,verbose=False,**kwargs):
     BaseAtlas = Atlas(feats=multiAtlas.features)
     
     fittedAtlases = Parallel(n_jobs=NUM_CORES)(delayed(atlasFit)(BaseAtlas,
-                            d,maps,verbose=verbose,
+                            d,maps,classifier=classifier,verbose=verbose,
                             **fitArgs) for d in multiAtlas.datasets)
     
     return fittedAtlases
     
-def atlasFit(baseAtlas,data,maps,verbose=False,**args):
+def atlasFit(baseAtlas,data,maps,classifier,
+             verbose=False,**kwargs):
     
     """
     Single model fitting step.
@@ -783,7 +786,7 @@ def atlasFit(baseAtlas,data,maps,verbose=False,**args):
 
     atl = copy.deepcopy(baseAtlas)
     
-    atl.fit(data,maps,**args)
+    atl.fit(data,maps,classifier = classifier,**kwargs)
     
     return atl
 
