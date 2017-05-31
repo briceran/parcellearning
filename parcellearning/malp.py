@@ -19,7 +19,7 @@ import pickle
 from joblib import Parallel, delayed
 import multiprocessing
 
-from sklearn import ensemble, linear_model, multiclass
+from sklearn import ensemble
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 
 # number of cores to parallelize over
