@@ -728,6 +728,8 @@ class MultiAtlas(object):
                 
                 if size >= 1 and size <= len(subjects):
                     self.atlas_size = size
+            else:
+                self.atlas_size = ATLAS_SIZE
             
             if initArgs.has_key('atlases'):
                 numAtlas = initArgs['atlases']
