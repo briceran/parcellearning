@@ -319,7 +319,6 @@ def vertexMemberships(labelMaps,labels):
     return labelVerts
 
 
-
 """
 ##########
 
