@@ -227,8 +227,6 @@ class Atlas(object):
             randomSample = len(subjects)
         else:
             randomSample = min(self.random,len(subjects))
-            
-        print('Fitting model with {} subjects.'.format(randomSample))
 
         sample = np.random.choice(subjects,size=randomSample,replace=False)
         sampleData = {s: trainData[s] for s in sample}
@@ -294,9 +292,6 @@ class Atlas(object):
         
         # check to see what type of processing option was provided
         if softmax_type == 'BASE':
-            
-            print('{} prediction option provided.\n'.format(softmax_type))
-
             for lab in self.labels:
 
                 # compute vertices that map to that label
@@ -311,9 +306,6 @@ class Atlas(object):
                     baseline = cu.updatePredictions(baseline,members,scores)
                     
         else:
-            
-            print('{} prediction option provided.\n'.format(softmax_type))
-
             for lab in self.labels:
                 members = self.labelToVertexMaps[lab]
                 
