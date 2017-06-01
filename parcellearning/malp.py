@@ -171,7 +171,6 @@ class Atlas(object):
     
                 models[l].fit(learned,np.squeeze(y))
 
-        print 'Fitting procedure 100%% complete.'
         self.models = models
         self._fit = True
         
@@ -645,7 +644,7 @@ class MultiAtlas(object):
         - - - - -
         
             features : features to include in each Atlas
-            atlas_size : number of traiing subjects per atlas
+            atlas_size : number of training subjects per atlas
             atlases : number of atlases to generate
             
         """
