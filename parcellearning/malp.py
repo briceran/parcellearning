@@ -7,7 +7,7 @@ Created on Tue May  9 18:17:38 2017
 """
 import classifier_utilities as cu
 import featureData as fd
-import libraries as lb
+import matchingLibraries as lb
 import loaded as ld
 
 import copy
@@ -153,10 +153,9 @@ class Atlas(object):
         mgm = self.mergedMappings
         freqs = lb.mappingFrequency(mgm)
 
-        status = np.asarray([0.5,1]); 
         c = 1
 
-        for l in self.labels:
+        for i,l in enumerate(self.labels):
             if l in self.labelData.keys():
                 
                 # copy the model (due to passing by reference)
@@ -171,16 +170,7 @@ class Atlas(object):
                 [learned,y] = cu.mergeLabelData(self.labelData,self.response,mapped)
     
                 models[l].fit(learned,np.squeeze(y))
-                
-                # to keep track of fitting procedure
-                frac = 1.*c/len(self.labels)
-                inds = frac >= status
-                
-                if sum(inds) > 0:
-                    print 'Fitting ' + str(100*np.squeeze(status[inds])) + '% complete.'
-                    status = status[~inds]
-                c+=1
-        
+
         self.models = models
         self._fit = True
         
@@ -227,8 +217,6 @@ class Atlas(object):
             randomSample = len(subjects)
         else:
             randomSample = min(self.random,len(subjects))
-            
-        print('Fitting model with {} subjects.'.format(randomSample))
 
         sample = np.random.choice(subjects,size=randomSample,replace=False)
         sampleData = {s: trainData[s] for s in sample}
@@ -294,9 +282,6 @@ class Atlas(object):
         
         # check to see what type of processing option was provided
         if softmax_type == 'BASE':
-            
-            print('{} prediction option provided.\n'.format(softmax_type))
-
             for lab in self.labels:
 
                 # compute vertices that map to that label
@@ -311,9 +296,6 @@ class Atlas(object):
                     baseline = cu.updatePredictions(baseline,members,scores)
                     
         else:
-            
-            print('{} prediction option provided.\n'.format(softmax_type))
-
             for lab in self.labels:
                 members = self.labelToVertexMaps[lab]
                 
@@ -662,7 +644,7 @@ class MultiAtlas(object):
         - - - - -
         
             features : features to include in each Atlas
-            atlas_size : number of traiing subjects per atlas
+            atlas_size : number of training subjects per atlas
             atlases : number of atlases to generate
             
         """
@@ -796,7 +778,8 @@ def parallelPredicting(models,testObject,testMappings,*args,**kwargs):
     """
     
     predictedLabels = Parallel(n_jobs=NUM_CORES)(delayed(atlasPredict)(models[i],
-                               testObject,testMappings,) for i,m in enumerate(models))
+                               testObject,testMappings,
+                                *args,**kwargs) for i,m in enumerate(models))
     
     return predictedLabels
 
