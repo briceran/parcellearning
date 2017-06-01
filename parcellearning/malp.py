@@ -776,13 +776,17 @@ def parallelFitting(multiAtlas,maps,features,
     
     return fittedAtlases
     
-def atlasFit(baseAtlas,data,maps,classifier):
+def atlasFit(baseAtlas,data,maps,classifier,**kwargs):
     
     """
     Single model fitting step.
     """
 
     atl = copy.deepcopy(baseAtlas)
+    
+    args,_,_,_ = inspect.getargspec(atl.__init__)
+    atlArgs = cu.parseKwargs(args,kwargs)
+    atl.set_params(**atlArgs)
     
     atl.fit(data,maps,classifier = classifier)
     
