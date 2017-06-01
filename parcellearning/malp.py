@@ -784,10 +784,6 @@ def atlasFit(baseAtlas,data,maps,classifier,**kwargs):
 
     atl = copy.deepcopy(baseAtlas)
     
-    args,_,_,_ = inspect.getargspec(atl.__init__)
-    atlArgs = cu.parseKwargs(args,kwargs)
-    atl.set_params(**atlArgs)
-    
     atl.fit(data,maps,classifier = classifier)
     
     return atl
@@ -800,18 +796,21 @@ def parallelPredicting(models,testObject,testMappings,*args,**kwargs):
     """
     
     predictedLabels = Parallel(n_jobs=NUM_CORES)(delayed(atlasPredict)(models[i],
-                               testObject,testMappings,
-                               *args,**kwargs) for i,m in enumerate(models))
+                               testObject,testMappings,) for i,m in enumerate(models))
     
     return predictedLabels
 
-def atlasPredict(model,testObject,testMappings,*args,**kwargs):
+def atlasPredict(model,testObject,testMappings,**kwargs):
     
     """
     Single model prediction step.
     """
     
-    model.predict(testObject,testMappings,*args,**kwargs)
+    args,_,_,_ = inspect.getargspec(model.__init__)
+    modelArgs = cu.parseKwargs(args,kwargs)
+    model.set_params(**modelArgs)
+    
+    model.predict(testObject,testMappings)
     
     return model.predicted
 

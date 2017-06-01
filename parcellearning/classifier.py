@@ -18,8 +18,7 @@ import numpy as np
 import os
 import pickle
 
-from sklearn import ensemble, covariance, neighbors, mixture
-from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
+from sklearn import covariance, neighbors, mixture
 
 ##########
 ##########
