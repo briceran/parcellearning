@@ -796,7 +796,8 @@ def parallelPredicting(models,testObject,testMappings,*args,**kwargs):
     """
     
     predictedLabels = Parallel(n_jobs=NUM_CORES)(delayed(atlasPredict)(models[i],
-                               testObject,testMappings,) for i,m in enumerate(models))
+                               testObject,testMappings,
+                                *args,**kwargs) for i,m in enumerate(models))
     
     return predictedLabels
 
