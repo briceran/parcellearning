@@ -171,7 +171,7 @@ class Atlas(object):
     
                 models[l].fit(learned,np.squeeze(y))
 
-        print 'Fitting 100% complete.'
+        print 'Fitting procedure 100% complete.'
         self.models = models
         self._fit = True
         
