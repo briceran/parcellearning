@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/parcellearning.iml" filepath="$PROJECT_DIR$/.idea/parcellearning.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../shortestpath/.idea/shortestpath.iml" filepath="$PROJECT_DIR$/../../shortestpath/.idea/shortestpath.iml" />
     </modules>
   </component>
 </project>
