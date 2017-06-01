@@ -153,10 +153,9 @@ class Atlas(object):
         mgm = self.mergedMappings
         freqs = lb.mappingFrequency(mgm)
 
-        status = np.asarray([0.5,1]); 
         c = 1
 
-        for l in self.labels:
+        for i,l in enumerate(self.labels):
             if l in self.labelData.keys():
                 
                 # copy the model (due to passing by reference)
@@ -171,16 +170,8 @@ class Atlas(object):
                 [learned,y] = cu.mergeLabelData(self.labelData,self.response,mapped)
     
                 models[l].fit(learned,np.squeeze(y))
-                
-                # to keep track of fitting procedure
-                frac = 1.*c/len(self.labels)
-                inds = frac >= status
-                
-                if sum(inds) > 0:
-                    print 'Fitting ' + str(100*np.squeeze(status[inds])) + '% complete.'
-                    status = status[~inds]
-                c+=1
-        
+
+        print 'Fitting 100% complete.'
         self.models = models
         self._fit = True
         
