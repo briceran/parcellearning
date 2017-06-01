@@ -12,11 +12,13 @@ import featureData as fd
 import libraries as lb
 import loaded as ld
 
+import copy
+import inspect
 import numpy as np
 import os
 import pickle
 
-from sklearn import ensemble, covariance, neighbors, mixture, multiclass
+from sklearn import ensemble, covariance, neighbors, mixture
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 
 ##########
@@ -348,32 +350,95 @@ class GMM(object):
             
     """
     
-    def __init__(self,trainObj,feats,scale=True):
+    def __init__(self,features,scale=True,thresh_test=0.05,exclude_testing=None,
+                 random=None,load=None,save=None,power=None):
         
-        if isinstance(trainObj,str):
-            trainData = ld.loadPick(trainObj)
-        elif isinstance(trainObj,dict):
-            trainData = trainObj
+        if not features:
+            raise ValueError('Feature list cannot be empty.')
+        
+        if scale not in [True, False]:
+            raise ValueError('Scale must be boolean.')
+
+        if thresh_test < 0 or thresh_test > 1:
+            raise ValueError('Threshold value must be within [0,1].')
+            
+        if exclude_testing is not None and not isinstance(exclude_testing,str):
+            raise ValueError('exclude_testing must by a string or None.')
+            
+        if random is not None and random < 0:
+            raise ValueError('Random must be a positive integer or None.')
+            
+        if not load is None and not isinstance(load,str):
+            raise ValueError('load must be a string or None.')
+            
+        if save is not None and not isinstance(save,str):
+            raise ValueError('save must be a string or None.')
+            
+        if power is not None and not isinstance(power,float):
+            raise ValueError('power must be a float or None.')
+        
+        self.features = features
+        self.scale = scale
+        self.thresh_test = thresh_test
+        self.exclude_testing = exclude_testing
+        self.random = random
+        self.load = load
+        self.save = save
+        self.power = power
+        
+    def set_params(self,**kwargs):
+        
+        """
+        Update parameters with user-specified dictionary.
+        """
+        
+        args, varargs, varkw, defaults = inspect.getargspec(self.__init__)
+        
+        if kwargs:
+            for key in kwargs:
+                if key in args:
+                    setattr(self,key,kwargs[key])
+    
+    def _initializeTraining(self,trainObject):
+        
+        """
+        Parameters:
+        - - - - -
+            trainObject : input training data (either '.p' file, or dictionary)
+        """
+        
+        # if trainObject is filename
+        if isinstance(trainObject,str):
+            trainData = ld.loadPick(trainObject)
+            
+            # if trainData is SubjectFeatures object (single subject)
+            if isinstance(trainData,fd.SubjectFeatures):
+                self.trainingID = trainData.ID
+                trainData = cu.prepareUnitaryFeatures(trainData)
+                
+        # otherwise, if provided with dictionary
+        elif isinstance(trainObject,dict):
+            trainData = trainObject
+        else:
+            raise ValueError('Training object is of incorrect type.')
             
         if not trainData:
             raise ValueError('Training data cannot be empty.')
-        
-        if not feats:
-            raise ValueError('Feature list cannot be empty.')
             
-        if scale:
-            [trainData,scalers] = fd.standardize(trainData,feats)
+        if self.scale:
+            [trainData,scalers] = fd.standardize(trainData,self.features)
             
             self.scalers = scalers
             self._scaled = True            
             
-        self._labels = set(cu.getLabels(trainData)) - set([0,-1])
-        self.labelData = cu.partitionData(trainData,feats = feats)
+        self.labels = set(cu.getLabels(trainData)) - set([0,-1])
+        self.labelData = cu.partitionData(trainData,feats = self.features)
         
         self.trainData = trainData
-        self._features = feats
 
-    def fit(self, model = mixture.GaussianMixture(n_components=2,covariance_type='full')):
+    def fit(self, trainObject, 
+            model = mixture.GaussianMixture(n_components=2,covariance_type='full'),
+            **kwargs):
         
         """
         Method to model the data for each training label as a mixture of
@@ -382,25 +447,28 @@ class GMM(object):
         
         Parameters:
         - - - - - 
-        
+            trainObject : input training data (either '.p' file, or dictionary)
+                
             model : dictionary of options that will be supplied to
                         sklearn.mixture.GaussianMixture()
                         
                         See sklearn documentation for more details.
                         
-        Initializes:
-        - - - - - -
-        
-            mixtures_ : dictionary mapping label to unique mixture model for 
-                        data corresponding to that label
+            kwargs : optional arguments with which to update the model
         """
         
-        self._model = model
+        self._initializeTraining(trainObject)
+        
+        args,_,_,_ = inspect.getargspec(model.__init__)
+        
+        modelArgs = cu.parseKwargs(args,kwargs)
+        model.set_params(**modelArgs)
+        
+        self.model = model
 
-        mixtures = {}
-        mixtures = mixtures.fromkeys(self._labels)
+        mixtures = {}.fromkeys(self.labels)
 
-        for l in self._labels:
+        for l in self.labels:
             
             mixtures[l] = deepcopy(model)
             mixtures[l].fit(self.labelData[l])
@@ -408,11 +476,11 @@ class GMM(object):
         self.mixtures = mixtures
         self._fitted = True
         
-    def loadTest(self,y,yMatch,features,**kwargs):
+    def _loadTest(self,y,yMatch):
         
         """
         Method to load the test data into the object.  We might be interested
-        in loaded new test data into, so we have explicitly defined this is
+        in loading new test data, so we have explicitly defined this is
         as a method.
         
         Parameters:
@@ -422,43 +490,81 @@ class GMM(object):
             yMatch : MatchingFeaturesTest object containing vertLib attribute 
                     detailing which labels each vertex in surface y maps to 
                     in the training data
-                    
-            feats : names of features to include in the distance calculations
-            
-            kwargs : computing vertex-to-label mappings is time consuming, so
-                    we allow the option to pre-load this data
+
         """
         
-        testObject = ld.loadPick(y)
-
-        testMatch = ld.loadPick(yMatch)
+        # get Atlas attributes
+        threshold = self.thresh_test
+        load = self.load
+        save = self.save
         
-        if 'load' in kwargs:
-            labelVertices = ld.loadPick(kwargs['load'])
-            
-        else:
-            lMaps = testMatch.vertLib
-            simplified = {n: lMaps[n].keys() for n in lMaps.keys()}
-            
-            labelVertices = cu.vertexMemberships(simplified,self._labels)
-
-        self._labelVerts = labelVertices
-
-        if self._scaled:
-            toScale = {'scale': self.scalers}
-            self.mergedData = cu.mergeFeatures(testObject.data,features,**toScale)
+        labels = self.labels
+        features = self.features
+ 
+        # load test subject data, save as attribtues
+        testObject = ld.loadPick(y)        
+        testMatch = ld.loadPick(yMatch)
         
         self.testMatch = testMatch
         self.testObject = testObject
         
-        if 'save' in kwargs:
-            try:
-                with open(kwargs['save'],"wb") as outFile:
-                    pickle.dump(labelVertices,outFile,-1)
-            except IOError:
-                print('Cannot save labelVertices to file.')
+        # if the training data has been scaled, apply scaling 
+        # transformation to test data and merge features
+        data = testObject.data
+        
+        if self._scaled:
+            scalers = self.scalers
+            
+            for feat in features:
+                if feat in data.keys():
+                    data[feat] = scalers[feat].transform(data[feat])
+                    
+        self.mergedTestData = cu.mergeFeatures(data,features)
 
-    def predict(self,**kwargs):
+        # generate a label : vertex dictionary, the vertex contains all 
+        # vertices that mapped to label via surface registration
+        
+        # get vertex to label mapping counts
+        vTLM = copy.deepcopy(testMatch.vertLib)
+        
+        # convert vertex to label mapping counts to frequencies
+        freqMaps = lb.mappingFrequency(vTLM)
+        
+        # if threshold value is greater than 0, there might be labels 
+        # that will be cutoff -- otherwise, none will be
+        if threshold > 0:
+            threshed = {}.fromkeys(freqMaps.keys())
+            
+            for k in threshed.keys():
+                if freqMaps[k]:
+                    threshed[k] = lb.mappingThreshold(freqMaps[k],threshold)
+                    
+            freqMaps = threshed
+            
+        self.mappingsCutoff = freqMaps
+        
+        # Computing label-vertex memberships is time consuming
+        # If already precomputed for given test data at specified threshold,
+        # can supply path to load file.
+        if load:
+            if os.path.isfile(load):
+                self.labelToVertexMaps = ld.loadPick(load)
+        
+        # Otherwise, compute label-vertex memberships.
+        else:
+            self.labelToVertexMaps = cu.vertexMemberships(freqMaps,labels)
+
+        # if save is provided, save label-vertex memberships to file
+        if save:
+            try:
+                with open(save,"wb") as outFile:
+                    pickle.dump(self.labelToVertexMaps,outFile,-1)
+            except IOError:
+                print('Cannot save label-vertex memberships to file.')
+
+        self._loadedTest = True
+
+    def predict(self,y,yMatch):
         
         """
         Method to compute Mahalanobis distance of test data from the
@@ -471,18 +577,23 @@ class GMM(object):
                     base classification and weighted classification of the
                     surface vertices
         """
-
-        verts = self.testMatch.vertLib.keys()
         
-        labelVerts = self._labelVerts
-        mergedData = self.mergedData
+        # load the testing data
+        self._loadTest(y,yMatch)
+        
+        # get names of test data vertices
+        verts = self.testMatch.vertLib.keys()
+        # get test data
+        mergedData = self.mergedTestData
+        
+        # get label-vertex maps
+        labelVerts = self.labelToVertexMaps
 
         # initialize prediction dictionary
-        baseline = {}
-        baseline = baseline.fromkeys(verts)
+        baseline = {}.fromkeys(verts)
 
         # for all labels in in training set
-        for lab in self._labels:
+        for lab in self.labels:
 
             # compute vertices that map to that label
             members = labelVerts[lab]
@@ -494,14 +605,13 @@ class GMM(object):
                 # save results in self.predict
                 baseline = cu.updateScores(baseline,lab,members,scores)
         
+        self.baseline = baseline
         self.predicted = self._classify(baseline)
         self._classified = True
-                
-        if kwargs:
-            if kwargs['power']:
-    
-                weightedLL = self.weight(baseline,kwargs['power'])
-                self.weighted = self._classify(weightedLL)
+        
+        if self.power:
+            weightedLL = self.weight(baseline,self.power)
+            self.weighted = self._classify(weightedLL)
         
     def _predictPoint(self,data,label,members):
         
@@ -751,35 +861,6 @@ class GMM(object):
 
         return bic
 
-    @property
-    def classes(self):
-        ''' Return classified cortex.'''
-        
-        if not self._classified:
-            raise ValueError('Run classify() first.')
-        
-        return self.predicted
-
-    @property
-    def features(self):
-        '''Return which features are included in the model.'''
-        
-        return self._features
-    
-    @property
-    def labels(self):
-        '''Return training label set.'''
-        
-        return self._labels
-    
-    @property
-    def labelVerts(self):
-        '''Return vertex-to-label mappings.'''
-        
-        return self._labelVerts
-        
-        
-
 ##########
 ##########
 ##########
@@ -836,221 +917,3 @@ class MaximumLiklihood(object):
         ''' Return classified cortex.'''
         
         return self._classed
-
-##########
-##########
-##########
-##########
-        
-class Train(object):
-    
-    """
-    Class to generate trained classifiers for each label in a GroupFeatures
-    object.
-    
-    ############
-    NOT DONE YET
-    ############
-    
-    Parameters:
-    - - - - - 
-    
-        trainObj : GroupFeatures object containing training data and features 
-                    of interest
-                    
-        mergedMaps : aggregated label mapping data across all training subjects
-                        produced by libraries.mergeMatchingLibraryTrain
-                        
-        feats : name of features to include in the model
-        
-        scale : whether or not to scale the training data
-        
-    """
-    
-    def __init__(self,trainObj,mergedMaps,feats,scale=True,threshold = 0):
-        
-        if isinstance(trainObj,str):
-            trainData = ld.loadPick(trainObj)
-            
-            if isinstance(trainData,fd.SubjectFeatures):
-                trainData = cu.prepareUnitaryFeatures(trainData,feats)
-                
-        elif isinstance(trainObj,dict):
-            trainData = trainObj
-        else:
-            raise ValueError('Training object is of incorrect type.')
-            
-        if not trainData:
-            raise ValueError('Training data cannot be empty.')
-        
-        if not feats:
-            raise ValueError('Feature list cannot be empty.')
-            
-        if threshold < 0 or threshold > 1:
-            raise ValueError('Threshold value must be within [0,1].')
-        
-        if scale:
-            [trainData,scalers] = fd.standardize(trainData,feats)
-            
-            self.scalers = scalers
-            self._scaled = True
-            
-        self.features = feats
-        self.threshold = threshold
-        
-        self.labels = set(cu.getLabels(trainData)) - set([0,-1])
-        self.labelData = cu.partitionData(trainData,feats = feats)
-        
-        self.response = cu.buildResponseVector(self.labels,self.labelData)
-        self.mergedMappings = ld.loadPick(mergedMaps)
-        
-        cond = True
-        
-        if not self._compareTrainingDataKeys():
-            print('Warning: Training data and response vectors do not have the same keys.')
-            cond = False
-
-        if not self._compareTrainingDataSize():
-            print('Warning: Training data and response vectors are not the same length.')
-            cond = False
-            
-        if not cond:
-            raise ValueError('Training data is incorrect.')
-            
-        # rather than building the classifier training data upon loading,
-        # we do not save in memory and instead build when fitting classifiers
-        
-        #if cond:
-        #    print('Aggregating classifier training data structures.')
-        #    self._buildTrainingData()        
-            
-    def fit(self,classifier = ensemble.RandomForestClassifier(),
-            ms = 'ori',**kwargs):
-        
-        """
-        Method to train the classifiers.
-        """
-
-        if kwargs:
-            kwargs = cu.parseKwargs(kwargs)
-            classifier.set_params(**kwargs)
-        
-        model_selector = {'oVo': OneVsOneClassifier(classifier),
-                          'oVr': OneVsRestClassifier(classifier),
-                          'ori': classifier}
-        models = {}
-        
-        labelData = self.labelData
-        response = self.response
-        
-        for l in np.arange(1,5):
-            
-            models[l] = deepcopy(model_selector[ms])
-            
-            mapped = self.mergedMappings[l]
-            mapped = lb.mappingThreshold(mapped,self.threshold)
-            mapped.update([l])
-            
-            # build classifier training data upon request
-            [learned,y] = cu.mergeLabelData(labelData,response,mapped)
-
-            models[l].fit(learned,np.squeeze(y))
-        
-        self.models = models
-        self._fit = True
-        
-    def loadTest(self,y,yMatch,features,**kwargs):
-        
-        """
-        Method to load the test data into the object.  We might be interested
-        in loading new test data into, so we have explicitly defined this is
-        as a method.
-        
-        Parameters:
-        - - - - -
-            y : SubjectFeatures object for a test brain      
-            
-            yMatch : MatchingFeaturesTest object containing vertLib attribute 
-                    detailing which labels each vertex in surface y maps to 
-                    in the training data
-                    
-            feats : names of features to include in model
-            
-            kwargs : computing vertex-to-label mappings is time consuming, so
-                    we allow the option to pre-load this data
-        """
-        
-        testObject = ld.loadPick(y)
-        testMatch = ld.loadPick(yMatch)
-        
-        if 'load' in kwargs:
-            labelVertices = ld.loadPick(kwargs['load'])
-        else:
-            lMaps = testMatch.vertLib
-            simplified = {n: lMaps[n].keys() for n in lMaps.keys()}
-            labelVertices = cu.ertexMemberships(simplified,self._labels)
-
-        self._labelVerts = labelVertices
-        self.mergedData = cu.mergeFeatures(testObject.data,features)
-        
-        self.testMatch = testMatch
-        self.testObject = testObject
-        
-        if 'save' in kwargs:
-            if not os.path.isfile(kwargs['save']):
-                try:
-                    with open(kwargs['save'],"wb") as outFile:
-                        pickle.dump(labelVertices,outFile,-1)
-                except IOError:
-                    print('Cannot save labelVertices to file.')
-
-    def save(self,outFile):
-        
-        """
-        Method to save the classification object.  This can be saved at any
-        time.  However, we can only "test" the classification object if it
-        has been trained.
-        """
-        
-        if not self._fit:
-            print("Warning: Classifier has not been trained yet.")
-        try:
-            with open(outFile,"wb") as output:
-                pickle.dump(self,output,-1)
-        except:
-            pass
-        
-    def _buildTrainingData(self):
-        
-        """
-        Method to aggregate the training data for all labels.  This will be the 
-        input into self.train().
-        
-        The mergedMappings attribute contains the "confusion" mappings for a 
-        given label.  From the surface registration step, we keep trac of
-        which labels are "confused" with the target label (generally the 
-        neighbors of the target label).
-        """
-        
-        learnData = {}
-        y = {}        
-        
-        labelData = self.labelData
-        response = self.response
-        
-        for l in self.labels:
-            # get the confusion labels for label l, add l to list
-            
-            mapped = self.mergedMappings[l]
-            mapped = lb.mappingThreshold(mapped,self.threshold)
-            
-            mapped.update([l])
-            
-            # merge data for all labels in mapped
-            [learned,resp] = cu.mergeLabelData(labelData,response,mapped)
-            
-            learnData[l] = learned
-            y[l] = resp
-            
-        self.learnData = learnData
-        self.y = y

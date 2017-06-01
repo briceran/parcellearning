@@ -277,15 +277,6 @@ class Atlas(object):
                     detailing which labels each vertex in surface y maps to 
                     in the training data
                     
-            *args : optional arguments for prediction
-                        args : ['base','forests','trees']
-            
-                        'BASE' : non-thresholded
-                        'FORESTS' : soft-max at forest-prediction level
-                        'TREES' : soft-max at tree-prediction level
-                        
-                    If more than 2 options are prodivided, 'base' takes precedence.
-
         """
         
         softmax_type = self.softmax_type
