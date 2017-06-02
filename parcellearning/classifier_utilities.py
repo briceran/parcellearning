@@ -11,6 +11,8 @@ import copy
 import numpy as np
 import pickle
 
+import libraries as lb
+
 """
 ##########
 
@@ -212,18 +214,33 @@ def mergeLabelData(labelData,responseData,labels):
     
     return(learnData,y)
 
-def parseKwargs(kwargs):
+def parseKwargs(acceptable,kwargs):
     
     """
     Method to check **kwargs input to methods to receive it.  If some of
     the values are set to None, will remove the key that corresponds to it.
+    
+    Parameters:
+    - - - - -
+        classInstance : instance of class whose arguments might needed to be 
+                        adapted
+        kwargs : possible arguments supplied to function
+        
+    Returns:
+    - - - -
+        kwargs : supplied key-value arguments that are included in the 
+                    classInstance arguments
     """
     
+    output = {}
+
     if kwargs:
         for key in kwargs.keys():
-            if not kwargs[key]:
-                del(kwargs[key])
-    return kwargs
+            
+            if key in acceptable:
+                output[key] = kwargs[key]
+
+    return output
 
 def partitionData(trainData,feats):
     
@@ -302,7 +319,6 @@ def vertexMemberships(labelMaps,labels):
     return labelVerts
 
 
-
 """
 ##########
 
@@ -311,11 +327,10 @@ Below are methods related to the classification or prediction steps.
 ##########
 """
 
-def combineBaselines(models,ids):
+def combineClassifications(models,ids):
     
     """
-    Combines baseline classifier counts from multiple atlases by performing
-    list concatenation.
+    Combines classifier counts from multiple Atlases via list concatenation.
     
     Parameters:
     - - - - -
@@ -341,6 +356,61 @@ def combineBaselines(models,ids):
                             
     return counts
 
+def countClassifications(classifications,ids):
+    
+    """
+    Counts instances of each classified element, returns dictionary of counts
+    for each test point.
+    
+    Parameters:
+    - - - - - 
+        classifications : (dictionary)  Keys are vertices, values are lists
+                            of labels
+        ids : (list) of vertex IDs
+    Returns:
+    - - - -
+        counts : (dictionary) Keys are vertices, values are sub-dictionaries.
+                                Sub-keys are label, sub-values are counts.
+    """
+    
+    counts = {k: {} for k in ids}
+    
+    for k in ids:
+        if classifications[k]:
+            for l in set(classifications[k]):
+                counts[k].update({l: classifications[k].count(l)})
+                
+    return counts
+
+def frequencyClassifications(baselineCounts,predicted,ids):
+    
+    """
+    Computes frequency with which test label was classified as final label.
+    
+    Parameters:
+    - - - - -
+        baselineCounts : (dictionary) Key are vertices, values are 
+                            sub-dictionaries.  Sub-keys are labels, and
+                            sub-values are counts.
+    Returns:
+    - - - -
+        maxFreq : (dictionary) Keys are vertices, values are frequencies.
+        
+    """
+    
+    pred = copy.copy(predicted)
+    
+    maxFreq = {}.fromkeys(ids)
+    
+    freqs = lb.mappingFrequency(baselineCounts)
+    
+    for n,k in enumerate(ids):
+        print(n,k)
+        if freqs[k]:
+            maxFreq[k] = freqs[k][pred[n]]
+    
+    return maxFreq
+
 def combineFilter(mappings,combined,ids):
     
     """
@@ -359,7 +429,6 @@ def combineFilter(mappings,combined,ids):
             filtered[i] = {l: combined[i][l] for l in ic if l in im}
     
     return filtered
-
 
     
 def maximumLiklihood(y,yMatch):
@@ -463,6 +532,6 @@ def updateScores(storage,label,members,scores):
                 storage[vert].update({label: scr})
                 
         return storage
-
-
+    
+    
     
