@@ -46,6 +46,8 @@ class Atlas(object):
         softmax_type : type of classification constraining based on surface
                         registration mappings.  BASE for none, TREES at the
                         tree level, and FORESTS at the forest level
+
+
         
         random : number of training subjects to include in model
         
