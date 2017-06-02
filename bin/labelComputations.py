@@ -49,9 +49,10 @@ def computeAverageShortestPath(dijkstraLabels,predLabels,groundTruth,
         predLab = predicted[i]
         
         if lab != 0 and predLab != 0:
+            if distances.has_key(lab):
+                if distances[lab].has_key(predLab):
 
-            computed[i] = distances[lab][predLab]
-        
+                    computed[i] = distances[lab][predLab]
         else:
             computed[i] = 0
             
@@ -65,6 +66,3 @@ def computeAverageShortestPath(dijkstraLabels,predLabels,groundTruth,
     
     func.darrays[0].data = meaned.astype(np.float32)
     nb.save(func,outFunc)
-    
-    
-    
