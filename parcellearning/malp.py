@@ -46,9 +46,13 @@ class Atlas(object):
         softmax_type : type of classification constraining based on surface
                         registration mappings.  BASE for none, TREES at the
                         tree level, and FORESTS at the forest level
+<<<<<<< HEAD
                         
         exclude_test : 
         
+=======
+
+>>>>>>> ae196858b581178779aaea44c3707559b5400c69
         random : number of training subjects to include in model
         
         load : if test subject label-verte memberships has been generated
