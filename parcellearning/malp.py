@@ -47,8 +47,6 @@ class Atlas(object):
                         registration mappings.  BASE for none, TREES at the
                         tree level, and FORESTS at the forest level
 
-
-        
         random : number of training subjects to include in model
         
         load : if test subject label-verte memberships has been generated
