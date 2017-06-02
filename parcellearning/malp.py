@@ -46,13 +46,9 @@ class Atlas(object):
         softmax_type : type of classification constraining based on surface
                         registration mappings.  BASE for none, TREES at the
                         tree level, and FORESTS at the forest level
-<<<<<<< HEAD
-                        
-        exclude_test : 
-        
-=======
 
->>>>>>> ae196858b581178779aaea44c3707559b5400c69
+        exclude_test : (None,List) list of subjects to exclude from the training step
+
         random : number of training subjects to include in model
         
         load : if test subject label-verte memberships has been generated
@@ -215,7 +211,7 @@ class Atlas(object):
         subjects = trainData.keys()
         
         if self.exclude_testing:
-            subjects = set(subjects)-set(self.exclude_testing)
+            subjects = list(set(subjects)-set(self.exclude_testing))
         
         # if random is set, sample subsect of training data (no replacement)
         # otherwise, set sample to number of training subjects
