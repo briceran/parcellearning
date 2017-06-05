@@ -24,14 +24,20 @@ from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 
 # number of cores to parallelize over
 NUM_CORES = multiprocessing.cpu_count()
-# Valid prediction key-value parameters
+
+# Valid soft-max constraints
 PREDICTION_KEYS = ['BASE','TREES','FORESTS']
+
 # type of classifier used -- the type of classifier will dictate option applicability of softmax_type
 CLASSIFIER = {'random_forest': PREDICTION_KEYS,
               'decision_tree': PREDICTION_KEYS,
               'logistic': 'BASE',
               'svm': 'BASE',
               'gaussian_process': 'BASE'}
+
+# type of label confusion data
+NEIGHBORHOOD_TYPE = ['adjacency','confusion']
+
 
 
 class Atlas(object):
@@ -45,15 +51,23 @@ class Atlas(object):
         
         scale : standardized the training data (default == True)
         
-        thresh_train : threshold to apply to training subject matches
+        thresh_train : threshold to apply to training subject matches (default = 0.05)
         
-        thresh_test : threshold to apply to test subject matches
+        thresh_test : threshold to apply to test subject matches (default = 0.05)
+
+        hops : default neighborhood size from adjacency Dijkstra list (default = 1)
+
+        neighborhood : type of label neighborhood to consider.  If 'adjacency', uses
+                        'hop_size' and Dijkstra distance files.  If 'confusion', uses
+                        'thresh_train' and MergedMappings file.
         
         softmax_type : type of classification constraining based on surface
                         registration mappings.  BASE for none, TREES at the
-                        tree level, and FORESTS at the forest level
+                        tree level, and FORESTS at the forest level.  (default = 'BASE')
 
-        exclude_test : (None,List) list of subjects to exclude from the training step
+        classifier_type : model used to fit training data (default = 'random_forest')
+
+        exclude_testing : (None,List) list of subjects to exclude from the training step
 
         random : number of training subjects to include in model
         
@@ -64,56 +78,73 @@ class Atlas(object):
 
     """
     
-    def __init__(self,feats,scale=True, thresh_train = 0.05, thresh_test = 0.05, hops = 1, neighbors = 'adjacency',
+    def __init__(self,feats,scale=True, thresh_train = 0.05, thresh_test = 0.05, hop_size = 1, neighborhood = 'adjacency',
                  softmax_type = 'BASE', classifier_type = 'random_forest', exclude_testing = None, random = None,
                  load = None, save = None):
 
+        # check feature value
         if not feats and not isinstance(feats,list):
             raise ValueError('Features cannot be empty.  Must be a list.')
-            
+
+        # check scale type value
         if scale not in [True, False]:
             raise ValueError('Scale must be boolean.')
-            
+
+        # check thresh_train value
         if thresh_train < 0 or thresh_train > 1:
             raise ValueError('Threshold value must be within [0,1].')
-            
+
+        # check tresh_test value
         if thresh_test < 0 or thresh_test > 1:
             raise ValueError('Threshold value must be within [0,1].')
 
+        # check hop_size value
+        if hop_size < 0 and not isinstance(hop_size,int):
+            raise ValueError('hop size must be non-negative integer value.')
+
+        if neighborhood not in NEIGHBORHOOD_TYPE:
+            raise ValueError('neighbohood must be in {}.'.format(' '.join(NEIGHBORHOOD_TYPE)))
+
+        # check softmax constraint value
         if softmax_type not in PREDICTION_KEYS:
-            raise ValueError('softmax_type must be either BASE,TREES, or FORESTS.')
-            
+            raise ValueError('softmax_type must be in {}.'.format(' '.join(PREDICTION_KEYS)))
+
+        # check classifier_type value
+        if classifier_type not in CLASSIFIER.keys():
+            raise ValueError('classifier_type must be in {}.'.format(' '.join(CLASSIFIER.keys())))
+
+        # check exclude_testing value
         if exclude_testing is not None and not isinstance(exclude_testing,str) and not isinstance(exclude_testing,list):
             raise ValueError('exclude_testing must by a string or None.')
-            
+
+        # check random value
         if random is not None and random < 0:
             raise ValueError('Random must be a positive integer or None.')
-            
+
+        # check load value
         if not load is None and not isinstance(load,str):
             raise ValueError('load must be a string or None.')
-            
+
+        # check save value
         if save is not None and not isinstance(save,str):
             raise ValueError('save must be a string or None.')
 
-        if softmax_type not in PREDICTION_KEYS:
-            options = ' '.join(PREDICTION_KEYS)
-            raise ValueError('softmax_type must be in {}.'.format(options))
-
-        if classifier_type not in CLASSIFIER.keys():
-            options = ' '.join(CLASSIFIER.keys())
-            raise ValueError('classifier_type must be in {}.'.format(options))
-
-        # CLASSIFIER maps classifier_type to prediction methods
-        # softmax_constaints do not apply to not 'random_forest' or 'decision_tree'
+        # CLASSIFIER maps classifier_type to valid softmax constraint types
+        # softmax_type only applies to 'random_forest' or 'decision_tree'
         if softmax_type not in CLASSIFIER[classifier_type]:
             softmax_type = 'BASE'
 
+        # training-related attributes
         self.features = feats
         self.scale = scale
         self.thresh_train = thresh_train
+        self.hop_size = hop_size
+        self.neighborhood = neighborhood
+        self.exclude_testing = exclude_testing
+
+        # testing-related attributes
         self.thresh_test = thresh_test
         self.softmax_type = softmax_type
-        self.exclude_testing = exclude_testing
         self.random = random
         self.load = load
         self.save = save
@@ -131,7 +162,7 @@ class Atlas(object):
                 if key in args:
                     setattr(self,key,kwargs[key])
             
-    def fit(self, trainObject, mergedMaps, model_type = 'ori',
+    def fit(self, trainObject, neighborhoodMap, model_type = 'ori',
             classifier = ensemble.RandomForestClassifier(n_jobs=-1),**kwargs):
         
         """
@@ -155,7 +186,7 @@ class Atlas(object):
         threshold = self.thresh_train
         
         self.model_type = model_type
-        self._initializeTraining(trainObject,mergedMaps)
+        self._initializeTraining(trainObject,neighborhoodMap)
 
         # get valid arguments for supplied classifier
         # get valid parameters passed by user
@@ -195,7 +226,7 @@ class Atlas(object):
         self.models = models
         self._fit = True
         
-    def _initializeTraining(self,trainObject,mergedMaps):
+    def _initializeTraining(self,trainObject,neighborhoodMap):
         
         """
         Initialize the object with the training data.
@@ -259,7 +290,10 @@ class Atlas(object):
         
         # build response vector for each set of label data
         self.response = cu.buildResponseVector(self.labels,self.labelData)
-        self.mergedMappings = ld.loadPick(mergedMaps)
+
+        neighborhoodMap = ld.loadPick(neighborhoodMap)
+        neighborhoodMap = self._prepareNeighborhood(neighborhoodMap)
+        self.mappings = neighborhoodMap
         
         cond = True
         if not self._compareTrainingDataKeys():
@@ -272,6 +306,31 @@ class Atlas(object):
             
         if not cond:
             raise ValueError('Training data is flawed.')
+
+    def _prepareNeighborhood(self,neighborhoodMap):
+
+        """
+        Method to prepare the neiguborhood type.
+
+        Parameters:
+        - - - - -
+            neighborhoodMap : cortical map Dijkstra distances OR MergedMappings confusion list
+        """
+
+        mappings = copy.deepcopy(neighborhoodMap)
+
+        if self.neighborhood == 'adjacency':
+            boundary = 'inside'
+            threshold = self.hop_size
+        elif self.neighborhood == 'confusion':
+            boundary = 'outside'
+            threshold = self.thresh_train
+
+            mappings = lb.mappingFrequency(mappings)
+
+        mappings = lb.mappingThreshold(mappings,threshold,boundary)
+
+        return mappings
                     
     def predict(self,y,yMatch):
         

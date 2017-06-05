@@ -526,7 +526,7 @@ def mappingConfusionMatrix(merged):
                 confusion[c1][c2] = merged[lab][maps]
     return confusion
 
-def mappingThreshold(mapFreqs,threshold):
+def mappingThreshold(mapCounts,threshold,limit):
     
     """
     Method to threshold the mappings at a specified frequencies.  Only those
@@ -538,18 +538,30 @@ def mappingThreshold(mapFreqs,threshold):
         mapFreqs : dictionary of sub-dictionaries, where main keys
                         are labels, and sub-key/label pairs are labels
                         and an associated frequency
-        threshold : cutoff frequency within [0,1]
+        threshold : count cutoff
     Returns:
     - - - -
         passed : list of labels with frequencies greater than the cutoff
     """
-    
-    if threshold > 0 and threshold <= 1:
-        zips = zip(mapFreqs.keys(),mapFreqs.values())
-        passed = [k for k,v in zips if v >= threshold]
-    else:
-        passed = mapFreqs.keys()
-    
-    return passed
-    
-    
+
+    options = ['inside','outside']
+
+    if limit not in options:
+        raise ValueError('limit must be in {}.'.format(' '.join(options)))
+
+    if threshold < 0:
+        raise ValueError('threshold must be non-negative.')
+
+    thresholdC = {k: [] for k in mapCounts.keys()}
+
+    for key in mapCounts.keys():
+        zips = zip(mapCounts[key].keys(),mapCounts[key].values())
+
+        if limit == 'inside':
+            passed = [k for k,v in zips if v <= threshold]
+        else:
+            passed = [k for k,v in zips if v >= threshold]
+
+        thresholdC[key] = passed
+
+    return thresholdC
