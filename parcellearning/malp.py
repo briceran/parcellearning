@@ -77,7 +77,8 @@ class Atlas(object):
         if softmax_type not in PREDICTION_KEYS:
             raise ValueError('softmax_type must be either BASE,TREES, or FORESTS.')
             
-        if exclude_testing is not None and not isinstance(exclude_testing,str):
+        if exclude_testing is not None and not isinstance(exclude_testing,str) and not \
+                isinstance(exclude_testing,list):
             raise ValueError('exclude_testing must by a string or None.')
             
         if random is not None and random < 0:
@@ -637,7 +638,8 @@ class MultiAtlas(object):
 
     """
     
-    def __init__(self,features,atlas_size = 1,atlases=None):
+    def __init__(self,features,atlas_size = 1,atlases=None,
+                 exclude_testing = None):
         
         """
         Method to initialize Mutli-Atlas label propagation scheme.
@@ -646,8 +648,12 @@ class MultiAtlas(object):
         - - - - -
         
             features : features to include in each Atlas
+
             atlas_size : number of training subjects per atlas
+
             atlases : number of atlases to generate
+
+            exclude_testing = (None,str,list) list of subjects to exclude from training data
             
         """
         
@@ -657,10 +663,15 @@ class MultiAtlas(object):
         
         if atlases is not None and atlases < 0:
             raise ValueError('atlases must be positive integer or None.')
+
+        if exclude_testing is not None and not isinstance(exclude_testing,str) and not \
+                isinstance(exclude_testing,list):
+            raise ValueError('exclude_testing must by a string or None.')
         
         self.atlas_size = atlas_size
         self.atlases = atlases
         self.features = features
+        self.exclude_testing = exclude_testing
         
     def set_params(self,**kwargs):
         
@@ -675,7 +686,7 @@ class MultiAtlas(object):
                 if key in args:
                     setattr(self,key,kwargs[key])
 
-    def initializeTraining(self,trainObject):
+    def initializeTraining(self,trainObject,**kwargs):
         
         """
         Private method to load and initialize training data.
@@ -683,8 +694,6 @@ class MultiAtlas(object):
         Parameters:
         - - - - -
             trainObject : training data (either '.p' file, or dictionary)
-                        
-            **kwargs : optional arguments in MALP_INITIALIZATION
         """
         
         # can either load a single SubjectFeatures object
@@ -706,6 +715,12 @@ class MultiAtlas(object):
             raise ValueError('Training data cannot be empty.')
             
         subjects = trainData.keys()
+
+        if kwargs:
+            self.set_params(**kwargs)
+
+        if self.exclude_testing:
+            subjects = list(set(subjects) - set(self.exclude_testing))
         
         if not self.atlases:
             self.atlases = len(subjects)
