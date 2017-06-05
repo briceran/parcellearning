@@ -5,6 +5,7 @@ Created on Tue May  9 18:17:38 2017
 
 @author: kristianeschenburg
 """
+
 import classifier_utilities as cu
 import featureData as fd
 import matchingLibraries as lb
@@ -183,8 +184,6 @@ class Atlas(object):
 
         """
 
-        threshold = self.thresh_train
-        
         self.model_type = model_type
         self._initializeTraining(trainObject,neighborhoodMap)
 
@@ -202,24 +201,24 @@ class Atlas(object):
                           'ori': classifier}
         models = {}
 
-        mgm = self.mergedMappings
-        freqs = lb.mappingFrequency(mgm)
+        neighbors = self.neighbors
 
         c = 1
 
         for i,l in enumerate(self.labels):
             if l in self.labelData.keys():
-                
+
                 # copy the model (due to passing by reference)
                 models[l] = copy.deepcopy(model_selector[model_type])
 
-                # threshold the mapping frequencies
-                mapped = lb.mappingThreshold(freqs[l],threshold)
-                mapped.append(l)
-                mapped = list(set(mapped).intersection(self.labels))
+                # get associated neighboring regions (from adjacency or confusion data)
+                label_neighbors = neighbors[l]
+                label_neighbors.append(l)
+
+                label_neighbors = list(set(label_neighbors).intersection(self.labels))
                 
                 # build classifier training data upon request
-                [learned,y] = cu.mergeLabelData(self.labelData,self.response,mapped)
+                [learned,y] = cu.mergeLabelData(self.labelData,self.response,label_neighbors)
     
                 models[l].fit(learned,np.squeeze(y))
 
@@ -235,12 +234,12 @@ class Atlas(object):
         - - - - -
             trainObject : input training data (either '.p' file, or dictionary)
             
-            mergedMaps : merged MatchingLibraries corresponding to training data
+            neighborhoodMap : Dijkstra distance file or MergedMappings file
+
         """
 
-        ## Load / process the training data ##
-        
-        # if trainObject is filename
+        # load and pre-process the training data
+
         if isinstance(trainObject,str):
             trainData = ld.loadPick(trainObject)
             
@@ -248,8 +247,7 @@ class Atlas(object):
             if isinstance(trainData,fd.SubjectFeatures):
                 self.trainingID = trainData.ID
                 trainData = cu.prepareUnitaryFeatures(trainData)
-                
-        # otherwise, if provided with dictionary
+
         elif isinstance(trainObject,dict):
             trainData = trainObject
         else:
@@ -257,14 +255,15 @@ class Atlas(object):
             
         if not trainData:
             raise ValueError('Training data cannot be empty.')
-            
+
+        # get subject IDs in training data
         subjects = trainData.keys()
-        
+
+        # if exclude_testing is set, the data for these subjects when fitting the models
         if self.exclude_testing:
             subjects = list(set(subjects)-set(self.exclude_testing))
         
-        # if random is set, sample subsect of training data (no replacement)
-        # otherwise, set sample to number of training subjects
+        # if random is set, select random subset of size random from viable training subjects
         if not self.random:
             randomSample = len(subjects)
         else:
@@ -274,7 +273,8 @@ class Atlas(object):
         sampleData = {s: trainData[s] for s in sample}
         trainData = sampleData
 
-        # Scale the training data.
+        # if scale is True, scale each feature of the training data and save the transformation
+        # transformation will be applied to incoming test data
         if self.scale:
             [trainData,scalers] = fd.standardize(trainData,self.features)
             
@@ -285,16 +285,29 @@ class Atlas(object):
         # get unique labels in training set
         self.labels = set(cu.getLabels(trainData)) - set([0,-1])
         
-        # aggregate data corresponding to each label
+        # isolate training data corresponding to each label
         self.labelData = cu.partitionData(trainData,feats = self.features)
         
-        # build response vector for each set of label data
+        # build response vector for each label
         self.response = cu.buildResponseVector(self.labels,self.labelData)
 
+        # load and prepare neighborhoodMap
         neighborhoodMap = ld.loadPick(neighborhoodMap)
-        neighborhoodMap = self._prepareNeighborhood(neighborhoodMap)
-        self.mappings = neighborhoodMap
-        
+
+        if self.neighborhood == 'adjacency':
+            boundary = 'inside'
+            threshold = self.hop_size
+        else:
+            boundary = 'outside'
+            threshold = self.thresh_train
+
+            neighborhoodMap = lb.mappingFrequency(neighborhoodMap)
+
+        self.neighbors = lb.mappingThreshold(neighborhoodMap, threshold, boundary)
+
+        # check quality of training data to ensure all features have same length,
+        # all response vectors have the same number of samples, and that all training data
+        # has the same features
         cond = True
         if not self._compareTrainingDataKeys():
             print('WARNING: Training data and response vectors do not have the same keys.')
@@ -306,31 +319,6 @@ class Atlas(object):
             
         if not cond:
             raise ValueError('Training data is flawed.')
-
-    def _prepareNeighborhood(self,neighborhoodMap):
-
-        """
-        Method to prepare the neiguborhood type.
-
-        Parameters:
-        - - - - -
-            neighborhoodMap : cortical map Dijkstra distances OR MergedMappings confusion list
-        """
-
-        mappings = copy.deepcopy(neighborhoodMap)
-
-        if self.neighborhood == 'adjacency':
-            boundary = 'inside'
-            threshold = self.hop_size
-        elif self.neighborhood == 'confusion':
-            boundary = 'outside'
-            threshold = self.thresh_train
-
-            mappings = lb.mappingFrequency(mappings)
-
-        mappings = lb.mappingThreshold(mappings,threshold,boundary)
-
-        return mappings
                     
     def predict(self,y,yMatch):
         
