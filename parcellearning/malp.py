@@ -64,12 +64,12 @@ class Atlas(object):
 
     """
     
-    def __init__(self,feats,scale=True,thresh_train = 0.05,thresh_test = 0.05,
-                 softmax_type='BASE', classifier_type = 'random_forest', exclude_testing=None,
-                 random=None,load=None,save=None):
+    def __init__(self,feats,scale=True, thresh_train = 0.05, thresh_test = 0.05, hops = 1, neighbors = 'adjacency',
+                 softmax_type = 'BASE', classifier_type = 'random_forest', exclude_testing = None, random = None,
+                 load = None, save = None):
 
-        if not feats:
-            raise ValueError('Feature list cannot be empty.')
+        if not feats and not isinstance(feats,list):
+            raise ValueError('Features cannot be empty.  Must be a list.')
             
         if scale not in [True, False]:
             raise ValueError('Scale must be boolean.')
@@ -79,16 +79,11 @@ class Atlas(object):
             
         if thresh_test < 0 or thresh_test > 1:
             raise ValueError('Threshold value must be within [0,1].')
-            
-<<<<<<< HEAD
-        if exclude_testing is not None and not isinstance(exclude_testing,str):
-=======
+
         if softmax_type not in PREDICTION_KEYS:
             raise ValueError('softmax_type must be either BASE,TREES, or FORESTS.')
             
-        if exclude_testing is not None and not isinstance(exclude_testing,str) and not \
-                isinstance(exclude_testing,list):
->>>>>>> 4ad35842d82b403694124a76a297954ba9dadecd
+        if exclude_testing is not None and not isinstance(exclude_testing,str) and not isinstance(exclude_testing,list):
             raise ValueError('exclude_testing must by a string or None.')
             
         if random is not None and random < 0:
