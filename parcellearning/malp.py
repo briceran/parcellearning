@@ -26,6 +26,12 @@ from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 NUM_CORES = multiprocessing.cpu_count()
 # Valid prediction key-value parameters
 PREDICTION_KEYS = ['BASE','TREES','FORESTS']
+# type of classifier used -- the type of classifier will dictate option applicability of softmax_type
+CLASSIFIER = {'random_forest': PREDICTION_KEYS,
+              'decision_tree': PREDICTION_KEYS,
+              'logistic': 'BASE',
+              'svm': 'BASE',
+              'gaussian_process': 'BASE'}
 
 
 class Atlas(object):
@@ -59,7 +65,7 @@ class Atlas(object):
     """
     
     def __init__(self,feats,scale=True,thresh_train = 0.05,thresh_test = 0.05,
-                 softmax_type='BASE',exclude_testing=None,
+                 softmax_type='BASE', classifier_type = 'random_forest', exclude_testing=None,
                  random=None,load=None,save=None):
 
         if not feats:
@@ -74,9 +80,6 @@ class Atlas(object):
         if thresh_test < 0 or thresh_test > 1:
             raise ValueError('Threshold value must be within [0,1].')
             
-        if softmax_type not in PREDICTION_KEYS:
-            raise ValueError('softmax_type must be either BASE,TREES, or FORESTS.')
-            
         if exclude_testing is not None and not isinstance(exclude_testing,str):
             raise ValueError('exclude_testing must by a string or None.')
             
@@ -88,6 +91,19 @@ class Atlas(object):
             
         if save is not None and not isinstance(save,str):
             raise ValueError('save must be a string or None.')
+
+        if softmax_type not in PREDICTION_KEYS:
+            options = ' '.join(PREDICTION_KEYS)
+            raise ValueError('softmax_type must be in {}.'.format(options))
+
+        if classifier_type not in CLASSIFIER.keys():
+            options = ' '.join(CLASSIFIER.keys())
+            raise ValueError('classifier_type must be in {}.'.format(options))
+
+        # CLASSIFIER maps classifier_type to prediction methods
+        # softmax_constaints do not apply to not 'random_forest' or 'decision_tree'
+        if softmax_type not in CLASSIFIER[classifier_type]:
+            softmax_type = 'BASE'
 
         self.features = feats
         self.scale = scale
