@@ -41,7 +41,6 @@ CLASSIFIER = {'random_forest': PREDICTION_KEYS,
 NEIGHBORHOOD_TYPE = ['adjacency','confusion']
 
 
-
 class Atlas(object):
     
     """
