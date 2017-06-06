@@ -69,8 +69,9 @@ def computeLabelLayers(labelFile,surfaceAdjacency,borderFile):
     
     Layers = {}.fromkeys(L)
     
-    layers = Parallel(n_jobs=NUM_CORES)(delayed(labelLayers)(np.where(label == l)[0],
-                                                 surfAdj,borders[l]) for l in L)
+    layers = Parallel(n_jobs=NUM_CORES)(delayed(labelLayers)(lab,
+                      np.where(label == lab)[0],
+                      surfAdj,borders[lab]) for lab in L)
     
     for i,l in enumerate(L):
 
@@ -78,7 +79,7 @@ def computeLabelLayers(labelFile,surfaceAdjacency,borderFile):
         
     return Layers
 
-def labelLayers(labelIndices,surfAdj,borderIndices):
+def labelLayers(lab,labelIndices,surfAdj,borderIndices):
     
     """
     Method to compute level structures for a single region.
@@ -89,6 +90,8 @@ def labelLayers(labelIndices,surfAdj,borderIndices):
         surfAdj : surface adjacency file corresponding to whole surface
         borderIndices : indices corresponding to border of ROI
     """
+    
+    print('Computing layers for label {}.'.format(lab))
     
     regionSurfAdj = {k: [] for k in labelIndices}
     
@@ -106,9 +109,14 @@ def labelLayers(labelIndices,surfAdj,borderIndices):
     
     for i,n in enumerate(nonBorders):
         for b in borderIndices:
-            if nx.has_path(G,source=n,target=b):
+            # see if there is a path between the source node and target node
+            try:
                 sp_nb = nx.shortest_path_length(G,source=n,target=b)
-                distances[n].append(sp_nb)
+            # otherwise set distance to none
+            except:
+                sp_nb = None
+
+            distances[n].append(sp_nb)
         
         distances[n] = min(distances[n])
         
@@ -120,7 +128,7 @@ def labelLayers(labelIndices,surfAdj,borderIndices):
         
     return layers      
 
-def condenseSubLayers(layers,level):
+def layerCondensation(layers,level):
     
     """
     Method to condense vertices of layers at at least a depth of level.
