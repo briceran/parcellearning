@@ -108,8 +108,9 @@ def labelLayers(labelIndices,surfAdj,borderIndices):
     print('Computing distances to border vertices.')
     for i,n in enumerate(nonBorders):
         for b in borderIndices:
-            sp_nb = nx.shortest_path_length(G,source=n,target=b)
-            distances[n].append(sp_nb)
+            if nx.has_path(G,source=n,target=b):
+                sp_nb = nx.shortest_path_length(G,source=n,target=b)
+                distances[n].append(sp_nb)
         
         distances[n] = min(distances[n])
         
