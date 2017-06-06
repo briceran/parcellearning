@@ -5,7 +5,6 @@ Created on Tue May  9 18:17:38 2017
 
 @author: kristianeschenburg
 
-Authenticated using ssh.
 """
 
 import classifier_utilities as cu
