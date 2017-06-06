@@ -93,7 +93,6 @@ def labelLayers(labelIndices,surfAdj,borderIndices):
     regionSurfAdj = {k: [] for k in labelIndices}
     
     # compute condensed adjacency list corresponding to vertices in ROI
-    print('Computing condensed adjacency list.')
     for li in labelIndices:
         
         fullNeighbs = surfAdj[li]
@@ -105,7 +104,6 @@ def labelLayers(labelIndices,surfAdj,borderIndices):
     
     distances = {n: [] for n in nonBorders}
     
-    print('Computing distances to border vertices.')
     for i,n in enumerate(nonBorders):
         for b in borderIndices:
             if nx.has_path(G,source=n,target=b):
@@ -116,9 +114,33 @@ def labelLayers(labelIndices,surfAdj,borderIndices):
         
     layers = {k: [] for k in distances.values()}
     
-    print('Finding minimum distances.')
     for vertex in distances.keys():
         dist = distances[vertex]
         layers[dist].append(vertex)
         
     return layers      
+
+def condenseSubLayers(layers,level):
+    
+    """
+    Method to condense vertices of layers at at least a depth of level.
+    
+    Parameters:
+    - - - - -
+        layers : layers for each label
+        level : minimum distance a vertex needs to be from the boundary
+                vertices.
+    """
+    
+    condensedLayers = {k: [] for k in layers.keys()}
+    
+    for k in layers.keys():
+        
+        k_label = layers[k]
+        
+        deepVertices = [v for j,v in k_label.items() if j >= level]
+        deepVertices = np.concatenate(deepVertices)
+        
+        condensedLayers[k] = deepVertices
+        
+    return condensedLayers
