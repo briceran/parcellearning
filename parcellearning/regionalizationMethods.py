@@ -152,3 +152,47 @@ def layerCondensation(layers,level):
         condensedLayers[k] = deepVertices
         
     return condensedLayers
+
+def parseColorLookUpFile(lookupTable):
+    
+    """
+    Method to convert 
+    """
+    
+    with open(lookupTable,"rb") as input:
+        lines = input.readlines()
+    
+    lines = [map(int,v.strip().split(' ')) for i,v in enumerate(lines) if i % 2 == 1]
+    
+    lines = np.row_stack(lines)
+    
+    parsedColors = {k: list(v) for k,v in zip(lines[:,0],lines[:,1:4])}
+    
+    return parsedColors
+
+def shiftColor(rgb,mag=20):
+    
+    """
+    Method to adjust rgba slightly slightly.
+    """
+    
+    rgb_adj = []
+    
+    for i in np.arange(3):
+        
+        r = np.random.choice([-1,1])
+        print(r)
+        m = (1*r*mag)
+        
+        adj = rgb[i]+m
+        
+        if adj > 255:
+            adj = adj - 2*mag
+        elif adj < 1:
+            adj = adj + 2*mag
+        
+        rgb_adj.append(adj)
+    
+    return rgb_adj
+        
+        
