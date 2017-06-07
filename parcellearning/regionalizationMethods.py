@@ -68,17 +68,13 @@ def computeLabelLayers(labelFile,surfaceAdjacency,borderFile):
     # get set of non-zero labels in label file
     L = set(label) - set([0])
     
-    Layers = {}.fromkeys(L)
+    layers = {}.fromkeys(L)
     
-    layers = Parallel(n_jobs=NUM_CORES)(delayed(labelLayers)(lab,
-                      np.where(label == lab)[0],
-                      surfAdj,borders[lab]) for lab in L)
-    
-    for i,l in enumerate(L):
+    for lab in L:
+        layers[lab] = labelLayers(lab,np.where(label == lab)[0],surfAdj,
+              borders[lab])
 
-        Layers[l] = layers[i]
-        
-    return Layers
+    return layers
 
 def labelLayers(lab,labelIndices,surfAdj,borderIndices):
     
@@ -171,13 +167,13 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
             if isinstance(distances[n],list):
                 distances[n] = min(distances[n])
 
-    layers = {k: [] for k in set(distances.values())}
+    layered = {k: [] for k in set(distances.values())}
     
     for vertex in distances.keys():
         dist = distances[vertex]
-        layers[dist].append(vertex)
+        layered[dist].append(vertex)
         
-    return layers      
+    return layered      
 
 def layerCondensation(layers,level):
     
