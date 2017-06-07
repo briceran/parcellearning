@@ -48,7 +48,7 @@ def coreBoundaryVertices(labelFile,surfaceAdjacency):
             # if vertex is isolated instance of lab (i.e. noise), exclude it
             selfLabels = neighborLabels.count(lab)
             
-            if len(set(neighborLabels)) > 1 and selfLabels > 1:
+            if len(set(neighborLabels)) > 1 and selfLabels > 0:
                 
                 borderVertices[lab].append(i)
     
