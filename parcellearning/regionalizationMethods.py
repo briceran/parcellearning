@@ -138,9 +138,7 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
                                                            target = b)
                         except:
                             sg_nb = None
-                            
                         distances[n].append(sg_nb)
-                    distances[n] = min(distances[n])
                 # if the border vertices are an integer
                 else:
                     try:
@@ -149,9 +147,7 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
                                                         target=sg_borders)
                     except:
                         sg_nb = None
-                    
                     distances[n].append(sg_nb)
-                distances[n] = min(distances[n])
                 
         # if the subGraph internal nodes are a single integer
         else:
@@ -164,9 +160,7 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
                                                            target = b)
                     except:
                         sg_nb = None
-                            
-                        distances[n].append(sg_nb)
-                    distances[n] = min(distances[n])
+                    distances[n].append(sg_nb)
                     
             # if the border vertices are an integer
             else:
@@ -176,9 +170,12 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
                                                     target=sg_borders)
                 except:
                     sg_nb = None
-                
                 distances[n].append(sg_nb)
-            distances[n] = min(distances[n])
+                
+    for n in distances.key():
+        if distances[n]:
+            if isinstance(distances[n],list):
+                distances[n] = min(distances[n])
 
     layers = {k: [] for k in set(distances.values())}
     
