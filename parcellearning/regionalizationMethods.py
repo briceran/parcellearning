@@ -116,13 +116,22 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
         
         sg_nodes = subGraph.nodes()
         
+        # get subgraph border indices
         sg_borders = list(set(borderIndices).intersection(sg_nodes))
+        # get subgraph internal indices
         sg_internal = list(set(internalNodes).intersection(sg_nodes))
         
         for i,n in sg_internal:
-            for b in sg_borders:
+            
+            if isinstance(sg_borders,list):
+                for b in sg_borders:
+                    try:
+                        sg_nb = nx.shortest_path_length(subGraph,source=n,target=b)
+                    except:
+                        sg_nb = None
+            elif isinstance(sg_borders,int):
                 try:
-                    sg_nb = nx.shortest_path_length(subGraph,source=n,target=b)
+                    sg_nb = nx.shortest_path_length(subGraph,source=n,target=sg_borders)
                 except:
                     sg_nb = None
                 
