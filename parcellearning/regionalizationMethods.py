@@ -13,6 +13,8 @@ import networkx as nx
 from joblib import Parallel, delayed
 import multiprocessing
 
+NUM_CORES = multiprocessing.cpu_count()
+
 def coreBoundaryVertices(labelFile,surfaceAdjacency):
     
     """
