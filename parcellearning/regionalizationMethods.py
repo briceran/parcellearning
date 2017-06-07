@@ -115,11 +115,15 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
     for subGraph in nx.connected_component_subgraphs(G):
         
         sg_nodes = subGraph.nodes()
+        print('subgraph nodes: ',sg_nodes)
         
         # get subgraph border indices
         sg_borders = list(set(borderIndices).intersection(sg_nodes))
+        print('subgraph borders: ',sg_borders)
+        
         # get subgraph internal indices
         sg_internal = list(set(internalNodes).intersection(sg_nodes))
+        print('subgraph internals: ',sg_internal)
         
         # if the subGraph internal nodes are a list
         if isinstance(sg_internal,list):
