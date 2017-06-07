@@ -71,8 +71,7 @@ def computeLabelLayers(labelFile,surfaceAdjacency,borderFile):
     layers = {}.fromkeys(L)
     
     for lab in L:
-        layers[lab] = labelLayers(lab,np.where(label == lab)[0],surfAdj,
-              borders[lab])
+        layers[lab] = labelLayers(lab,np.where(label == lab)[0],surfAdj,borders[lab])
 
     return layers
 
