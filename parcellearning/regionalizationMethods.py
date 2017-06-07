@@ -114,16 +114,12 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
     # here, we allow for connected components in the regions
     for subGraph in nx.connected_component_subgraphs(G):
         
+        # get subgraph nodes
         sg_nodes = subGraph.nodes()
-        print('subgraph nodes: ',sg_nodes)
-        
         # get subgraph border indices
         sg_borders = list(set(borderIndices).intersection(sg_nodes))
-        print('subgraph borders: ',sg_borders)
-        
         # get subgraph internal indices
         sg_internal = list(set(internalNodes).intersection(sg_nodes))
-        print('subgraph internals: ',sg_internal)
         
         # if the subGraph internal nodes are a list
         if isinstance(sg_internal,list):
@@ -172,7 +168,7 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
                     sg_nb = None
                 distances[n].append(sg_nb)
                 
-    for n in distances.key():
+    for n in distances.keys():
         if distances[n]:
             if isinstance(distances[n],list):
                 distances[n] = min(distances[n])
