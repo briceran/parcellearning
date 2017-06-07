@@ -121,17 +121,55 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
         # get subgraph internal indices
         sg_internal = list(set(internalNodes).intersection(sg_nodes))
         
-        for i,n in sg_internal:
+        # if the subGraph internal nodes are a list
+        if isinstance(sg_internal,list):
+            for n in sg_internal:
             
+                # if the border vertices are a list
+                if isinstance(sg_borders,list):
+                    for b in sg_borders:
+                        try:
+                            sg_nb = nx.shortest_path_lengh(subGraph,
+                                                           source=n,
+                                                           target = b)
+                        except:
+                            sg_nb = None
+                            
+                        distances[n].append(sg_nb)
+                    distances[n] = min(distances[n])
+                # if the border vertices are an integer
+                else:
+                    try:
+                        sg_nb = nx.shortest_path_length(subGraph,
+                                                        source=n,
+                                                        target=sg_borders)
+                    except:
+                        sg_nb = None
+                    
+                    distances[n].append(sg_nb)
+                distances[n] = min(distances[n])
+                
+        # if the subGraph internal nodes are a single integer
+        else:
+            # if the border vertices are a list
             if isinstance(sg_borders,list):
                 for b in sg_borders:
                     try:
-                        sg_nb = nx.shortest_path_length(subGraph,source=n,target=b)
-                    except:
-                        sg_nb = None
-            elif isinstance(sg_borders,int):
+                        sg_nb = nx.shortest_path_lengh(subGraph,
+                                                           source=sg_internal,
+                                                           target = b)
+                        except:
+                            sg_nb = None
+                            
+                        distances[n].append(sg_nb)
+                    distances[n] = min(distances[n])
+                    
+            # if the border vertices are an integer
+            else:
                 try:
-                    sg_nb = nx.shortest_path_length(subGraph,source=n,target=sg_borders)
+                    sg_nb = nx.shortest_path_length(subGraph,
+                                                    source=sg_internal,
+                                                    target=sg_borders)
                 except:
                     sg_nb = None
                 
