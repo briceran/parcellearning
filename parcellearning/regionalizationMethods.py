@@ -65,6 +65,7 @@ def computeLabelLayers(labelFile,surfaceAdjacency,borderFile):
     surfAdj = ld.loadPick(surfaceAdjacency)
     borders = ld.loadPick(borderFile)
     
+    # get set of non-zero labels in label file
     L = set(label) - set([0])
     
     Layers = {}.fromkeys(L)
@@ -93,34 +94,40 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
     
     print('Computing layers for label {}.'.format(lab))
     
-    regionSurfAdj = {k: [] for k in labelIndices}
+    internalNodes = list(set(labelIndices).difference(borderIndices))
     
     # compute condensed adjacency list corresponding to vertices in ROI
+    regionSurfAdj = {k: [] for k in labelIndices}
+    
     for li in labelIndices:
         
         fullNeighbs = surfAdj[li]
         regionSurfAdj[li] = list(set(labelIndices).intersection(fullNeighbs))
         
+    # generate graph of condensed surface adjacency file
     G = nx.from_dict_of_lists(regionSurfAdj)
+    
+    distances = {n: [] for n in internalNodes}
+    
+    # here, we allow for connected components in the regions
+    for subGraph in nx.connected_component_subgraphs(G):
         
-    nonBorders = list(set(labelIndices).difference(borderIndices))
-    
-    distances = {n: [] for n in nonBorders}
-    
-    for i,n in enumerate(nonBorders):
-        for b in borderIndices:
-            # see if there is a path between the source node and target node
-            try:
-                sp_nb = nx.shortest_path_length(G,source=n,target=b)
-            # otherwise set distance to none
-            except:
-                sp_nb = None
+        sg_nodes = subGraph.nodes()
+        
+        sg_borders = list(set(borderIndices).intersection(sg_nodes))
+        sg_internal = list(set(internalNodes).intersection(sg_nodes))
+        
+        for i,n in sg_internal:
+            for b in sg_borders:
+                try:
+                    sg_nb = nx.shortest_path_length(subGraph,source=n,target=b)
+                except:
+                    sg_nb = None
+                
+                distances[n].append(sg_nb)
+            distances[n] = min(distances[n])
 
-            distances[n].append(sp_nb)
-        
-        distances[n] = min(distances[n])
-        
-    layers = {k: [] for k in distances.values()}
+    layers = {k: [] for k in set(distances.values())}
     
     for vertex in distances.keys():
         dist = distances[vertex]
