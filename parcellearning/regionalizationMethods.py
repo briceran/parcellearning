@@ -88,6 +88,8 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
         surfAdj : surface adjacency file corresponding to whole surface
         borderIndices : indices corresponding to border of ROI
     """
+    
+    print ('Computing layers for label {}.'.format(lab))
 
     internalNodes = list(set(labelIndices).difference(borderIndices))
     
