@@ -10,6 +10,9 @@ import loaded as ld
 import numpy as np
 import networkx as nx
 
+from joblib import Parallel, delayed
+import multiprocessing
+
 def coreBoundaryVertices(labelFile,surfaceAdjacency):
     
     """
@@ -65,8 +68,12 @@ def computeLabelLayers(labelFile,surfaceAdjacency,borderFile):
     
     layers = {}.fromkeys(L)
     
-    for lab in L:
-        layers[lab] = labelLayers(lab,np.where(label == lab)[0],surfAdj,borders[lab])
+    fullList = Parallel(n_jobs=NUM_CORES)(delayed(labelLayers)(lab,
+                        np.where(label == lab)[0],
+                        surfAdj,borders[lab] for lab in L))
+    
+    for i,lab in enumerate(L):
+        layers[lab] = fullList[i]
 
     return layers
 
