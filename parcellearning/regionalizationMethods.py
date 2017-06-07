@@ -43,7 +43,7 @@ def coreBoundaryVertices(labelFile,surfaceAdjacency):
             # get neighboring vertices of vertex i
             neighbors = surfAdj[i]
             # get labels of neighbors of vertex i
-            neighborLabels = label[neighbors]
+            neighborLabels = list(label[neighbors])
             
             # if vertex is isolated instance of lab (i.e. noise), exclude it
             selfLabels = neighborLabels.count(lab)
