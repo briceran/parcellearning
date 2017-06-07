@@ -72,7 +72,7 @@ def computeLabelLayers(labelFile,surfaceAdjacency,borderFile):
     
     fullList = Parallel(n_jobs=NUM_CORES)(delayed(labelLayers)(lab,
                         np.where(label == lab)[0],
-                        surfAdj,borders[lab] for lab in L))
+                        surfAdj,borders[lab]) for lab in L)
     
     for i,lab in enumerate(L):
         layers[lab] = fullList[i]
