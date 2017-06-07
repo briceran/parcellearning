@@ -106,6 +106,8 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
         
     # generate graph of condensed surface adjacency file
     G = nx.from_dict_of_lists(regionSurfAdj)
+    nComp = nx.number_connected_components(G)
+    print('Label {} has {} connected components.'.format(lab,nComp))
     
     distances = {n: [] for n in internalNodes}
     
