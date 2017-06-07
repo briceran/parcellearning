@@ -10,11 +10,6 @@ import loaded as ld
 import numpy as np
 import networkx as nx
 
-from joblib import Parallel, delayed
-import multiprocessing
-
-NUM_CORES = multiprocessing.cpu_count()
-
 def coreBoundaryVertices(labelFile,surfaceAdjacency):
     
     """
@@ -86,9 +81,7 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
         surfAdj : surface adjacency file corresponding to whole surface
         borderIndices : indices corresponding to border of ROI
     """
-    
-    print('Computing layers for label {}.'.format(lab))
-    
+
     internalNodes = list(set(labelIndices).difference(borderIndices))
     
     # compute condensed adjacency list corresponding to vertices in ROI
