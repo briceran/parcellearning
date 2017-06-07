@@ -162,8 +162,8 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
                         sg_nb = nx.shortest_path_lengh(subGraph,
                                                            source=sg_internal,
                                                            target = b)
-                        except:
-                            sg_nb = None
+                    except:
+                        sg_nb = None
                             
                         distances[n].append(sg_nb)
                     distances[n] = min(distances[n])
