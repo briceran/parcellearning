@@ -234,6 +234,7 @@ def neighborhoodErrorMap(core,labelAdjacency,truthLabFile,
         truthLabFile : ground truth label file
         predLabFile : predicted label file
         labelLookup : label color lookup table
+        outputColorMap : new color map for label files
     """
     
     # load files
