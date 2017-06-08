@@ -47,21 +47,21 @@ subjects = [x.strip() for x in subjects]
 
 
 labelDir = args.labelDir
-labelExtension = args.labelExtension
+labelExt = args.labelExt
 
-boundaryDir = args.boundaryDirectory
-boundaryExtension = args.boundaryExtension
+boundaryDir = args.boundaryDir
+boundaryExt = args.boundaryExt
 
-outDir = args.outputDirectory
-outExt = args.outputExtension
+outDir = args.outputDir
+outExt = args.outputExt
 
 
 for s in subjects:
     cond = True
     
-    inLabel = ''.join([labelDir,s,labelExtension])
+    inLabel = ''.join([labelDir,s,labelExt])
     print(inLabel)
-    inBound = ''.join([boundaryDir,s,boundaryExtension])
+    inBound = ''.join([boundaryDir,s,boundaryExt])
     print(inBound)
     outFile = ''.join([outDir,s,outExt])
     
