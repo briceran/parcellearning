@@ -198,6 +198,8 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
             for k in sg_internal:
                 distances[k] = [v for j,v in sp[k].items() if j in sg_border]
                 distances[k] = min(distances[k])
+            
+            print(distances)
 
     layered = {k: [] for k in set(distances.values())}
     
