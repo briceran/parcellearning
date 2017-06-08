@@ -10,10 +10,76 @@ import loaded as ld
 import numpy as np
 import networkx as nx
 
+from sklearn import metrics
+
 from joblib import Parallel, delayed
 import multiprocessing
 
 NUM_CORES = multiprocessing.cpu_count()
+
+#####
+"""
+Methods relating to performing regionalization of a time series, using the 
+data provided in the level structures.
+"""
+#####
+
+def regionalizeStructures(timeSeries,levelStructures,level,midlines,
+                          measure='median',R=180):
+    
+    """
+    Method to regionalize the resting state connectivity, using only vertices
+    included at a minimum level away from the border vertices.
+    
+    Parameters:
+    - - - - -
+        timeSeries : input resting state file
+        levelStrucutres : levelStructures file created by computeLabelLayers
+        level : depth to constaint layers at
+        midlines : path to midline indices
+        measur
+    """
+    
+    assert measure in ['median','mean']
+    assert level >= 1
+    
+    
+    resting = ld.loadMat(timeSeries)
+    midlines = ld.loadMat(midlines)
+    levelSets = ld.loadPick(levelStructures)
+    
+    condensedLevels = layerCondensation(levelSets,level)
+    
+    regionalized = np.zeros((resting.shape[0],R))
+    
+    for region_id in condensedLevels.keys():
+        
+        subregion = condensedLevels[region_id]
+        subregion = list(set(subregion).difference(set(midlines)))
+        
+        subrest = resting[subregion,:]
+        
+        correlated = metrics.pairwise.pairwise_distances(resting,subrest,
+                                                         metric='correlation')
+        
+        if measure == 'median':
+            regionalized[:,region_id] = np.median(correlated,axis=1)
+        else:
+            regionalized[:,region_id] = np.mean(correlated,axis=1)
+        
+    return regionalized
+        
+        
+        
+        
+        
+        
+
+#####
+"""
+Methods to compute level structures on a cortical map file
+"""
+#####
 
 def coreBoundaryVertices(labelFile,surfaceAdjacency):
     
@@ -178,6 +244,12 @@ def layerCondensation(layers,level):
         condensedLayers[k] = deepVertices
         
     return condensedLayers
+
+#####
+"""
+Methods relating to visualizing predicted cortical maps.
+"""
+#####
 
 def parseColorLookUpFile(lookupTable):
     
