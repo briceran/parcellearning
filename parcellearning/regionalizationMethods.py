@@ -147,7 +147,7 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
             distances[key] = None
 
     layered = {k: [] for k in set(distances.values())}
-
+    
     for vertex in distances.keys():
         dist = distances[vertex]
         layered[dist].append(vertex)
@@ -241,13 +241,25 @@ def neighborhoodErrorMap(core,labelAdjacency,truthLabFile,
     truth = ld.loadGii(truthLabFile,0)
     pred = ld.loadGii(predLabFile,0)
     
-    # initialize new color map file
-    color_file = open(outputColorMap,"w")
-    
     # extract current colors from colormap
     parsedColors = parseColorLookUpFile(labelLookup)
     
-    # get labels that neighbor core label
+
+
+    # initialize new color map file
+    color_file = open(outputColorMap,"w")
+
+    trueColors = ' '.join(map(str,[255,255,255]))
+    trueName = 'Label {}'.format(core)
+    trueRGBA = '{} {} {}\n'.format(core,trueColors,255)
+    
+    trueStr = '\n'.join([trueName,trueRGBA])
+    color_file.writelines(trueStr)
+    
+    
+    
+    
+    # get labels that neighbor core
     neighbors = labAdj[core]
     # get indices of core label in true map
     truthInds = np.where(truth == core)[0]
@@ -256,59 +268,40 @@ def neighborhoodErrorMap(core,labelAdjacency,truthLabFile,
     visualizeMap = np.zeros((truth.shape))
     visualizeMap[truthInds] = core
     
-    trueColors = [255,255,255]
-    trueColors = map(str,trueColors)
-    
-    trueName = 'Label {}'.format(core)
-    trueRGBA = '{} {} {}\n'.format(core,' '.join(trueColors),255)
-    
-    trueStr = '\n'.join([trueName,trueRGBA])
-    color_file.writelines(trueStr)
-    
     # get predicted label values existing at truthInds
     predLabelsTruth = pred[truthInds]
-    print('confused labels: ',set(predLabelsTruth))
 
     for n in neighbors:
         
-        originalLabel = n
+        # get color code for label, adjust and write text to file
+        oriName = 'Label {}'.format(n)
+        oriCode = parsedColors[n]
+        oriColors = ' '.join(map(str,oriCode))
+        oriRGBA = '{} {} {}\n'.format(n,oriColors,255)
+        oriStr = '\n'.join([oriName,oriRGBA])
         
-        # get color code for label, and adjust
-        colorCode = parsedColors[n]
-        adjColors = shiftColor(colorCode,mag=20)
-        adjColors = map(str,adjColors)
+        color_file.writelines(oriStr)
         
-        # convert original code to string
-        originalColorStr = map(str,colorCode)
+        adjLabel = n+180
+        adjName = 'Label {}'.format(adjLabel)
+        adjColors = shiftColor(oriCode,mag=20)
+        adjColors = ' '.join(map(str,adjColors))
+        adjRGBA = '{} {} {}\n'.format(adjLabel,adjColors,255)
+        adjStr = '\n'.join([adjName,adjRGBA])
         
-        n_inds = np.where(truth == originalLabel)[0]
-        visualizeMap[n_inds] = originalLabel
+        color_file.writelines(adjStr)
         
-        # write original label data to text file
-        originalLabelName = 'Label {}'.format(originalLabel)
-        originalRGBA = '{} {} {}\n'.format(originalLabel,
-                        ' '.join(originalColorStr),255)
-        originalStr = '\n'.join([originalLabelName,originalRGBA])
         
-        color_file.writelines(originalStr)
+        # find where true map == n and set this value
+        n_inds = np.where(truth == n)[0]
+        visualizeMap[n_inds] = n
         
-        # create new label, outside original bounds
-        newLabel = originalLabel+180
-        
-        # write new label data to text file
-        label_name = 'Label {}'.format(newLabel)
-        labelRGBA  = '{} {} {}\n'.format(newLabel,' '.join(adjColors),255)
-        newStr = '\n'.join([label_name,labelRGBA])
-        
-        color_file.writelines(newStr)
-        
+        # find where prediction(core) == n, and set to adjusted value
         n_inds = np.where(predLabelsTruth == n)[0]
-        visualizeMap[truthInds[n_inds]] = newLabel
+        visualizeMap[truthInds[n_inds]] = adjLabel
     
     color_file.close()
-    
-    
-    
+
     return visualizeMap
         
         
