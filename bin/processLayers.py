@@ -19,43 +19,32 @@ import pickle
 __author__ = 'kristianeschenburg'
 
 parser = argparse.ArgumentParser(description='This function computes the level structures of a cortical map file.')
-parser.add_argument('-dataDir','--dataDirectory', help='Main directory where data is housed.',required=True)
 
 parser.add_argument('-sl','--subjectList', help='Name of file containing subject IDs.',required=True)
-
 parser.add_argument('-surfAdj','--surfaceAdjacency', help='Path to surface adjacency file.',required=True)
 
 parser.add_argument('-lDir','--labelDir',help='Path to label files.',required=True)
-parser.add_argument('-lExt','--labelExtension',help='Extension of label files.',required=True)
+parser.add_argument('-lExt','--labelExt',help='Extension of label files.',required=True)
 
-parser.add_argument('-bDir','--boundaryDirectory',help='Path to boundary vertex files.',required=True)
-parser.add_argument('-bExt','--boundaryExtension',help='Boundary vertex file extension.',required=True)
+parser.add_argument('-bDir','--boundaryDir',help='Path to boundary vertex files.',required=True)
+parser.add_argument('-bExt','--boundaryExt',help='Boundary vertex file extension.',required=True)
 
-parser.add_argument('-oDir','--outputDirectory',help='Output directory for level structures.',required=True)
-parser.add_argument('-oExt','--outputExtension',help='Output level structure file extension.',required=True)
+parser.add_argument('-oDir','--outputDir',help='Output directory for level structures.',required=True)
+parser.add_argument('-oExt','--outputExt',help='Output level structure file extension.',required=True)
 
 args = parser.parse_args()
 
-
-print ("Data directory: %s\n" % ''.join([args.dataDirectory]))
-print ("Subject list: %s\n" % args.subjectList)
-print ("Surface adjacency file: %s\n" % ''.join([args.dataDirectory,args.surfaceAdjacency]))
-print ("Label extension: %s\n" % ''.join([args.labelExtension]))
-print ("Output directory: %s\n" % args.outputDirectory) 
-
-
-dataDir = args.dataDirectory
 subjectList = args.subjectList
-surfAdjFile = ''.join([dataDir,args.surfaceAdjacency])
+surfAdjFile = ''.join([args.surfaceAdjacency])
 
 
 print('Loading subject list.')
-subjectList = ''.join([dataDir,subjectList])
-
+subjectList = ''.join([subjectList])
 
 with open(subjectList,"rb") as inFile:
     subjects = inFile.readlines()
 subjects = [x.strip() for x in subjects]
+
 
 labelDir = args.labelDir
 labelExtension = args.labelExtension
@@ -74,7 +63,7 @@ for s in subjects:
     print(inLabel)
     inBound = ''.join([boundaryDir,s,boundaryExtension])
     print(inBound)
-    outFile = ''.join([dataDir,outDir,s,outExt])
+    outFile = ''.join([outDir,s,outExt])
     
     if not os.path.isfile(inLabel):
         cond = False
