@@ -196,11 +196,14 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
             sp = nx.all_pairs_shortest_path_length(subGraph)
             
             for k in sg_internal:
+                
                 distances[k] = [v for j,v in sp[k].items() if j in sg_border]
-                if len(distances[k]):
-                    distances[k] = min(distances[k])
-                else:
-                    distances[k] = None
+    
+    for k in distances.keys():
+        if len(distances[k]):
+            distances[k] = min(distances[k])
+        else:
+            distances[k] = None
 
     layered = {k: [] for k in set(distances.values())}
     
