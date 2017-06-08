@@ -48,24 +48,29 @@ def regionalizeStructures(timeSeries,levelStructures,level,midlines,
     midlines = ld.loadMat(midlines)
     levelSets = ld.loadPick(levelStructures)
     
+    resting[midlines,:] = 0
+    
     condensedLevels = layerCondensation(levelSets,level)
     
     regionalized = np.zeros((resting.shape[0],R))
     
     for region_id in condensedLevels.keys():
         
+        print(region_id)
+        
         subregion = condensedLevels[region_id]
-        subregion = list(set(subregion).difference(set(midlines)))
-        
-        subrest = resting[subregion,:]
-        
-        correlated = metrics.pairwise.pairwise_distances(resting,subrest,
-                                                         metric='correlation')
-        
-        if measure == 'median':
-            regionalized[:,region_id] = np.median(correlated,axis=1)
-        else:
-            regionalized[:,region_id] = np.mean(correlated,axis=1)
+        if len(subregion):
+            subregion = list(set(subregion).difference(set(midlines)))
+            
+            subrest = resting[subregion,:]
+            
+            correlated = metrics.pairwise.pairwise_distances(resting,subrest,
+                                                             metric='correlation')
+
+            if measure == 'median':
+                regionalized[:,region_id-1] = np.median(1-correlated,axis=1)
+            else:
+                regionalized[:,region_id-1] = np.mean(1-correlated,axis=1)
         
     return regionalized
         
@@ -188,29 +193,11 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
             # get subgraph internal indices
             sg_internal = list(set(sg_nodes).intersection(internalNodes))
             
-            # if single elements, convert to lists
-            if isinstance(sg_border,int):
-                sg_border = list([sg_border])
+            sp = nx.all_pairs_shortest_path_length(subGraph)
             
-            if isinstance(sg_internal,int):
-                sg_internal = list([sg_internal])
-                
-            for i,n in enumerate(sg_internal):
-                # iterate over border vertices
-                for b in sg_border:
-                    if nx.has_path(subGraph,source=n,target=b):
-                        sg_nb = nx.shortest_path_length(subGraph,source=n,
-                                                        target=b)
-                    else:
-                        sg_nb = None
-                    distances[n].append(sg_nb)
-    
-    for key in distances.keys():
-        if distances[key]:
-            if isinstance(distances[key],list):
-                distances[key] = min(distances[key])
-        else:
-            distances[key] = None
+            for k in sg_internal:
+                distances[k] = [v for j,v in sp[k].items() if j in sg_border]
+                distances[k] = min(distances[k])
 
     layered = {k: [] for k in set(distances.values())}
     
@@ -237,11 +224,12 @@ def layerCondensation(layers,level):
     for k in layers.keys():
         
         k_label = layers[k]
-        
         deepVertices = [v for j,v in k_label.items() if j >= level]
-        deepVertices = np.concatenate(deepVertices)
         
-        condensedLayers[k] = deepVertices
+        if len(deepVertices):
+            
+            deepVertices = np.concatenate(deepVertices)
+            condensedLayers[k] = deepVertices
         
     return condensedLayers
 
