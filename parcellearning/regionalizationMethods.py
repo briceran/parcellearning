@@ -24,8 +24,8 @@ data provided in the level structures.
 """
 #####
 
-def regionalizeStructures(timeSeries,levelStructures,level,midlines,
-                          measure='median',R=180):
+def regionalizeStructures(timeSeries,levelStructures,level,midlines,R,
+                          measure='median'):
     
     """
     Method to regionalize the resting state connectivity, using only vertices
