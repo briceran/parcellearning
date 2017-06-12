@@ -24,7 +24,7 @@ data provided in the level structures.
 """
 #####
 
-def regionalizeStructures(timeSeries,levelStructures,level,midlines,R,
+def regionalizeStructures(timeSeries,levelStructures,midlines,level,R,
                           measure='median'):
     
     """
