@@ -18,11 +18,10 @@ import argparse
 import sys
 sys.path.append('..')
 
-import parcellearning.loaded as ld
 import parcellearning.regionalizationMethods as RM
 
+import h5py
 import os
-import pickle
 
 __author__ = 'kristianeschenburg'
 
@@ -92,7 +91,8 @@ for s in subjects:
         
         print 'Computing level structures of {}.'.format(s)
         LAY = RM.regionalizeStructures(inRest,inLayer,level,inMid,
-                          measure='median',R=180):
+                                       measure='median',R=180)
         
-        with open(outFile,"wb") as output:
-            pickle.dump(LAY,output,-1)
+        regFile = h5py.File(outFile,'w')
+        regFile['reg'] = LAY
+        regFile.close()

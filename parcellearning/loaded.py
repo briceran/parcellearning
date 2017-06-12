@@ -5,9 +5,10 @@ Created on Thu Mar  2 10:43:58 2017
 @author: kristianeschenburg
 """
 
-import h5py
 import numpy as np
 import nibabel
+
+import h5py
 import os
 import pickle
 import scipy.io as sio
@@ -173,8 +174,37 @@ def loadGii(inFile,darray):
         # if data is instance of Nifti2Image
         elif isinstance(data,nibabel.nifti2.Nifti2Image):
             return np.squeeze(np.asarray(data.get_data()))
+        
+def loadH5(inFile,keys):
+    
+    """
+    Method to load hdf5 files.  Not part of specific class.
+    
+    Parameters:
+    - - - - -
+        inFile : input file name
+        keys : attributes contained in hdf5 file to be extracted
+    """
+    
+    parts = str.split(inFile,'/')
+    data = {}
+    
+    if isinstance(keys,str):
+        keys = list([keys])
 
-
+    try:
+        toRead = h5py.File(inFile,'r')
+    except IOError:
+        raise
+    else:
+        for k in keys:
+            if k in toRead.keys():
+                data[k] = np.asarray(toRead[k])
+            else:
+                raise KeyError('{} not in {}.'.format(k,parts[-1]))
+    
+    return data
+    
 def loadPick(inFile,*args):
     
     """
@@ -184,8 +214,8 @@ def loadPick(inFile,*args):
     parts = str.split(inFile,'/')
 
     try:
-        with open(inFile,"rb") as input:
-            data = pickle.load(input)
+        with open(inFile,"rb") as toRead:
+            data = pickle.load(toRead)
     except OSError:
         print('Warning: {} cannot be read.'.format(parts[-1]))
     else:

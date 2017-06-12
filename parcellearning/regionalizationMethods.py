@@ -34,10 +34,16 @@ def regionalizeStructures(timeSeries,levelStructures,level,midlines,
     Parameters:
     - - - - -
         timeSeries : input resting state file
-        levelStrucutres : levelStructures file created by computeLabelLayers
+        
+        levelStrucutres : levelStructures created by computeLabelLayers
+                            ".RegionalLayers.p" file
+                            
         level : depth to constaint layers at
+        
         midlines : path to midline indices
-        measur
+
+        measure : measure to apply to correlation values ['mean','median']
+
     """
     
     assert measure in ['median','mean']
@@ -71,6 +77,8 @@ def regionalizeStructures(timeSeries,levelStructures,level,midlines,
                 regionalized[:,region_id-1] = np.median(1-correlated,axis=1)
             else:
                 regionalized[:,region_id-1] = np.mean(1-correlated,axis=1)
+    
+    regionalized[midlines,:] = 0
         
     return regionalized
         
