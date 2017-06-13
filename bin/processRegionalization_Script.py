@@ -34,7 +34,7 @@ layerDir = dataDir + 'BoundaryVertices/Destrieux/'
 layerExt = '.L.aparc.a2009s.RegionalLayers.p'
 
 outDir = dataDir + 'CorticalRegionalization/FreeSurfer/CentralVertices/'
-outExt = '.aparc.a2009s.Central.Level_2.h5'
+outExt = '.L.aparc.a2009s.Central.Level_2.h5'
 
 for s in subjects:
     cond = True

@@ -60,16 +60,26 @@ def regionalizeStructures(timeSeries,levelStructures,midlines,level,R,
     
     regionalized = np.zeros((resting.shape[0],R))
     
+    # get the central vertices for region_id
     for region_id in condensedLevels.keys():
         
         print(region_id)
         
         subregion = condensedLevels[region_id]
+        subregion = list(set(subregion).difference(set(midlines)))
+        print('# subvertices: {}'.format(len(subregion)))
+        
+        # if subregion has at least 1 vertex
         if len(subregion):
-            subregion = list(set(subregion).difference(set(midlines)))
-            
+
             subrest = resting[subregion,:]
             
+            if np.ndim(subrest) == 1:
+                subrest.shape += (1,)
+            
+            if subrest.shape[1] != resting.shape[1]:
+                subrest = subrest.T
+
             correlated = metrics.pairwise.pairwise_distances(resting,subrest,
                                                              metric='correlation')
 

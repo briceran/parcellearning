@@ -175,7 +175,7 @@ def loadGii(inFile,darray):
         elif isinstance(data,nibabel.nifti2.Nifti2Image):
             return np.squeeze(np.asarray(data.get_data()))
         
-def loadH5(inFile,keys):
+def loadH5(inFile,*keys):
     
     """
     Method to load hdf5 files.  Not part of specific class.
@@ -183,7 +183,9 @@ def loadH5(inFile,keys):
     Parameters:
     - - - - -
         inFile : input file name
-        keys : attributes contained in hdf5 file to be extracted
+        *keys : attributes contained in hdf5 file to be extracted
+                If len(keys) == 1, returns a Numpy array.  Otherwise, returns a dictionary,
+                where keys as elements of keys parameter, and values as attributes in inFile.
     """
     
     parts = str.split(inFile,'/')
@@ -197,11 +199,14 @@ def loadH5(inFile,keys):
     except IOError:
         raise
     else:
-        for k in keys:
-            if k in toRead.keys():
-                data[k] = np.asarray(toRead[k])
-            else:
-                raise KeyError('{} not in {}.'.format(k,parts[-1]))
+        if len(keys) == 1:
+            data = np.asarray(toRead[keys])
+        else:
+            for k in keys:
+                if k in toRead.keys():
+                    data[k] = np.asarray(toRead[k])
+                else:
+                    raise KeyError('{} not in {}.'.format(k,parts[-1]))
     
     return data
     

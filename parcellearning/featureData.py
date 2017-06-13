@@ -82,19 +82,26 @@ class SubjectFeatures(object):
                             'obsevations.  Check input data.')
             
             
-    def addFeature(self,featName,featPath):
+    def addFeature(self,featName,featPath,*args):
         
         """
-        Method to add a new feature to a loaded feature object.
+        Method to add a new feature to a loaded feature object.  If loading a HDF5 file,
+        expects that there is only 1 attribute in the file (num(featPath.keys()) = 1).
+
+        While loaded.loadH5 can return a dictionary of attributes, addFeature expects a
+        single feature.
         
         Parameters:
         - - - - -
             featName : name of feature to include (i.e. 'reg', 'label')
+                        SubjectFeatures object
             
             featPath : path where feature exists
+
+
         """
 
-        tempData = getSingleFeature(featName,featPath)
+        tempData = getSingleFeature(featName,featPath,*args)
         
         cond = True
         if not checkFeatureType(tempData):
@@ -410,7 +417,7 @@ def checkFeatureType(data):
     return isinstance(data,np.ndarray)
 
 
-def getSingleFeature(feat,path):
+def getSingleFeature(feat,path,*args):
     
     """
     Method to get data from a single feature.
@@ -421,16 +428,23 @@ def getSingleFeature(feat,path):
         feat : feature name
         
         path : path to feature data
+
+        *args : (list,str) if loading a HDF5 file, or (int) if loading Gifti file
+
     """
     
     # dictionary of functions, call depends on file extension
-    functions = {'mat': ld.loadMat, 'gii' : ld.loadGii, 'p' : ld.loadPick, 'nii': ld.loadGii}
+    functions = {'gii' : ld.loadGii,
+                 'h5' : ld.loadH5,
+                 'mat' : ld.loadMat,
+                 'nii' : ld.loadGii,
+                 'p' : ld.loadPick}
     
     # get file extension
     parts = str.split(path,'.')
     
     # temporarilly load data
-    tempData = functions[parts[-1]](path,0)
+    tempData = functions[parts[-1]](path,*args)
 
     return tempData
 
