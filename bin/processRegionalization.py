@@ -45,6 +45,7 @@ parser.add_argument('-oExt','--outputExt',help='Output regionalization file exte
 args = parser.parse_args()
 
 print('Loading subject list.')
+subjectList = args.subjectList
 subjectList = ''.join([subjectList])
 
 with open(subjectList,"rb") as inFile:
