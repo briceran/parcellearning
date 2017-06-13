@@ -29,6 +29,7 @@ parser = argparse.ArgumentParser(description='This function computes the level s
 
 parser.add_argument('-sl','--subjectList', help='Name of file containing subject IDs.',required=True)
 parser.add_argument('-level','--layerLevel',help='Level of layers to consider.',required=True)
+parser.add_argument('-reg','--numRegions',help='Number of regions in layers file.',required=True)
 
 parser.add_argument('-restDir','--restingStateDir', help='Path to resting state files.',required=True)
 parser.add_argument('-restExt','--restingStateExt',help='Resting state file extension.',required=True)
@@ -65,14 +66,18 @@ outDir = args.outputDir
 outExt = args.outputExt
 
 level = args.layerLevel
+R = args.numRegions
 
 
 for s in subjects:
     cond = True
     
     inLayer = ''.join([layerDir,s,layerExt])
+    print(inLayer)
     inRest = ''.join([restDir,s,restExt])
+    print(inRest)
     inMid = ''.join([midDir,s,midExt])
+    print(inMid)
     
     outFile = ''.join([outDir,s,outExt])
     
@@ -87,8 +92,8 @@ for s in subjects:
     if cond:
         
         print 'Computing level structures of {}.'.format(s)
-        LAY = RM.regionalizeStructures(inRest,inLayer,level,inMid,
-                                       measure='median',R=180)
+        LAY = RM.regionalizeStructures(inRest,inLayer,inMid,level,R,
+                                       measure='median')
         
         regFile = h5py.File(outFile,'w')
         regFile['reg'] = LAY
