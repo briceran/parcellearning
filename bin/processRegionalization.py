@@ -65,8 +65,8 @@ layerExt = args.layerExt
 outDir = args.outputDir
 outExt = args.outputExt
 
-level = args.layerLevel
-R = args.numRegions
+level = int(args.layerLevel)
+R = int(args.numRegions)
 
 
 for s in subjects:
