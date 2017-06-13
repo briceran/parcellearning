@@ -44,10 +44,6 @@ parser.add_argument('-oExt','--outputExt',help='Output regionalization file exte
 
 args = parser.parse_args()
 
-subjectList = args.subjectList
-surfAdjFile = ''.join([args.surfaceAdjacency])
-
-
 print('Loading subject list.')
 subjectList = ''.join([subjectList])
 
