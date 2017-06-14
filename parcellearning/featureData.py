@@ -170,7 +170,7 @@ class GroupFeatures(object):
     
     Class expects that file structure for a set of subjects to be the same.  
     The individual subject feature matrices have been generated, 
-    and saved somewhere.  For now, we will save them as Pickle files.
+    and saved somewhere.  We will save them as HDF5 files.
     
     Parameters:
     - - - - -
@@ -211,7 +211,7 @@ class GroupFeatures(object):
             exten : extension of BuildSubjectFeatureData pickle files
         """
         
-        if (str.split(exten,'.')[-1] != "p"):
+        if (str.split(exten,'.')[-1] != "h5"):
             print('Warning: Incorrect file extension.')
         else:
             self.exten = exten
@@ -225,27 +225,43 @@ class GroupFeatures(object):
             print('Warning: Input directory does not exist.')
         else:
             self.inputDir = inputDir
+            
+        trainData = {}
+        testData = {}
                     
         # loop over subject IDs
         for subject in self.subjects:
                         
-            inFile = self.inputDir + subject + self.exten
+            inFile = ''.join([self.inputDir,subject,self.exten])
+            sFeats = ld.loadH5(inFile,*['full'])
             
-            feats = ld.loadPick(inFile)
+            ID = sFeats.attrs['ID']
+            train = sFeats.attrs['train']
                 
             # check to make sure subject ID is same as input subject
-            if feats.ID != subject:
+            if ID != subject:
                 raise Exception('Data file ID {} does not match the input '
-                                'subject name {}.'.format(feats.ID,subject))
+                                'subject name {}.'.format(sFeats.ID,subject))
                 
             # if subject data has correct number, names, and sizes of 
             # features
-            if self.checkFeatureNames(feats) and self.checkFeatureSizes(feats):
+            if self.checkFeatureNames(sFeats) and self.checkFeatureSizes(sFeats):
                 # split data into training and testing types
-                if feats.train:
-                    self.training[subject] = feats.data
+                if train:
+                    trainData[subject] = {}.fromkeys(self.features)
+                    
+                    for f in self.features:
+                        trainData[subject][f] = sFeats[f]
+                        
                 else:
-                    self.testing[subject] = feats.data
+                    testData[subject] = {}.fromkeys(self.features)
+                    
+                    for f in self.features:
+                        testData[subject][f] = sFeats[f]
+        
+        self.training = trainData
+        self.testing = testData
+                        
 
     def checkFeatureNames(self,data):
         
@@ -259,28 +275,23 @@ class GroupFeatures(object):
         """
         
         cond = True
-        dataFeatures = set(data.data.keys()).difference({'label'})
+        train = data.attrs['train']
+        ID = data.attrs['ID']
+        
+        dataFeatures = set(data.keys()).difference({'label'})
+        groupFeatures = self.features.keys()
         
         # determine if subject is training or testing data
-        if data.train:
+        if train:
             kind = "Train"
-            enum = data.numFeatures - 1
         else:
             kind = "Test"
-            enum = data.numFeatures
-        
-        # make each subject has the correct number of features
-        if enum != self.count:
-            print('Warning: {} subject {} does not have the same number of '
-                  'features as specified by user.  It will not be added to '
-                  'the compiled data.'.format(kind,data.ID))
-            cond = False
-                    
+
         # make sure the features names are as expected
-        if set(self.features.keys()) != set(dataFeatures):
+        if set(groupFeatures) != set(dataFeatures):
             print('Warning: {} subject {} does not have the same feature'
                   'names as specified by user.  It will not be added to '
-                  'the compiled data'.format(kind,data.ID))
+                  'the compiled data'.format(kind,ID))
             cond = False
         
         return cond
@@ -293,26 +304,29 @@ class GroupFeatures(object):
         """
         
         cond = True
-        dataFeatures = set(data.data.keys()).difference({'label'})
+        ID = data.attrs['ID']
+        
+        dataFeatures = set(data.keys()).difference({'label'})
+        features = self.features
                 
         # loop through the expected features
-        for f in self.features.keys():
+        for f in features:
 
             # check if current feature exists in subject features
             if f in dataFeatures:
                             
-                if data.data[f].ndim == 1:
-                    data.data[f].shape += (1,)
-                
-                size = data.data[f].shape[1]
-                
+                if data[f].ndim == 1:
+                    data[f].shape += (1,)
+                    
+                yDim = data[f].shape[1]
+
                 # check that y-dim is same as expected number of regions
-                if size != self.features[f]:
-                    print('Subject {}, feature {} has size of {}, '
-                          'but expecting {}.'.format(data.ID,f,size,self.features[f]))
+                if yDim != features[f]:
+                    print('Subject {}, feature {}, has size of {}, '
+                          'but expecting {}.'.format(ID,f,yDim,features[f]))
                     cond = False
             else:
-                print('Subject {} does not have feature {}.'.format(data.ID,f))
+                print('Subject {} does not have feature {}.'.format(ID,f))
                 cond = False
 
         return cond
@@ -460,6 +474,48 @@ def saveSubjectFeatures(featureObject,outFile):
                 outFeatures.attrs[attr] = obj.__dict__[attr];
             
             outFeatures.close()
+            
+def saveGroupFeatures(featureObject,outputKeys):
+    
+    """
+    Method to dump training and testing GroupFeatures data into their own HDF5 objects.
+    """
+    
+    obj = featureObject
+    features = obj.features
+    
+    if 'train' in outputKeys:
+        
+        training = obj.training
+        outFile = h5py.File(outputKeys['train'],mode='w')
+        
+        trainSubjects = training.keys()
+            
+        for s in trainSubjects:
+            outFile.create_group(s)
+            
+            for f in features:
+                outFile[s].create_dataset(f,data=training[s][f])
+            
+        outFile.attrs['numSubjects'] = len(trainSubjects)
+        outFile.close()
+    
+    if 'test' in outputKeys:
+        
+        testing = obj.testing
+        outFile = h5py.File(outputKeys['test'],mode='w')
+
+        testSubjects = testing.keys()
+
+        for s in testSubjects:
+            outFile.create_group(s)
+
+            for f in features:
+                outFile[s].create_dataset(f,data=testing[s][f])
+
+        outFile.attrs['numSubjects'] = len(testSubjects)
+        outFile.close()
+        
 
 def checkFeatureSize(N,data):
     
