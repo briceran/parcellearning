@@ -225,3 +225,30 @@ def loadPick(inFile,*args):
         print('Warning: {} cannot be read.'.format(parts[-1]))
     else:
         return data
+    
+def parseH5(h5Object,features):
+    
+    """
+    We are loading the H5 objects as read only.  parseH5 copy the contents of
+    the h5 object to a dictionary.
+    """
+    
+    subjects = h5Object.keys()
+    parsedData = {str(s): {}.fromkeys(features) for s in subjects}
+    
+    for s in subjects:
+        
+        parsedData[s] = {}.fromkeys(features)
+        
+        cond = True
+        for f in features:
+            if f in h5Object[s].keys():
+                parsedData[s][f] = np.asarray(h5Object[s][f])
+            else:
+                cond = False
+        if not cond:
+            del parsedData[s]
+    
+    return parsedData
+                
+                

@@ -85,7 +85,7 @@ def coreData(trainData,core,feats):
         subjFullData = trainData[subj]
         
         # get subject-specific label data
-        label = subjFullData['label']
+        label = np.asarray(subjFullData['label'])
         
         # list, containing "core" label data for each feature
         subjFeatData = []
@@ -500,21 +500,20 @@ def standardize(grouped, features):
     """
 
     if isinstance(grouped, str):
-        trainData = ld.loadH5(grouped, *['full'])
-    elif isinstance(grouped, h5py._hl.files.File):
-        trainData = copy.deepcopy(grouped)
+        trainData = ld.loadH5(grouped, *['full'])        
+    elif isinstance(grouped,h5py._hl.files.File):
+        trainData = grouped        
+    elif isinstance(grouped,dict):
+        trainData = grouped        
     else:
         raise ValueError('Training data cannot be empty.')
-
+        
     subjects = trainData.keys()
 
-    mappings = {}
-    mappings = mappings.fromkeys(subjects)
+    mappings = {}.fromkeys(subjects)
+    scalers = {}.fromkeys(features)
 
-    scalers = {}
-    scalers = scalers.fromkeys(features)
-
-    scale = preprocessing.StandardScaler(with_mean=True, with_std=True)
+    scale = preprocessing.StandardScaler(with_mean=True,with_std=True)
 
     for f in features:
 
@@ -538,7 +537,8 @@ def standardize(grouped, features):
 
         for s in subjects:
             coords = mappings[s]
-            trainData[s][f] = tempData[coords['b']:coords['e'], :]
+            coordData = tempData[coords['b']:coords['e'],:]
+            trainData[s][f] = coordData
 
     return (trainData, scalers)
 

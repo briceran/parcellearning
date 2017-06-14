@@ -204,8 +204,6 @@ class Atlas(object):
 
         neighbors = self.neighbors
 
-        c = 1
-
         for i,l in enumerate(self.labels):
             if l in self.labelData.keys():
 
@@ -247,9 +245,17 @@ class Atlas(object):
             trainData = trainObject
         else:
             raise ValueError('Training object is of incorrect type.')
-            
+
         if not trainData:
             raise ValueError('Training data cannot be empty.')
+            
+            
+        parseFeatures = copy.deepcopy(self.features)
+        parseFeatures.append('label')
+        
+        parsedData = ld.parseH5(trainData,parseFeatures)
+        trainData.close()
+        trainData = parsedData
 
         # get subject IDs in training data
         subjects = trainData.keys()
@@ -292,13 +298,15 @@ class Atlas(object):
         if self.neighborhood == 'adjacency':
             boundary = 'inside'
             threshold = self.hop_size
+            
         else:
             boundary = 'outside'
             threshold = self.thresh_train
 
             neighborhoodMap = lb.mappingFrequency(neighborhoodMap)
-
-        self.neighbors = lb.mappingThreshold(neighborhoodMap, threshold, boundary)
+            neighborhoodMap = lb.mappingThreshold(neighborhoodMap, threshold, boundary)
+            
+        self.neighbors = neighborhoodMap
 
         # check quality of training data to ensure all features have same length,
         # all response vectors have the same number of samples, and that all training data
@@ -314,7 +322,7 @@ class Atlas(object):
             
         if not cond:
             raise ValueError('Training data is flawed.')
-                    
+  
     def predict(self,y,yMatch):
         
         """
@@ -459,13 +467,16 @@ class Atlas(object):
  
         # load test subject data, save as attribtues
         testObject = ld.loadH5(y,*['full'])
-        testMatch = ld.loadPick(yMatch)
+        parsedData = ld.parseH5(testObject,self.features)
+        testObject.close()
+        testObject = parsedData
         
+        data = testObject.values()
+        
+        testMatch = ld.loadPick(yMatch)
+
         self.testMatch = testMatch
         self.testObject = testObject
-
-        ID = testObject.attrs['ID']
-        data = testObject[ID]
 
         if self._scaled:
             scalers = self.scalers

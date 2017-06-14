@@ -251,13 +251,15 @@ class GroupFeatures(object):
                     trainData[subject] = {}.fromkeys(self.features)
                     
                     for f in self.features:
-                        trainData[subject][f] = sFeats[f]
+                        trainData[subject][f] = np.asarray(sFeats[ID][f])
                         
                 else:
                     testData[subject] = {}.fromkeys(self.features)
                     
                     for f in self.features:
-                        testData[subject][f] = sFeats[f]
+                        testData[subject][f] = np.asarray(sFeats[ID][f])
+            
+            sFeats.close()
         
         self.training = trainData
         self.testing = testData
@@ -278,8 +280,8 @@ class GroupFeatures(object):
         ID = data.attrs['ID']
         train = data[ID].attrs['train']
 
-        dataFeatures = set(data[ID].keys()).difference({'label'})
-        groupFeatures = self.features.keys()
+        dataFeatures = data[ID].keys()
+        features = self.features.keys()
         
         # determine if subject is training or testing data
         if train:
@@ -288,7 +290,7 @@ class GroupFeatures(object):
             kind = "Test"
 
         # make sure the features names are as expected
-        if set(groupFeatures) != set(dataFeatures):
+        if set(features) != set(dataFeatures):
             print('Warning: {} subject {} does not have the same feature'
                   'names as specified by user.  It will not be added to '
                   'the compiled data'.format(kind,ID))
@@ -306,7 +308,7 @@ class GroupFeatures(object):
         cond = True
         ID = data.attrs['ID']
         
-        dataFeatures = set(data[ID].keys()).difference({'label'})
+        dataFeatures = data[ID].keys()
         features = self.features
                 
         # loop through the expected features
@@ -433,7 +435,7 @@ def saveSubjectFeatures(featureObject,outFile):
 
             outFeatures = h5py.File(outFile,mode='w')
             outFeatures.create_group(ID)
-            outFeatures.attr['ID'] = ID
+            outFeatures.attrs['ID'] = ID
             
             for k in obj.data.keys():
                 outFeatures[ID].create_dataset(k, data=obj.data[k]);
