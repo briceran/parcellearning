@@ -879,6 +879,3 @@ def atlasPredict(model,testObject,testMappings,**kwargs):
     
     return model.predicted
 
-    
-        
-    
