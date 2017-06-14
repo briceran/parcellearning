@@ -458,16 +458,15 @@ class Atlas(object):
         features = self.features
  
         # load test subject data, save as attribtues
-        testObject = ld.loadPick(y)        
+        testObject = ld.loadH5(y,*['full'])
         testMatch = ld.loadPick(yMatch)
         
         self.testMatch = testMatch
         self.testObject = testObject
-        
-        # if the training data has been scaled, apply scaling 
-        # transformation to test data and merge features
-        data = testObject.data
-        
+
+        ID = testObject.attrs['ID']
+        data = testObject[ID]
+
         if self._scaled:
             scalers = self.scalers
             
