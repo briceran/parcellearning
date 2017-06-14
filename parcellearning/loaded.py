@@ -155,7 +155,7 @@ def loadMat(inFile,*args):
     else:
         print('Input file does not exist.')
 
-def loadGii(inFile,darray):
+def loadGii(inFile,darray=0,*args):
     
     """
     Method to load Gifti files.  Not part of a specific class.
@@ -183,25 +183,25 @@ def loadH5(inFile,*keys):
     Parameters:
     - - - - -
         inFile : input file name
-        *keys : attributes contained in hdf5 file to be extracted
+        keys : attributes contained in hdf5 file to be extracted
                 If len(keys) == 1, returns a Numpy array.  Otherwise, returns a dictionary,
                 where keys as elements of keys parameter, and values as attributes in inFile.
     """
-    
+
     parts = str.split(inFile,'/')
-    data = {}
-    
-    if isinstance(keys,str):
-        keys = list([keys])
 
     try:
         toRead = h5py.File(inFile,'r')
     except IOError:
         raise
     else:
-        if len(keys) == 1:
-            data = np.asarray(toRead[keys])
+        if not keys:
+            key = toRead.keys()[0]
+            data = np.asarray(toRead[key])
+        elif 'full' in keys:
+            data = toRead
         else:
+            data = {}
             for k in keys:
                 if k in toRead.keys():
                     data[k] = np.asarray(toRead[k])
