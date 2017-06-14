@@ -13,14 +13,15 @@ import matchingLibraries as lb
 import loaded as ld
 
 import copy
+import h5py
 import inspect
-import numpy as np
 import os
 import pickle
 
 from joblib import Parallel, delayed
 import multiprocessing
 
+import numpy as np
 from sklearn import ensemble
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 
@@ -241,14 +242,8 @@ class Atlas(object):
         # load and pre-process the training data
 
         if isinstance(trainObject,str):
-            trainData = ld.loadPick(trainObject)
-            
-            # if trainData is SubjectFeatures object (single subject)
-            if isinstance(trainData,fd.SubjectFeatures):
-                self.trainingID = trainData.ID
-                trainData = cu.prepareUnitaryFeatures(trainData)
-
-        elif isinstance(trainObject,dict):
+            trainData = ld.loadH5(trainObject,*['full'])
+        elif isinstance(trainObject,h5py._hl.files.File):
             trainData = trainObject
         else:
             raise ValueError('Training object is of incorrect type.')
@@ -261,7 +256,7 @@ class Atlas(object):
 
         # if exclude_testing is set, the data for these subjects when fitting the models
         if self.exclude_testing:
-            subjects = list(set(subjects)-set(self.exclude_testing))
+            subjects = list(set(subjects).difference(set(self.exclude_testing)))
         
         # if random is set, select random subset of size random from viable training subjects
         if not self.random:
@@ -276,14 +271,14 @@ class Atlas(object):
         # if scale is True, scale each feature of the training data and save the transformation
         # transformation will be applied to incoming test data
         if self.scale:
-            [trainData,scalers] = fd.standardize(trainData,self.features)
+            [trainData,scalers] = cu.standardize(trainData,self.features)
             
             # scaler objects to transform test data
             self.scalers = scalers
             self._scaled = True
 
         # get unique labels in training set
-        self.labels = set(cu.getLabels(trainData)) - set([0,-1])
+        self.labels = set(cu.getLabels(trainData)).difference({0,-1})
         
         # isolate training data corresponding to each label
         self.labelData = cu.partitionData(trainData,feats = self.features)

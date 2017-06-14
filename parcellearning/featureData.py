@@ -234,9 +234,9 @@ class GroupFeatures(object):
                         
             inFile = ''.join([self.inputDir,subject,self.exten])
             sFeats = ld.loadH5(inFile,*['full'])
-            
+
             ID = sFeats.attrs['ID']
-            train = sFeats.attrs['train']
+            train = sFeats[ID].attrs['train']
                 
             # check to make sure subject ID is same as input subject
             if ID != subject:
@@ -275,10 +275,10 @@ class GroupFeatures(object):
         """
         
         cond = True
-        train = data.attrs['train']
         ID = data.attrs['ID']
-        
-        dataFeatures = set(data.keys()).difference({'label'})
+        train = data[ID].attrs['train']
+
+        dataFeatures = set(data[ID].keys()).difference({'label'})
         groupFeatures = self.features.keys()
         
         # determine if subject is training or testing data
@@ -306,7 +306,7 @@ class GroupFeatures(object):
         cond = True
         ID = data.attrs['ID']
         
-        dataFeatures = set(data.keys()).difference({'label'})
+        dataFeatures = set(data[ID].keys()).difference({'label'})
         features = self.features
                 
         # loop through the expected features
@@ -315,10 +315,10 @@ class GroupFeatures(object):
             # check if current feature exists in subject features
             if f in dataFeatures:
                             
-                if data[f].ndim == 1:
-                    data[f].shape += (1,)
+                if data[ID][f].ndim == 1:
+                    data[ID][f].shape += (1,)
                     
-                yDim = data[f].shape[1]
+                yDim = data[ID][f].shape[1]
 
                 # check that y-dim is same as expected number of regions
                 if yDim != features[f]:
@@ -331,39 +331,6 @@ class GroupFeatures(object):
 
         return cond
 
-    def saveData(self,outputs):
-        
-        """
-        Method to save groupwise training or testing data.
-        
-        Parameters:
-        - - - - - 
-            outputs : dictionary, where keys are 'train' or 'test', and the
-                        values are output file names.
-        """
-                
-        # If user wants to write training data
-        # check that correct key is specified
-        if outputs.has_key('train'):
-            if self.training:
-                try:
-                    with open(outputs['train'],"wb") as trainOut:
-                        pickle.dump(self.training,trainOut,-1)
-                except IOError:
-                    print('Cannot save to file.')
-            else:
-                print('There is no training data to write.')
-        
-        if outputs.has_key('test'):
-            if self.testing:
-                try:
-                    with open(outputs['test'],"wb") as testOut:
-                        pickle.dump(self.testing,testOut,-1)
-                except IOError:
-                    print('Cannot save to file.')
-            else:
-                print('There is no testing data to write.')
-                
 
 def addToFeaturesObject(featureObject,newFeats):
     
@@ -457,6 +424,7 @@ def saveSubjectFeatures(featureObject,outFile):
     """
     
     obj = featureObject
+    ID = obj.ID
     
     if len(obj.data.keys()) == 0 or not hasattr(obj,'data'):
         print('Data attribute for {} is empty.  Cannot save.'.format(obj.ID))
@@ -464,14 +432,16 @@ def saveSubjectFeatures(featureObject,outFile):
         if obj.compareFeatureSamples():
 
             outFeatures = h5py.File(outFile,mode='w')
+            outFeatures.create_group(ID)
+            outFeatures.attr['ID'] = ID
             
             for k in obj.data.keys():
-                outFeatures.create_dataset(k, data=obj.data[k]);
+                outFeatures[ID].create_dataset(k, data=obj.data[k]);
                 
-            atrribs = set(obj.__dict__).difference({'data','features'})
+            atrbs = set(obj.__dict__).difference({'data','features'})
             
-            for attr in atrribs:
-                outFeatures.attrs[attr] = obj.__dict__[attr];
+            for attr in atrbs:
+                outFeatures[ID].attrs[attr] = obj.__dict__[attr];
             
             outFeatures.close()
             
@@ -532,67 +502,3 @@ def checkFeatureType(data):
     """
     
     return isinstance(data,np.ndarray)
-
-
-def standardize(grouped,features):
-
-    """
-    Method to demean the data from a GroupFeatures object.  This object is
-    just a dictionary of dictionaries -- each main key is a subject ID, with
-    sub-keys correpsonding to features i.e. resting-state, cortical metrics.
-    
-    Standardization is performed upon run-time -- we might want to save the
-    mean and variance of each feature, and will return these, along with a 
-    demeaned and unit-varianced GroupFeatures object.
-    
-    Parameters:
-    - - - - -
-        grouped : pickle file -- output of GroupFeatures.save(
-                    {'train': 'outputFile.p'})
-    """
-    
-    if isinstance(grouped,str):
-        trainData = ld.loadPick(grouped)
-    elif isinstance(grouped,dict):
-        trainData = deepcopy(grouped)
-    else:
-        raise ValueError('Training data cannot be empty.')
-        
-    subjects = trainData.keys()
-    
-    mappings = {}
-    mappings = mappings.fromkeys(subjects)
-    
-    scalers = {}
-    scalers = scalers.fromkeys(features)
-    
-    scale = preprocessing.StandardScaler(with_mean=True,with_std=True)
-    
-    for f in features:
-
-        c = 0
-        tempData = []
-        scalers[f] = deepcopy(scale)
-        
-        for s in subjects:
-            
-            mappings[s] = {}
-            
-            subjData = trainData[s][f]
-            [x,y] = subjData.shape
-            mappings[s]['b'] = c
-            mappings[s]['e'] = c+x
-            
-            tempData.append(subjData)
-            c += x
-        
-        tempData = np.row_stack(tempData)
-        tempData = scalers[f].fit_transform(tempData)
-        
-        for s in subjects:
-            
-            coords = mappings[s]
-            trainData[s][f] = tempData[coords['b']:coords['e'],:]
-    
-    return(trainData,scalers)
-        
