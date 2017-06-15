@@ -64,6 +64,7 @@ for s in subjects:
     inBound = ''.join([boundaryDir,s,boundaryExt])
     print(inBound)
     outFile = ''.join([outDir,s,outExt])
+    print(outFile)
     
     if not os.path.isfile(inLabel):
         cond = False
@@ -73,6 +74,10 @@ for s in subjects:
         cond = False
         print 'Boundary file for {} does not exist.'.format(s)
     
+    if os.path.isfile(outFile):
+	cond = False
+	print 'Layer for file {} already exists.'.format(s)
+
     if cond:
         
         print 'Computing level structures of {}.'.format(s)

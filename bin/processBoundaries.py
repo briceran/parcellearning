@@ -76,7 +76,11 @@ for s in subjects:
     if not os.path.isfile(inLabel):
         cond = False
         print 'Label file for {} does not exist.'.format(s)
-    
+   
+    if os.path.isfile(outFile):
+	cond = False
+	print 'Boundary vertices for {} already exist.'.format(s)
+ 
     if cond:
         
         print 'Computing boundary vertices of {}.'.format(s)

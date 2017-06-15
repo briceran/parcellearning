@@ -30,21 +30,22 @@ restExt = '.rfMRI_Z-Trans_merged_CORTEX_LEFT.mat'
 midDir = dataDir + 'Midlines/'
 midExt = '_Midline_Indices.mat'
 
-layerDir = dataDir + 'BoundaryVertices/Destrieux/'
+layerDir = dataDir + 'BoundaryVertices/Destrieux/RegionalLayers/'
 layerExt = '.L.aparc.a2009s.RegionalLayers.p'
+#layerDir = dataDir + 'BoundaryVertices/HCP/RegionalLayers/'
+#layerExt = '.L.HCP.RegionalLayers.p'
 
 outDir = dataDir + 'CorticalRegionalization/FreeSurfer/CentralVertices/'
 outExt = '.L.aparc.a2009s.Central.Level_2.h5'
+#outDir = dataDir + 'CorticalRegionalization/HCP/CentralVertices/'
+#outExt = '.L.HCP.Central.Level_2.h5'
 
 for s in subjects:
     cond = True
     
     inLayer = ''.join([layerDir,s,layerExt])
-    print(inLayer)
     inRest = ''.join([restDir,s,restExt])
-    print(inRest)
     inMid = ''.join([midDir,s,midExt])
-    print(inMid)
     
     outFile = ''.join([outDir,s,outExt])
     
@@ -55,6 +56,10 @@ for s in subjects:
     if not os.path.isfile(inRest):
         cond = False
         print 'Resting state file for {} does not exist.'.format(s)
+
+    if os.path.isfile(outFile):
+    	cond = False
+    	print 'Regional layers for {} already exist.'.format(s)
     
     if cond:
         
