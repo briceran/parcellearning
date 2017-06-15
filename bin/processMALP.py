@@ -80,7 +80,7 @@ for k in np.arange(iters):
         print('Test subject {}, {} of {}.'.format(test_subj,(j+1),len(testing)))
         
         teobj = dataDir + 'TrainingObjects/FreeSurfer/' + test_subj + '.L.TrainingObject.aparc.a2009s.h5'
-        temps = dataDir + 'MatchingLibraries/Test/' + test_subj + '.MatchingLibrary.Test.p'
+        temps = dataDir + 'MatchingLibraries/Test/' + test_subj + '.VertexLibrary.Test.p'
         
         cond = True
         
