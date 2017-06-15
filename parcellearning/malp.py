@@ -205,7 +205,7 @@ class Atlas(object):
         neighbors = self.neighbors
 
         for i,l in enumerate(self.labels):
-            if l in self.labelData.keys():
+            if l in self.labelData.keys() and l in neighbors.keys():
 
                 # copy the model (due to passing by reference)
                 models[l] = copy.deepcopy(model_selector[model_type])
@@ -237,25 +237,27 @@ class Atlas(object):
 
         """
 
-        # load and pre-process the training data
+        # load the training data
 
         if isinstance(trainObject,str):
             trainData = ld.loadH5(trainObject,*['full'])
         elif isinstance(trainObject,h5py._hl.files.File):
+            trainData = trainObject
+        elif isinstance(trainObject,dict):
             trainData = trainObject
         else:
             raise ValueError('Training object is of incorrect type.')
 
         if not trainData:
             raise ValueError('Training data cannot be empty.')
-            
-            
-        parseFeatures = copy.deepcopy(self.features)
-        parseFeatures.append('label')
-        
-        parsedData = ld.parseH5(trainData,parseFeatures)
-        trainData.close()
-        trainData = parsedData
+
+        if isinstance(trainData,h5py._hl.files.File):
+            parseFeatures = copy.deepcopy(self.features)
+            parseFeatures.append('label')
+
+            parsedData = ld.parseH5(trainData,parseFeatures)
+            trainData.close()
+            trainData = parsedData
 
         # get subject IDs in training data
         subjects = trainData.keys()
@@ -354,43 +356,44 @@ class Atlas(object):
         # check to see what type of processing option was provided
         if softmax_type == 'BASE':
             for lab in self.labels:
+                if lab in self.neighbors.keys():
 
-                # compute vertices that map to that label
-                members = self.labelToVertexMaps[lab]
-                            
-                if len(members) > 0:
-    
-                    # compute member labels from lab core classifier
-                    scores = self._predictPoint(mtd,lab,members) 
-    
-                    # save results in self.predict
-                    baseline = cu.updatePredictions(baseline,members,scores)
+                    # compute vertices that map to that label
+                    members = self.labelToVertexMaps[lab]
+                                
+                    if len(members) > 0:
+        
+                        # compute member labels from lab core classifier
+                        scores = self._predictPoint(mtd,lab,members) 
+        
+                        # save results in self.predict
+                        baseline = cu.updatePredictions(baseline,members,scores)
                     
         else:
             for lab in self.labels:
-                members = self.labelToVertexMaps[lab]
-                
-                if len(members) > 0:
+                if lab in self.neighbors.keys():
                     
-                    if softmax_type == 'TREES':
+                    members = self.labelToVertexMaps[lab]
+                    
+                    if len(members) > 0:
                         
-                        predLabs = np.zeros((len(members),1))
-                        
-                        predLabs = treeSoftMax(self.models[lab],
-                                               self.mappingsCutoff,
-                                               members,
-                                               mtd[members,:])
-                                
-                    elif softmax_type == 'FORESTS':
-                        
-                        predLabs = forestSoftMax(self.models[lab],
-                                                        self.mappingsCutoff,
-                                                        members,
-                                                        mtd[members,:])
-
-                    predictedLabels = np.squeeze(predLabs)
-                    baseline = cu.updatePredictions(baseline,
-                                                    members,predictedLabels)
+                        if softmax_type == 'TREES':
+                            
+                            sfmxLabs = treeSoftMax(self.models[lab],
+                                                   self.mappingsCutoff,
+                                                   members,
+                                                   mtd[members,:])
+                                    
+                        elif softmax_type == 'FORESTS':
+                            
+                            sfmxLabs = forestSoftMax(self.models[lab],
+                                                            self.mappingsCutoff,
+                                                            members,
+                                                            mtd[members,:])
+    
+                        predLabs = np.squeeze(sfmxLabs)
+                        baseline = cu.updatePredictions(baseline,members,
+                                                        predLabs)
 
         self.baseline = baseline
         
@@ -467,11 +470,13 @@ class Atlas(object):
  
         # load test subject data, save as attribtues
         testObject = ld.loadH5(y,*['full'])
+        ID = testObject.attrs['ID']
+        
         parsedData = ld.parseH5(testObject,self.features)
         testObject.close()
         testObject = parsedData
         
-        data = testObject.values()
+        data = testObject[ID]
         
         testMatch = ld.loadPick(yMatch)
 
@@ -494,20 +499,10 @@ class Atlas(object):
         vTLM = copy.deepcopy(testMatch.vertLib)
         
         # convert vertex to label mapping counts to frequencies
+        # and threshold labels to include by the mapping frequency
         freqMaps = lb.mappingFrequency(vTLM)
-        
-        # if threshold value is greater than 0, there might be labels 
-        # that will be cutoff -- otherwise, none will be
-        if threshold > 0:
-            threshed = {}.fromkeys(freqMaps.keys())
-            
-            for k in threshed.keys():
-                if freqMaps[k]:
-                    threshed[k] = lb.mappingThreshold(freqMaps[k],threshold)
-                    
-            freqMaps = threshed
-            
-        self.mappingsCutoff = freqMaps
+        threshed = lb.mappingThreshold(freqMaps,threshold,'outside')
+        self.mappingsCutoff = threshed
         
         # Computing label-vertex memberships is time consuming
         # If already precomputed for given test data at specified threshold,
@@ -674,6 +669,7 @@ def treeSoftMax(metaEstimator,mappings,members,memberData):
                 vals = temporaryVals[i]
                 
                 probs = estimateProbs[i,:][inds]
+                print(probs)
                 maxProb = list([np.argmax(probs)])
                 labels.append([vals[j] for j in maxProb])
         
@@ -709,7 +705,7 @@ class MultiAtlas(object):
     """
     
     def __init__(self,features,atlas_size = 1,atlases=None,
-                 exclude_testing = None):
+                 exclude_testing = None,cv=False,cv_size=20):
         
         """
         Method to initialize Mutli-Atlas label propagation scheme.
@@ -737,11 +733,20 @@ class MultiAtlas(object):
         if exclude_testing is not None and not isinstance(exclude_testing,str) and not \
                 isinstance(exclude_testing,list):
             raise ValueError('exclude_testing must by a string or None.')
+
+        if not isinstance(cv,bool):
+            raise ValueError('cv must be of type boolean.')
+
+        if not isinstance(cv_size,int) and cv_size < 1:
+            raise ValueError('cv_size must be a positive integer.')
         
         self.atlas_size = atlas_size
         self.atlases = atlases
         self.features = features
         self.exclude_testing = exclude_testing
+
+        self.cv = cv
+        self.cv_size = cv_size
         
     def set_params(self,**kwargs):
         
@@ -749,12 +754,19 @@ class MultiAtlas(object):
         Update parameters with user-specified dictionary.
         """
         
-        args, varargs, varkw, defaults = inspect.getargspec(self.__init__)
-        
-        if kwargs:
-            for key in kwargs:
-                if key in args:
-                    setattr(self,key,kwargs[key])
+        try: 
+            self.initialized
+        except:
+            args, varargs, varkw, defaults = inspect.getargspec(self.__init__)
+            
+            if kwargs:
+                for key in kwargs:
+                    if key in args:
+                        setattr(self,key,kwargs[key])
+        else:
+            print('Warning: training data has already been intiailized.  '
+                  'New parameters will have no effect.  '
+                  'Reinstantiate the class to update the parameters.')
 
     def initializeTraining(self,trainObject,**kwargs):
         
@@ -766,16 +778,11 @@ class MultiAtlas(object):
             trainObject : training data (either '.p' file, or dictionary)
         """
         
-        # can either load a single SubjectFeatures object
-        # or a nested dictionary structure
+        # load a single SubjectFeatures object or a nested dictionary structure
         if isinstance(trainObject,str):
-            trainData = ld.loadPick(trainObject)
-            
-            if isinstance(trainData,fd.SubjectFeatures):
-                self.trainingID = trainData.ID
-                trainData = cu.prepareUnitaryFeatures(trainData)
-                
-        # otherwise, if provided with dictionary
+            trainData = ld.loadH5(trainObject,*['full'])
+        elif isinstance(trainObject,h5py._hl.files.File):
+            trainData = trainObject
         elif isinstance(trainObject,dict):
             trainData = trainObject
         else:
@@ -783,6 +790,15 @@ class MultiAtlas(object):
             
         if not trainData:
             raise ValueError('Training data cannot be empty.')
+
+        # pre-process if trainData is h5py
+        if isinstance(trainData,h5py._hl.files.File):
+            parseFeatures = copy.deepcopy(self.features)
+            parseFeatures.append('label')
+
+            parsedData = ld.parseH5(trainData,parseFeatures)
+            trainData.close()
+            trainData = parsedData
             
         subjects = trainData.keys()
 
@@ -790,7 +806,7 @@ class MultiAtlas(object):
             self.set_params(**kwargs)
 
         if self.exclude_testing:
-            subjects = list(set(subjects) - set(self.exclude_testing))
+            subjects = list(set(subjects).difference(set(self.exclude_testing)))
         
         if not self.atlases:
             self.atlases = len(subjects)
@@ -798,8 +814,7 @@ class MultiAtlas(object):
             self.atlases = min(self.atlases,len(subjects))
 
         datasets = []
-        
-        
+
         if self.atlas_size == 1:
             subjectSet = np.random.choice(subjects,size=self.atlases,
                                           replace=False)
@@ -817,6 +832,7 @@ class MultiAtlas(object):
                 datasets.append(td)
 
         self.datasets = datasets
+        self.initialized=True
         
 
 def parallelFitting(multiAtlas,maps,features,

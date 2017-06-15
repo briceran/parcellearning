@@ -555,13 +555,16 @@ def mappingThreshold(mapCounts,threshold,limit):
     thresholdC = {k: [] for k in mapCounts.keys()}
 
     for key in mapCounts.keys():
-        zips = zip(mapCounts[key].keys(),mapCounts[key].values())
-
-        if limit == 'inside':
-            passed = [k for k,v in zips if v <= threshold]
+        if mapCounts[key]:
+            zips = zip(mapCounts[key].keys(),mapCounts[key].values())
+    
+            if limit == 'inside':
+                passed = [k for k,v in zips if v <= threshold]
+            else:
+                passed = [k for k,v in zips if v >= threshold]
+    
+            thresholdC[key] = passed
         else:
-            passed = [k for k,v in zips if v >= threshold]
-
-        thresholdC[key] = passed
+            thresholdC[key] = None
 
     return thresholdC
