@@ -66,7 +66,7 @@ for k in np.arange(iters):
     
     print 'Atlas size: {}'.format(size)
     print 'Training size: {}'.format(L)
-    print 'Testing size: {}.'.format(len(testing))
+    print 'Testing size: {}'.format(len(testing))
     
     Atlases = malp.parallelFitting(M,mapData,feats,**kars)
 
