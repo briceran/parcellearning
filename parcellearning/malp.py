@@ -806,7 +806,7 @@ class MultiAtlas(object):
         if kwargs:
             self.set_params(**kwargs)
 
-        if self.exclude_testing:
+        if np.any(self.exclude_testing):
             subjects = list(set(subjects).difference(set(self.exclude_testing)))
         
         if not self.atlases:
