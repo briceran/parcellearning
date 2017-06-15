@@ -32,7 +32,7 @@ mapData = dataDir + 'LabelAdjacency/HCP/Compiled.L.HCP.LabelAdjacency.p'
 inMatchingDir = dataDir + 'MatchingLibraries/Test/'
 
 kars = {'atlas_size': 1,
-        'n_estimators': 60,
+        'n_estimators': 3,
         'max_depth': 5,
         'softmax_type': 'FORESTS'}
 
@@ -71,7 +71,7 @@ for k in np.arange(iters):
     Atlases = malp.parallelFitting(M,mapData,feats,**kars)
 
     extension = '.L.MALP.Atlases_{}.nEst_{}.Size_{}.Depth_{}'.format((k+1),
-                              L,kars['n_estimators'],kars['atlas_size'],kars['depth'])
+                              L,kars['n_estimators'],kars['atlas_size'],kars['max_depth'])
     
     outPickle = dataDir + 'CrossValidated/Iteration_{}'.format(k+1) + extension + '.p'
     
