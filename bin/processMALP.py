@@ -50,8 +50,8 @@ for k in np.arange(iters):
     
     print('Training Iteration: {}'.format(k+1))
     
-    testing = np.random.choice(subjects,size=testSize,
-                                          replace=False)
+    testing = list(np.random.choice(subjects,size=testSize,
+                                          replace=False))
     
     testPredictions = {}.fromkeys(testing)
     
