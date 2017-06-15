@@ -31,10 +31,10 @@ mapData = dataDir + 'LabelAdjacency/HCP/Compiled.L.HCP.LabelAdjacency.p'
 
 inMatchingDir = dataDir + 'MatchingLibraries/Test/'
 
-kars = {'softmax_type':'FORESTS',
-        'depth':5,
-        'n_estimators':60,
-        'atlas_size':1}
+kars = {'atlas_size': 1,
+        'n_estimators': 60,
+        'depth': 5,
+        'softmax_type': 'FORESTS'}
 
 feats = ['fs_central','subcort','sulcal','myelin']
 
@@ -64,7 +64,10 @@ for k in np.arange(iters):
     L = len(M.datasets)
     size = M.atlas_size
     
-    Atlases = malp.parallelFitting(M,mapData,feats)
+    print('MALP atlas size: ',size)
+    print('Training size: ',L)
+    
+    Atlases = malp.parallelFitting(M,mapData,feats,**kars)
     print('Atlas softmax type: {}.'.format(Atlases[0].softmax_type))
     
     extension = '.L.MALP.Atlases_{}.nEst_{}.Size_{}.Depth_{}'.format((k+1),
@@ -98,7 +101,7 @@ for k in np.arange(iters):
         
         if cond:
             
-            Preds = malp.parallelPredicting(Atlases,teobj,temps)
+            Preds = malp.parallelPredicting(Atlases,teobj,temps,**kars)
             preds = np.column_stack(Preds)
             
             outPreds = np.zeros((myl.shape))
