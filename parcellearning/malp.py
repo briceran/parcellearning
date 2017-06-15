@@ -848,11 +848,17 @@ def parallelFitting(multiAtlas,maps,features,
     classArgs = cu.parseKwargs(args[1:],kwargs)
     classifier.set_params(**classArgs)
     
+    print 'Classifier depth: {}'.format(classifier.__dict__['max_depth'])
+    print 'Classifier nEst: {}'.format(classifier.__dict__['n_estimators'])
+    
     BaseAtlas = Atlas(feats=features)
     
     args,_,_,_ = inspect.getargspec(BaseAtlas.__init__)
     atlasArgs = cu.parseKwargs(args[1:],kwargs)
     BaseAtlas.set_params(**atlasArgs)
+    
+    print 'Atlas softmax type: {}'.format(BaseAtlas.softmax_type)
+    
 
     # fit atlas on each component
 

@@ -33,7 +33,7 @@ inMatchingDir = dataDir + 'MatchingLibraries/Test/'
 
 kars = {'atlas_size': 1,
         'n_estimators': 60,
-        'depth': 5,
+        'max_depth': 5,
         'softmax_type': 'FORESTS'}
 
 feats = ['fs_central','subcort','sulcal','myelin']
@@ -64,12 +64,12 @@ for k in np.arange(iters):
     L = len(M.datasets)
     size = M.atlas_size
     
-    print 'MALP atlas size: {}'.format(size)
+    print 'Atlas size: {}'.format(size)
     print 'Training size: {}'.format(L)
+    print 'Testing size: {}.'.format(len(testing))
     
     Atlases = malp.parallelFitting(M,mapData,feats,**kars)
-    print 'Atlas softmax type: {}.'.format(Atlases[0].softmax_type)
-    
+
     extension = '.L.MALP.Atlases_{}.nEst_{}.Size_{}.Depth_{}'.format((k+1),
                               L,kars['n_estimators'],kars['atlas_size'],kars['depth'])
     
@@ -78,7 +78,6 @@ for k in np.arange(iters):
     for j,test_subj in enumerate(testing):
 
         outFunc = dataDir + 'CrossValidated/' + test_subj + extension + '.Iter_{}.func.gii'.format(k+1)
-        
         
         print 'Test subject {}, {} of {}.'.format(test_subj,(j+1),len(testing))
         
