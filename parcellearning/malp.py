@@ -615,8 +615,9 @@ def forestSoftMax(metaEstimator,mappings,members,memberData):
             vals = [v[1] for v in tups]
             
             probs = predProbs[i,:][inds]
-            maxProb = list([np.argmax(probs)])
-            labels.append([vals[j] for j in maxProb])
+            if len(probs):
+                maxProb = list([np.argmax(probs)])
+                labels.append([vals[j] for j in maxProb])
     
     return labels
 
@@ -669,9 +670,9 @@ def treeSoftMax(metaEstimator,mappings,members,memberData):
                 vals = temporaryVals[i]
                 
                 probs = estimateProbs[i,:][inds]
-                print(probs)
-                maxProb = list([np.argmax(probs)])
-                labels.append([vals[j] for j in maxProb])
+                if len(probs):
+                    maxProb = list([np.argmax(probs)])
+                    labels.append([vals[j] for j in maxProb])
         
         predLabels.append(labels)
     
