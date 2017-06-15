@@ -6,7 +6,10 @@ Created on Thu Jun  1 16:08:13 2017
 @author: kristianeschenburg
 """
 
-from parcellearning import loaded as ld
+import sys
+sys.path.append('..')
+
+import parcellearning.loaded as ld
 
 import os
 import nibabel as nb

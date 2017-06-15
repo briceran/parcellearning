@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
@@ -7,11 +6,15 @@ Created on Tue May  9 18:22:13 2017
 @author: kristianeschenburg
 """
 
+import loaded as ld
+import matchingLibraries as lb
+
 import copy
-import numpy as np
+import h5py
 import pickle
 
-import libraries as lb
+import numpy as np
+from sklearn import preprocessing
 
 """
 ##########
@@ -82,7 +85,7 @@ def coreData(trainData,core,feats):
         subjFullData = trainData[subj]
         
         # get subject-specific label data
-        label = subjFullData['label']
+        label = np.asarray(subjFullData['label'])
         
         # list, containing "core" label data for each feature
         subjFeatData = []
@@ -155,7 +158,7 @@ def mergeFeatures(yData,feats,**kwargs):
         if kwargs['scale']:
             scalers = kwargs['scale']
         else:
-            print('Does not have scaler objects -- will return ' \
+            print('Does not have scaler objects -- will return '
                   'non-standardized data.')
     
     for f in feats:
@@ -261,7 +264,7 @@ def partitionData(trainData,feats):
                     training data object
     """
     
-    labs = set(getLabels(trainData)) - set([0,-1])
+    labs = set(getLabels(trainData)).difference({0,-1})
     labelData = {}
         
     for l in labs:
@@ -278,9 +281,11 @@ def prepareUnitaryFeatures(trainingObject):
     - - - - -
         trainingObject : single subject training object
     """
-    
+
+    ID = trainingObject.attrs['ID']
+
     training = {}
-    training[trainingObject.ID] = trainingObject.data
+    training[ID] = trainingObject.data
     
     return training
 
@@ -476,6 +481,66 @@ def saveClassifier(classifier,output):
             pass
     else:
         print('Classifier has not been trained.  Not saving.')
+
+
+def standardize(grouped, features):
+    """
+    Method to demean the data from a GroupFeatures object.  This object is
+    just a dictionary of dictionaries -- each main key is a subject ID, with
+    sub-keys correpsonding to features i.e. resting-state, cortical metrics.
+
+    Standardization is performed upon run-time -- we might want to save the
+    mean and variance of each feature, and will return these, along with a
+    demeaned and unit-varianced GroupFeatures object.
+
+    Parameters:
+    - - - - -
+        grouped : pickle file -- output of GroupFeatures.save(
+                    {'train': 'outputFile.p'})
+    """
+
+    if isinstance(grouped, str):
+        trainData = ld.loadH5(grouped, *['full'])        
+    elif isinstance(grouped,h5py._hl.files.File):
+        trainData = grouped        
+    elif isinstance(grouped,dict):
+        trainData = grouped        
+    else:
+        raise ValueError('Training data cannot be empty.')
+        
+    subjects = trainData.keys()
+
+    mappings = {}.fromkeys(subjects)
+    scalers = {}.fromkeys(features)
+
+    scale = preprocessing.StandardScaler(with_mean=True,with_std=True)
+
+    for f in features:
+
+        c = 0
+        tempData = []
+        scalers[f] = copy.deepcopy(scale)
+
+        for s in subjects:
+            mappings[s] = {}
+
+            subjData = trainData[s][f]
+            [x, y] = subjData.shape
+            mappings[s]['b'] = c
+            mappings[s]['e'] = c + x
+
+            tempData.append(subjData)
+            c += x
+
+        tempData = np.row_stack(tempData)
+        tempData = scalers[f].fit_transform(tempData)
+
+        for s in subjects:
+            coords = mappings[s]
+            coordData = tempData[coords['b']:coords['e'],:]
+            trainData[s][f] = coordData
+
+    return (trainData, scalers)
 
 def updatePredictions(storage,members,predictions):
     

@@ -4,34 +4,42 @@
 Created on Tue May  9 18:17:38 2017
 
 @author: kristianeschenburg
+
 """
+
 import classifier_utilities as cu
 import featureData as fd
 import matchingLibraries as lb
 import loaded as ld
 
 import copy
+import h5py
 import inspect
-import numpy as np
 import os
 import pickle
 
 from joblib import Parallel, delayed
 import multiprocessing
 
+import numpy as np
 from sklearn import ensemble
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 
 # number of cores to parallelize over
 NUM_CORES = multiprocessing.cpu_count()
-# Valid prediction key-value parameters
+
+# Valid soft-max constraints
 PREDICTION_KEYS = ['BASE','TREES','FORESTS']
+
 # type of classifier used -- the type of classifier will dictate option applicability of softmax_type
 CLASSIFIER = {'random_forest': PREDICTION_KEYS,
               'decision_tree': PREDICTION_KEYS,
               'logistic': 'BASE',
               'svm': 'BASE',
               'gaussian_process': 'BASE'}
+
+# type of label confusion data
+NEIGHBORHOOD_TYPE = ['adjacency','confusion']
 
 
 class Atlas(object):
@@ -45,15 +53,23 @@ class Atlas(object):
         
         scale : standardized the training data (default == True)
         
-        thresh_train : threshold to apply to training subject matches
+        thresh_train : threshold to apply to training subject matches (default = 0.05)
         
-        thresh_test : threshold to apply to test subject matches
+        thresh_test : threshold to apply to test subject matches (default = 0.05)
+
+        hops : default neighborhood size from adjacency Dijkstra list (default = 1)
+
+        neighborhood : type of label neighborhood to consider.  If 'adjacency', uses
+                        'hop_size' and Dijkstra distance files.  If 'confusion', uses
+                        'thresh_train' and MergedMappings file.
         
         softmax_type : type of classification constraining based on surface
                         registration mappings.  BASE for none, TREES at the
-                        tree level, and FORESTS at the forest level
+                        tree level, and FORESTS at the forest level.  (default = 'BASE')
 
-        exclude_test : (None,List) list of subjects to exclude from the training step
+        classifier_type : model used to fit training data (default = 'random_forest')
+
+        exclude_testing : (None,List) list of subjects to exclude from the training step
 
         random : number of training subjects to include in model
         
@@ -64,61 +80,73 @@ class Atlas(object):
 
     """
     
-    def __init__(self,feats,scale=True,thresh_train = 0.05,thresh_test = 0.05,
-                 softmax_type='BASE', classifier_type = 'random_forest', exclude_testing=None,
-                 random=None,load=None,save=None):
+    def __init__(self,feats,scale=True, thresh_train = 0.05, thresh_test = 0.05, hop_size = 1, neighborhood = 'adjacency',
+                 softmax_type = 'BASE', classifier_type = 'random_forest', exclude_testing = None, random = None,
+                 load = None, save = None):
 
-        if not feats:
-            raise ValueError('Feature list cannot be empty.')
-            
+        # check feature value
+        if not feats and not isinstance(feats,list):
+            raise ValueError('Features cannot be empty.  Must be a list.')
+
+        # check scale type value
         if scale not in [True, False]:
             raise ValueError('Scale must be boolean.')
-            
+
+        # check thresh_train value
         if thresh_train < 0 or thresh_train > 1:
             raise ValueError('Threshold value must be within [0,1].')
-            
+
+        # check tresh_test value
         if thresh_test < 0 or thresh_test > 1:
             raise ValueError('Threshold value must be within [0,1].')
-            
-<<<<<<< HEAD
-        if exclude_testing is not None and not isinstance(exclude_testing,str):
-=======
+
+        # check hop_size value
+        if hop_size < 0 and not isinstance(hop_size,int):
+            raise ValueError('hop size must be non-negative integer value.')
+
+        if neighborhood not in NEIGHBORHOOD_TYPE:
+            raise ValueError('neighbohood must be in {}.'.format(' '.join(NEIGHBORHOOD_TYPE)))
+
+        # check softmax constraint value
         if softmax_type not in PREDICTION_KEYS:
-            raise ValueError('softmax_type must be either BASE,TREES, or FORESTS.')
-            
-        if exclude_testing is not None and not isinstance(exclude_testing,str) and not \
-                isinstance(exclude_testing,list):
->>>>>>> 4ad35842d82b403694124a76a297954ba9dadecd
+            raise ValueError('softmax_type must be in {}.'.format(' '.join(PREDICTION_KEYS)))
+
+        # check classifier_type value
+        if classifier_type not in CLASSIFIER.keys():
+            raise ValueError('classifier_type must be in {}.'.format(' '.join(CLASSIFIER.keys())))
+
+        # check exclude_testing value
+        if exclude_testing is not None and not isinstance(exclude_testing,str) and not isinstance(exclude_testing,list):
             raise ValueError('exclude_testing must by a string or None.')
-            
+
+        # check random value
         if random is not None and random < 0:
             raise ValueError('Random must be a positive integer or None.')
-            
+
+        # check load value
         if not load is None and not isinstance(load,str):
             raise ValueError('load must be a string or None.')
-            
+
+        # check save value
         if save is not None and not isinstance(save,str):
             raise ValueError('save must be a string or None.')
 
-        if softmax_type not in PREDICTION_KEYS:
-            options = ' '.join(PREDICTION_KEYS)
-            raise ValueError('softmax_type must be in {}.'.format(options))
-
-        if classifier_type not in CLASSIFIER.keys():
-            options = ' '.join(CLASSIFIER.keys())
-            raise ValueError('classifier_type must be in {}.'.format(options))
-
-        # CLASSIFIER maps classifier_type to prediction methods
-        # softmax_constaints do not apply to not 'random_forest' or 'decision_tree'
+        # CLASSIFIER maps classifier_type to valid softmax constraint types
+        # softmax_type only applies to 'random_forest' or 'decision_tree'
         if softmax_type not in CLASSIFIER[classifier_type]:
             softmax_type = 'BASE'
 
+        # training-related attributes
         self.features = feats
         self.scale = scale
         self.thresh_train = thresh_train
+        self.hop_size = hop_size
+        self.neighborhood = neighborhood
+        self.exclude_testing = exclude_testing
+
+        # testing-related attributes
         self.thresh_test = thresh_test
         self.softmax_type = softmax_type
-        self.exclude_testing = exclude_testing
         self.random = random
         self.load = load
         self.save = save
@@ -136,7 +164,7 @@ class Atlas(object):
                 if key in args:
                     setattr(self,key,kwargs[key])
             
-    def fit(self, trainObject, mergedMaps, model_type = 'ori',
+    def fit(self, trainObject, neighborhoodMap, model_type = 'ori',
             classifier = ensemble.RandomForestClassifier(n_jobs=-1),**kwargs):
         
         """
@@ -157,10 +185,8 @@ class Atlas(object):
 
         """
 
-        threshold = self.thresh_train
-        
         self.model_type = model_type
-        self._initializeTraining(trainObject,mergedMaps)
+        self._initializeTraining(trainObject,neighborhoodMap)
 
         # get valid arguments for supplied classifier
         # get valid parameters passed by user
@@ -176,31 +202,29 @@ class Atlas(object):
                           'ori': classifier}
         models = {}
 
-        mgm = self.mergedMappings
-        freqs = lb.mappingFrequency(mgm)
-
-        c = 1
+        neighbors = self.neighbors
 
         for i,l in enumerate(self.labels):
             if l in self.labelData.keys():
-                
+
                 # copy the model (due to passing by reference)
                 models[l] = copy.deepcopy(model_selector[model_type])
 
-                # threshold the mapping frequencies
-                mapped = lb.mappingThreshold(freqs[l],threshold)
-                mapped.append(l)
-                mapped = list(set(mapped).intersection(self.labels))
+                # get associated neighboring regions (from adjacency or confusion data)
+                label_neighbors = neighbors[l]
+                label_neighbors.append(l)
+
+                label_neighbors = list(set(label_neighbors).intersection(self.labels))
                 
                 # build classifier training data upon request
-                [learned,y] = cu.mergeLabelData(self.labelData,self.response,mapped)
+                [learned,y] = cu.mergeLabelData(self.labelData,self.response,label_neighbors)
     
                 models[l].fit(learned,np.squeeze(y))
 
         self.models = models
         self._fit = True
         
-    def _initializeTraining(self,trainObject,mergedMaps):
+    def _initializeTraining(self,trainObject,neighborhoodMap):
         
         """
         Initialize the object with the training data.
@@ -209,36 +233,38 @@ class Atlas(object):
         - - - - -
             trainObject : input training data (either '.p' file, or dictionary)
             
-            mergedMaps : merged MatchingLibraries corresponding to training data
+            neighborhoodMap : Dijkstra distance file or MergedMappings file
+
         """
 
-        ## Load / process the training data ##
-        
-        # if trainObject is filename
+        # load and pre-process the training data
+
         if isinstance(trainObject,str):
-            trainData = ld.loadPick(trainObject)
-            
-            # if trainData is SubjectFeatures object (single subject)
-            if isinstance(trainData,fd.SubjectFeatures):
-                self.trainingID = trainData.ID
-                trainData = cu.prepareUnitaryFeatures(trainData)
-                
-        # otherwise, if provided with dictionary
-        elif isinstance(trainObject,dict):
+            trainData = ld.loadH5(trainObject,*['full'])
+        elif isinstance(trainObject,h5py._hl.files.File):
             trainData = trainObject
         else:
             raise ValueError('Training object is of incorrect type.')
-            
+
         if not trainData:
             raise ValueError('Training data cannot be empty.')
             
+            
+        parseFeatures = copy.deepcopy(self.features)
+        parseFeatures.append('label')
+        
+        parsedData = ld.parseH5(trainData,parseFeatures)
+        trainData.close()
+        trainData = parsedData
+
+        # get subject IDs in training data
         subjects = trainData.keys()
-        
+
+        # if exclude_testing is set, the data for these subjects when fitting the models
         if self.exclude_testing:
-            subjects = list(set(subjects)-set(self.exclude_testing))
+            subjects = list(set(subjects).difference(set(self.exclude_testing)))
         
-        # if random is set, sample subsect of training data (no replacement)
-        # otherwise, set sample to number of training subjects
+        # if random is set, select random subset of size random from viable training subjects
         if not self.random:
             randomSample = len(subjects)
         else:
@@ -248,24 +274,43 @@ class Atlas(object):
         sampleData = {s: trainData[s] for s in sample}
         trainData = sampleData
 
-        # Scale the training data.
+        # if scale is True, scale each feature of the training data and save the transformation
+        # transformation will be applied to incoming test data
         if self.scale:
-            [trainData,scalers] = fd.standardize(trainData,self.features)
+            [trainData,scalers] = cu.standardize(trainData,self.features)
             
             # scaler objects to transform test data
             self.scalers = scalers
             self._scaled = True
 
         # get unique labels in training set
-        self.labels = set(cu.getLabels(trainData)) - set([0,-1])
+        self.labels = set(cu.getLabels(trainData)).difference({0,-1})
         
-        # aggregate data corresponding to each label
+        # isolate training data corresponding to each label
         self.labelData = cu.partitionData(trainData,feats = self.features)
         
-        # build response vector for each set of label data
+        # build response vector for each label
         self.response = cu.buildResponseVector(self.labels,self.labelData)
-        self.mergedMappings = ld.loadPick(mergedMaps)
-        
+
+        # load and prepare neighborhoodMap
+        neighborhoodMap = ld.loadPick(neighborhoodMap)
+
+        if self.neighborhood == 'adjacency':
+            boundary = 'inside'
+            threshold = self.hop_size
+            
+        else:
+            boundary = 'outside'
+            threshold = self.thresh_train
+
+            neighborhoodMap = lb.mappingFrequency(neighborhoodMap)
+            neighborhoodMap = lb.mappingThreshold(neighborhoodMap, threshold, boundary)
+            
+        self.neighbors = neighborhoodMap
+
+        # check quality of training data to ensure all features have same length,
+        # all response vectors have the same number of samples, and that all training data
+        # has the same features
         cond = True
         if not self._compareTrainingDataKeys():
             print('WARNING: Training data and response vectors do not have the same keys.')
@@ -277,7 +322,7 @@ class Atlas(object):
             
         if not cond:
             raise ValueError('Training data is flawed.')
-                    
+  
     def predict(self,y,yMatch):
         
         """
@@ -421,16 +466,18 @@ class Atlas(object):
         features = self.features
  
         # load test subject data, save as attribtues
-        testObject = ld.loadPick(y)        
-        testMatch = ld.loadPick(yMatch)
+        testObject = ld.loadH5(y,*['full'])
+        parsedData = ld.parseH5(testObject,self.features)
+        testObject.close()
+        testObject = parsedData
         
+        data = testObject.values()
+        
+        testMatch = ld.loadPick(yMatch)
+
         self.testMatch = testMatch
         self.testObject = testObject
-        
-        # if the training data has been scaled, apply scaling 
-        # transformation to test data and merge features
-        data = testObject.data
-        
+
         if self._scaled:
             scalers = self.scalers
             
@@ -837,6 +884,3 @@ def atlasPredict(model,testObject,testMappings,**kwargs):
     
     return model.predicted
 
-    
-        
-    

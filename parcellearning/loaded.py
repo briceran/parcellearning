@@ -5,9 +5,10 @@ Created on Thu Mar  2 10:43:58 2017
 @author: kristianeschenburg
 """
 
-import h5py
 import numpy as np
 import nibabel
+
+import h5py
 import os
 import pickle
 import scipy.io as sio
@@ -154,7 +155,7 @@ def loadMat(inFile,*args):
     else:
         print('Input file does not exist.')
 
-def loadGii(inFile,darray):
+def loadGii(inFile,darray=0,*args):
     
     """
     Method to load Gifti files.  Not part of a specific class.
@@ -173,8 +174,42 @@ def loadGii(inFile,darray):
         # if data is instance of Nifti2Image
         elif isinstance(data,nibabel.nifti2.Nifti2Image):
             return np.squeeze(np.asarray(data.get_data()))
+        
+def loadH5(inFile,*keys):
+    
+    """
+    Method to load hdf5 files.  Not part of specific class.
+    
+    Parameters:
+    - - - - -
+        inFile : input file name
+        keys : attributes contained in hdf5 file to be extracted
+                If len(keys) == 1, returns a Numpy array.  Otherwise, returns a dictionary,
+                where keys as elements of keys parameter, and values as attributes in inFile.
+    """
 
+    parts = str.split(inFile,'/')
 
+    try:
+        toRead = h5py.File(inFile,'r')
+    except IOError:
+        raise
+    else:
+        if not keys:
+            key = toRead.keys()[0]
+            data = np.asarray(toRead[key])
+        elif 'full' in keys:
+            data = toRead
+        else:
+            data = {}
+            for k in keys:
+                if k in toRead.keys():
+                    data[k] = np.asarray(toRead[k])
+                else:
+                    raise KeyError('{} not in {}.'.format(k,parts[-1]))
+    
+    return data
+    
 def loadPick(inFile,*args):
     
     """
@@ -184,9 +219,36 @@ def loadPick(inFile,*args):
     parts = str.split(inFile,'/')
 
     try:
-        with open(inFile,"rb") as input:
-            data = pickle.load(input)
+        with open(inFile,"rb") as toRead:
+            data = pickle.load(toRead)
     except OSError:
         print('Warning: {} cannot be read.'.format(parts[-1]))
     else:
         return data
+    
+def parseH5(h5Object,features):
+    
+    """
+    We are loading the H5 objects as read only.  parseH5 copy the contents of
+    the h5 object to a dictionary.
+    """
+    
+    subjects = h5Object.keys()
+    parsedData = {str(s): {}.fromkeys(features) for s in subjects}
+    
+    for s in subjects:
+        
+        parsedData[s] = {}.fromkeys(features)
+        
+        cond = True
+        for f in features:
+            if f in h5Object[s].keys():
+                parsedData[s][f] = np.asarray(h5Object[s][f])
+            else:
+                cond = False
+        if not cond:
+            del parsedData[s]
+    
+    return parsedData
+                
+                
