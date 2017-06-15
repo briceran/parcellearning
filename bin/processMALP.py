@@ -64,11 +64,11 @@ for k in np.arange(iters):
     L = len(M.datasets)
     size = M.atlas_size
     
-    print('MALP atlas size: ',size)
-    print('Training size: ',L)
+    print 'MALP atlas size: {}'.format(size)
+    print 'Training size: {}'.format(L)
     
     Atlases = malp.parallelFitting(M,mapData,feats,**kars)
-    print('Atlas softmax type: {}.'.format(Atlases[0].softmax_type))
+    print 'Atlas softmax type: {}.'.format(Atlases[0].softmax_type)
     
     extension = '.L.MALP.Atlases_{}.nEst_{}.Size_{}.Depth_{}'.format((k+1),
                               L,kars['n_estimators'],kars['atlas_size'],kars['depth'])
@@ -80,7 +80,7 @@ for k in np.arange(iters):
         outFunc = dataDir + 'CrossValidated/' + test_subj + extension + '.Iter_{}.func.gii'.format(k+1)
         
         
-        print('Test subject {}, {} of {}.'.format(test_subj,(j+1),len(testing)))
+        print 'Test subject {}, {} of {}.'.format(test_subj,(j+1),len(testing))
         
         teobj = dataDir + 'TrainingObjects/FreeSurfer/' + test_subj + '.L.TrainingObject.aparc.a2009s.h5'
         temps = dataDir + 'MatchingLibraries/Test/' + test_subj + '.VertexLibrary.Test.p'
