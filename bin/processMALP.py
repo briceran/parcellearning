@@ -16,6 +16,7 @@ import nibabel as nb
 import numpy as np
 
 import os
+import pickle
 
 dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
 
