@@ -20,7 +20,7 @@ import pickle
 
 from joblib import Parallel, delayed
 import multiprocessing
-
+li
 import numpy as np
 from sklearn import ensemble
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
@@ -346,7 +346,7 @@ class Atlas(object):
         self._loadTest(y,yMatch)
 
         # get names of test data vertices
-        verts = self.testMatch.vertLib.keys()
+        verts = self.testMatch.keys()
         # get test data
         mtd = self.mergedTestData
 
@@ -496,7 +496,7 @@ class Atlas(object):
         # vertices that mapped to label via surface registration
         
         # get vertex to label mapping counts
-        vTLM = copy.deepcopy(testMatch.vertLib)
+        vTLM = copy.deepcopy(testMatch)
         
         # convert vertex to label mapping counts to frequencies
         # and threshold labels to include by the mapping frequency

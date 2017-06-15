@@ -77,7 +77,7 @@ for k in np.arange(iters):
         outFunc = dataDir + 'CrossValidated/' + test_subj + extension + '.Iter_{}.func.gii'.format(k+1)
         
         
-        print('Test subject {}, {} of {}.'.format(test_subj,j,len(testing)))
+        print('Test subject {}, {} of {}.'.format(test_subj,(j+1),len(testing)))
         
         teobj = dataDir + 'TrainingObjects/FreeSurfer/' + test_subj + '.L.TrainingObject.aparc.a2009s.h5'
         temps = dataDir + 'MatchingLibraries/Test/' + test_subj + '.MatchingLibrary.Test.p'
