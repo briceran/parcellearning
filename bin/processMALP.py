@@ -44,7 +44,7 @@ testSize = 10
 inMyl = dataDir + 'MyelinDensity/285345.L.MyelinMap.32k_fs_LR.func.gii'
 myl = ld.loadGii(inMyl)
 
-Myl = nb.load(myl)
+Myl = nb.gifti.giftiio.read(inMyl)
 
 for k in np.arange(iters):
     
