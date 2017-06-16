@@ -36,7 +36,7 @@ kars = {'atlas_size': 1,
         'max_depth': 5,
         'softmax_type': 'FORESTS'}
 
-feats = ['fs_central','subcort','sulcal','myelin']
+feats = ['fs_cort','subcort','sulcal','myelin']
 
 iters = 15
 testSize = 10
