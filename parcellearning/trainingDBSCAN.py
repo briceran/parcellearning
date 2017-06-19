@@ -35,7 +35,6 @@ def trainDBSCAN(labelData, eps=0.5, mxs = 10000, mxp = 0.7):
         
     return dbsData
     
-
 def labelDBSCAN(labelData,eps,max_samples,max_percent):
     
     """
