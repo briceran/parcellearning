@@ -7,13 +7,17 @@ Created on Mon Jun  5 21:08:50 2017
 """
 
 import loaded as ld
+
+import nibabel as nb
 import numpy as np
 import networkx as nx
-
 from sklearn import metrics
 
 from joblib import Parallel, delayed
 import multiprocessing
+
+import os
+from subprocess import call
 
 NUM_CORES = multiprocessing.cpu_count()
 
@@ -310,7 +314,7 @@ def shiftColor(rgb,mag=30):
     
     return rgb_adj
 
-def neighborhoodErrorMap(core,labelAdjacency,truthLabFile,
+def neighborhoodErrorMap(labVal,labelAdjacency,truthLabFile,
                          predLabFile,labelLookup,outputColorMap):
     
     """
@@ -341,8 +345,8 @@ def neighborhoodErrorMap(core,labelAdjacency,truthLabFile,
     color_file = open(outputColorMap,"w")
 
     trueColors = ' '.join(map(str,[255,255,255]))
-    trueName = 'Label {}'.format(core)
-    trueRGBA = '{} {} {}\n'.format(core,trueColors,255)
+    trueName = 'Label {}'.format(labVal)
+    trueRGBA = '{} {} {}\n'.format(labVal,trueColors,255)
     
     trueStr = '\n'.join([trueName,trueRGBA])
     color_file.writelines(trueStr)
@@ -351,13 +355,13 @@ def neighborhoodErrorMap(core,labelAdjacency,truthLabFile,
     
     
     # get labels that neighbor core
-    neighbors = labAdj[core]
+    neighbors = labAdj[labVal]
     # get indices of core label in true map
-    truthInds = np.where(truth == core)[0]
+    truthInds = np.where(truth == labVal)[0]
     
     # initialize new map
     visualizeMap = np.zeros((truth.shape))
-    visualizeMap[truthInds] = core
+    visualizeMap[truthInds] = labVal
     
     # get predicted label values existing at truthInds
     predLabelsTruth = pred[truthInds]
@@ -375,7 +379,7 @@ def neighborhoodErrorMap(core,labelAdjacency,truthLabFile,
         
         adjLabel = n+180
         adjName = 'Label {}'.format(adjLabel)
-        adjColors = shiftColor(oriCode,mag=20)
+        adjColors = shiftColor(oriCode,mag=30)
         adjColors = ' '.join(map(str,adjColors))
         adjRGBA = '{} {} {}\n'.format(adjLabel,adjColors,255)
         adjStr = '\n'.join([adjName,adjRGBA])
@@ -394,6 +398,32 @@ def neighborhoodErrorMap(core,labelAdjacency,truthLabFile,
     color_file.close()
 
     return visualizeMap
+
+def processNeighborhoodCM(labVal,labelAdjacency,truthLabFile,
+                         predLabFile,labelLookup,inMyl,outDir):
+    
+    ocm = outDir + '{}.ColorMap.txt'.format(labVal)
+    
+    vm = neighborhoodErrorMap(labVal,labelAdjacency,truthLabFile,
+                         predLabFile,labelLookup,ocm)
+        
+    outFunc = outDir + 'Label_{}.LabelMisMatch.func.gii'.format(labVal)
+    myl = nb.load(inMyl)
+    myl.darrays[0].data = vm.astype(np.float32)
+    nb.save(myl,outFunc)
+    
+    outLabel = outDir + 'Label_{}.LabelMisMatch.label.gii'.format(labVal)
+
+    #cmd_call = ['wb_command','-metric-label-import',outFunc,ocm,outLabel]
+    cmd_call = 'wb_command -metric-label-import {} {} {}'.format(outFunc,ocm,outLabel)
+    
+    print(os.path.isfile(outFunc))
+    print(os.path.isfile(ocm))
+    print(os.path.isfile(outLabel))
+
+    print(1)
+    os.system(cmd_call)
+    print(2)
         
         
         
