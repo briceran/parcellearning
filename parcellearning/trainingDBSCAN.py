@@ -11,10 +11,7 @@ from sklearn import cluster,metrics
 
 import copy
 
-MAXSAMPLES = 7500
-MAXPERCENT = 0.7
-
-def trainDBSCAN(labelData,eps=0.5):
+def trainDBSCAN(labelData, eps=0.5, mxs = 10000, mxp = 0.7):
     
     """
     Method to perform DBSCAN for training data.
@@ -24,7 +21,9 @@ def trainDBSCAN(labelData,eps=0.5):
         labelData : (dict) training data, keys are labels, values are arrays
         eps : DBSCAN parameter, specifiying maximum distance between two 
                 samples for them to be considered as in the same neighborhood
-        metric : metric to compute distance matrix
+        mxs : maximum number of samples per iteration of DBSCAN
+        mxp : minimum percentage of original data points required for a
+                completed round of DBSCAN
     """
     
     labels = labelData.keys()
@@ -32,12 +31,12 @@ def trainDBSCAN(labelData,eps=0.5):
     
     for lab in labels:
         
-        dbsData[lab] = labelDBSCAN(lab,labelData[lab],eps)
+        dbsData[lab] = labelDBSCAN(lab, labelData[lab], eps, mxs, mxp)
         
     return dbsData
     
 
-def labelDBSCAN(label,labelData,eps):
+def labelDBSCAN(label,labelData,eps,max_samples,max_percent):
     
     """
     Method to perform DBSCAN for training data belong to a single label.
@@ -48,11 +47,11 @@ def labelDBSCAN(label,labelData,eps):
     np.random.shuffle(labelData)
     samples,_ = labelData.shape    
 
-    if samples <= MAXSAMPLES:
+    if samples <= max_samples:
         subsets = list([labelData])
         
     else:
-        iters = samples/MAXSAMPLES
+        iters = samples/max_samples
         subsets = []
         
         for i in np.arange(iters):
@@ -73,7 +72,7 @@ def labelDBSCAN(label,labelData,eps):
         perc = 0.0
         ep = copy.copy(eps)
 
-        while perc < MAXPERCENT:
+        while perc < max_percent:
 
             model = cluster.DBSCAN(eps=ep,metric='precomputed',n_jobs=-1)
             model.fit(dMat)
