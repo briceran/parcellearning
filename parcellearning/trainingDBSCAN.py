@@ -7,7 +7,7 @@ Created on Mon Jun 19 12:33:55 2017
 """
 
 import numpy as np
-from sklearn import cluster,metrics
+from sklearn import cluster
 
 import copy
 
@@ -56,11 +56,11 @@ def labelDBSCAN(label,labelData,eps,max_samples,max_percent):
         
         for i in np.arange(iters):
             
-            bc = i*MAXSAMPLES
-            uc = (i+1)*MAXSAMPLES
+            bc = i*max_samples
+            uc = (i+1)*max_samples
             subsets.append(labelData[bc:uc,:])
         
-        subsets.append(labelData[(i+1)*MAXSAMPLES:,:])
+        subsets.append(labelData[(i+1)*max_samples:,:])
 
     accepted = []
     
