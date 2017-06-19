@@ -7,7 +7,7 @@ Created on Mon Jun 19 12:33:55 2017
 """
 
 import numpy as np
-from sklearn import cluster
+from sklearn import cluster,metrics
 
 import copy
 
@@ -31,25 +31,30 @@ def trainDBSCAN(labelData, eps=0.5, mxs = 10000, mxp = 0.7):
     
     for lab in labels:
         
-        dbsData[lab] = labelDBSCAN(lab, labelData[lab], eps, mxs, mxp)
+        dbsData[lab] = labelDBSCAN(labelData[lab], eps, mxs, mxp)
         
     return dbsData
     
 
-def labelDBSCAN(label,labelData,eps,max_samples,max_percent):
+def labelDBSCAN(labelData,eps,max_samples,max_percent):
     
     """
     Method to perform DBSCAN for training data belong to a single label.
     """
+
     
-    print 'input shape: {}'.format(labelData.shape)
-    
+    # Shuffle compiled training data for current label.  Shuffling is performed
+    # because training data is stacked 1 subject at a time -- we want DBSCAN to
+    # find central samples across all training data, not within each subject.
     np.random.shuffle(labelData)
     samples,_ = labelData.shape    
 
+    # if labelData has fewer samples than max_samples, convert to list
     if samples <= max_samples:
         subsets = list([labelData])
         
+    # otherwise break into subsets of size max_samples
+    # will generally produce one smaller subset
     else:
         iters = samples/max_samples
         subsets = []
@@ -64,16 +69,21 @@ def labelDBSCAN(label,labelData,eps,max_samples,max_percent):
 
     accepted = []
     
+    # for each subset
     for dataSubset in subsets:
 
-        ccoef = np.corrcoef(dataSubset)
-        dMat = (1-ccoef)/2
+        # compute correlation distance (1-corrcoef) and scale to 0-1
+        dMat = metrics.pairwise.pairwise_distances(dataSubset,
+                                                   metric='correlation')
+        dMat = (1-dMat)/2
 
         perc = 0.0
         ep = copy.copy(eps)
 
+        # while percentage of non-noise samples < max_percentage
         while perc < max_percent:
 
+            # apply DBSCAN, update epsilon parameter (neighborhood size)
             model = cluster.DBSCAN(eps=ep,metric='precomputed',n_jobs=-1)
             model.fit(dMat)
             predLabs = model.labels_            
@@ -82,8 +92,7 @@ def labelDBSCAN(label,labelData,eps,max_samples,max_percent):
             perc = (1.*len(clusters))/len(predLabs)
             ep += 0.025
 
-        tempAcc = dataSubset[clusters,:]
-        accepted.append(tempAcc)
+        accepted.append(dataSubset[clusters,:])
     
     accepted = np.row_stack(accepted)
     
