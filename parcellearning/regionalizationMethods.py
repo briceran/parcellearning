@@ -8,18 +8,13 @@ Created on Mon Jun  5 21:08:50 2017
 
 import loaded as ld
 
+import networkx as nx
 import nibabel as nb
 import numpy as np
-import networkx as nx
 from sklearn import cluster,metrics
-
-from joblib import Parallel, delayed
-import multiprocessing
 
 import copy
 import os
-
-NUM_CORES = multiprocessing.cpu_count()
 
 #####
 """
@@ -92,7 +87,7 @@ def regionalizeStructures(timeSeries,levelStructures,midlines,level,R,
     return regionalized
 
 
-def trainDBSCAN(labelData, eps=0.5, mxs = 7500, mxp = 0.7):
+def trainDBSCAN(labelData, eps=0.25, mxs = 7500, mxp = 0.7):
     
     """
     Method to perform DBSCAN for training data.
@@ -108,12 +103,12 @@ def trainDBSCAN(labelData, eps=0.5, mxs = 7500, mxp = 0.7):
     """
     
     labels = labelData.keys()
-    
-    results = Parallel(n_jobs=NUM_CORES)(delayed(labelDBSCAN)(lab,
-                       labelData[lab],eps,mxs,mxp) for lab in labels)
-    
-    dbsData = dict(zip(labels,results))
+    dbsData = {}.fromkeys(labels)
+
+    for lab in labels:
+        dbsData[lab] = labelDBSCAN(lab,labelData[lab],eps,mxs,mxp)
         
+    
     return dbsData
     
 def labelDBSCAN(label,labelData,eps,max_samples,max_percent):
@@ -171,7 +166,7 @@ def labelDBSCAN(label,labelData,eps,max_samples,max_percent):
             clusters = np.where(predLabs != -1)[0]
             
             perc = (1.*len(clusters))/len(predLabs)
-            ep += 0.025
+            ep += 0.02
 
         accepted.append(dataSubset[clusters,:])
     

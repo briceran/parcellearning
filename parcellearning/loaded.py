@@ -234,10 +234,10 @@ def parseH5(h5Object,features):
     the h5 object to a dictionary.
     """
     
-    subjects = h5Object.keys()
-    parsedData = {str(s): {}.fromkeys(features) for s in subjects}
+    groups = h5Object.keys()
+    parsedData = {str(s): {}.fromkeys(features) for s in groups}
     
-    for s in subjects:
+    for s in groups:
         
         parsedData[s] = {}.fromkeys(features)
         
@@ -251,5 +251,42 @@ def parseH5(h5Object,features):
             del parsedData[s]
     
     return parsedData
-                
+
+
+def loadh5_dbscan(inFile):
+    
+    """
+    Method to load results of dbscan sample reduction.
+    """
+    
+    inData = h5py.File(inFile,mode='r')
+    labels = [np.int32(x) for x in inData['maps'].keys()]
+    dbscan_data = {}.fromkeys(labels)
+    
+    for feat in labels:
+        dbscan_data[feat] = np.asarray(inData['dbscan_data'][feat])
+        
+    inData.close()
+    
+    return dbscan_data
+    
+    
+def saveh5_dbscan(outFile,inDict):
+    
+    """
+    Method to save results of dbscan sample reduction.
+    """
+    
+    outFile = h5py.File(outFile,'w')
+    labels = inDict.keys()
+    
+    outFile.create_group('maps')
+    outFile.create_group('dbscan_data')
+    
+    for lab in labels:
+        outFile['maps'].create_dataset(str(lab),data=lab)
+        outFile['dbscan_data'].create_dataset(str(lab),data=inDict[lab])
+    
+    outFile.close()
+    
                 

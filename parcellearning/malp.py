@@ -165,7 +165,7 @@ class Atlas(object):
                 if key in args:
                     setattr(self,key,kwargs[key])
             
-    def fit(self, trainObject, neighborhoodMap, model_type = 'ori',
+    def fit(self, trainObject, neighborhoodMap,model_type='ori',
             classifier = ensemble.RandomForestClassifier(n_jobs=-1),**kwargs):
         
         """
@@ -236,16 +236,16 @@ class Atlas(object):
             neighborhoodMap : Dijkstra distance file or MergedMappings file
 
         """
-        
-        kw = ['DBSCAN','save']
+
+        kw = ['DBSCAN','save','load']
         
         if kwargs:
-            args = copy.copy(kwargs)
-        
-        for k in args:
-            if k not in kw:
-                del args[k]
-
+            largs = copy.copy(kwargs)
+            
+            for k in largs:
+                if k not in kw:
+                    del(largs[k])
+                    
         # load the training data
 
         if isinstance(trainObject,str):
@@ -300,9 +300,30 @@ class Atlas(object):
         # isolate training data corresponding to each label
         self.labelData = cu.partitionData(trainData,feats = self.features)
         
-        print 'Checking DBSCAN'
-        if args['DBSCAN']:
-            self.labelData = regm.trainDBSCAN(self.labelData)
+        c = 0
+        for k in self.labelData.keys():
+            c += self.labelData[k].shape[0]
+        print('{} pre-DBSCAN samples.'.format(c))
+        
+        if 'DBSCAN' in largs:
+            print 'DBSCAN argument provided.'
+            if 'load' in largs:
+                print 'Loading now.'
+                dbs = ld.loadh5_dbscan(largs['load'])
+            else:
+                print 'Computing now.'
+                dbs = regm.trainDBSCAN(self.labelData)
+                
+            if 'save' in largs:
+                print 'Saving now.'
+                ld.saveH5_dbscan(largs['save'],dbs)
+
+            self.labelData = dbs
+            
+        c = 0
+        for k in self.labelData.keys():
+            c += self.labelData[k].shape[0]
+        print('{} post-DBSCAN samples.'.format(c))
 
         # build response vector for each label
         self.response = cu.buildResponseVector(self.labels,self.labelData)
