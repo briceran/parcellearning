@@ -108,11 +108,11 @@ def trainDBSCAN(labelData, eps=0.5, mxs = 7500, mxp = 0.7):
     """
     
     labels = labelData.keys()
-    dbsData = {}.fromkeys(labels)
     
-    for lab in labels:
-        
-        dbsData[lab] = labelDBSCAN(lab,labelData[lab], eps, mxs, mxp)
+    results = Parallel(n_jobs=NUM_CORES)(delayed(labelDBSCAN)(lab,
+                       labelData[lab],eps,mxs,mxp) for lab in labels)
+    
+    dbsData = dict(zip(labels,results))
         
     return dbsData
     
