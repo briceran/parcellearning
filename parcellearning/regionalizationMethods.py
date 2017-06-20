@@ -92,7 +92,7 @@ def regionalizeStructures(timeSeries,levelStructures,midlines,level,R,
     return regionalized
 
 
-def trainDBSCAN(labelData, eps=0.5, mxs = 10000, mxp = 0.7):
+def trainDBSCAN(labelData, eps=0.5, mxs = 7500, mxp = 0.7):
     
     """
     Method to perform DBSCAN for training data.
