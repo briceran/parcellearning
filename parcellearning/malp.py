@@ -239,10 +239,12 @@ class Atlas(object):
 
         kw = ['DBSCAN','save','load']
         
+        cond = False
         if kwargs:
             largs = copy.copy(kwargs)
-            
             for k in largs:
+                if k == 'DBSCAN':
+                    cond = True
                 if k not in kw:
                     del(largs[k])
                     
@@ -299,31 +301,17 @@ class Atlas(object):
         
         # isolate training data corresponding to each label
         self.labelData = cu.partitionData(trainData,feats = self.features)
-        
-        c = 0
-        for k in self.labelData.keys():
-            c += self.labelData[k].shape[0]
-        print('{} pre-DBSCAN samples.'.format(c))
-        
-        if 'DBSCAN' in largs:
-            print 'DBSCAN argument provided.'
+
+        if cond:
+            print 'Sample reduction using DBSCAN.'
             if 'load' in largs:
-                print 'Loading now.'
                 dbs = ld.loadH5_dbscan(largs['load'])
             else:
-                print 'Computing now.'
                 dbs = regm.trainDBSCAN(self.labelData)
-                
             if 'save' in largs:
-                print 'Saving now.'
                 ld.saveH5_dbscan(largs['save'],dbs)
 
             self.labelData = dbs
-            
-        c = 0
-        for k in self.labelData.keys():
-            c += self.labelData[k].shape[0]
-        print('{} post-DBSCAN samples.'.format(c))
 
         # build response vector for each label
         self.response = cu.buildResponseVector(self.labels,self.labelData)
@@ -395,8 +383,12 @@ class Atlas(object):
             if lab in self.neighbors.keys():
                 members = self.labelToVertexmaps[lab]
                 
-                preds = funcs[softmax_type](lab,members,)
+                preds = funcs[softmax_type](lab,members,
+                             self.mappingsCutoff,mtd)
+                
+                baseline = cu.updatePredictions(baseline,members,preds)
         
+        """
         # check to see what type of processing option was provided
         if softmax_type == 'BASE':
             for lab in self.labels:
@@ -438,6 +430,7 @@ class Atlas(object):
                         predLabs = np.squeeze(sfmxLabs)
                         baseline = cu.updatePredictions(baseline,members,
                                                         predLabs)
+        """
 
         self.baseline = baseline
         
