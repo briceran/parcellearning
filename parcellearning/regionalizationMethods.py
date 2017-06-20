@@ -11,20 +11,20 @@ import loaded as ld
 import nibabel as nb
 import numpy as np
 import networkx as nx
-from sklearn import metrics
+from sklearn import cluster,metrics
 
 from joblib import Parallel, delayed
 import multiprocessing
 
+import copy
 import os
-from subprocess import call
 
 NUM_CORES = multiprocessing.cpu_count()
 
 #####
 """
-Methods relating to performing regionalization of a time series, using the 
-data provided in the level structures.
+Methods relating to performing regionalization of samples / time series
+using the data provided in the level structures.
 """
 #####
 
@@ -38,16 +38,11 @@ def regionalizeStructures(timeSeries,levelStructures,midlines,level,R,
     Parameters:
     - - - - -
         timeSeries : input resting state file
-        
         levelStrucutres : levelStructures created by computeLabelLayers
                             ".RegionalLayers.p" file
-                            
         level : depth to constaint layers at
-        
         midlines : path to midline indices
-
         measure : measure to apply to correlation values ['mean','median']
-
     """
     
     assert measure in ['median','mean']
@@ -95,13 +90,93 @@ def regionalizeStructures(timeSeries,levelStructures,midlines,level,R,
     regionalized[midlines,:] = 0
         
     return regionalized
-        
-        
-        
-        
-        
-        
 
+
+def trainDBSCAN(labelData, eps=0.5, mxs = 10000, mxp = 0.7):
+    
+    """
+    Method to perform DBSCAN for training data.
+    
+    Paramters:
+    - - - - -
+        labelData : (dict) training data, keys are labels, values are arrays
+        eps : DBSCAN parameter, specifiying maximum distance between two 
+                samples for them to be considered as in the same neighborhood
+        mxs : maximum number of samples per iteration of DBSCAN
+        mxp : minimum percentage of original data points required for a
+                completed round of DBSCAN
+    """
+    
+    labels = labelData.keys()
+    dbsData = {}.fromkeys(labels)
+    
+    for lab in labels:
+        
+        dbsData[lab] = labelDBSCAN(labelData[lab], eps, mxs, mxp)
+        
+    return dbsData
+    
+def labelDBSCAN(labelData,eps,max_samples,max_percent):
+    
+    """
+    Method to perform DBSCAN for training data belong to a single label.
+    """
+
+    # Shuffle compiled training data for current label.  Shuffling is performed
+    # because training data is stacked 1 subject at a time -- we want DBSCAN to
+    # find central samples across all training data, not within each subject.
+    np.random.shuffle(labelData)
+    samples,_ = labelData.shape    
+
+    # if labelData has fewer samples than max_samples, convert to list
+    if samples <= max_samples:
+        subsets = list([labelData])
+        
+    # otherwise break into subsets of size max_samples
+    # will generally produce one smaller subset
+    else:
+        iters = samples/max_samples
+        subsets = []
+        
+        for i in np.arange(iters):
+            
+            bc = i*max_samples
+            uc = (i+1)*max_samples
+            subsets.append(labelData[bc:uc,:])
+        
+        subsets.append(labelData[(i+1)*max_samples:,:])
+
+    accepted = []
+    
+    # for each subset
+    for dataSubset in subsets:
+
+        # compute correlation distance (1-corrcoef) and scale to 0-1
+        dMat = metrics.pairwise.pairwise_distances(dataSubset,
+                                                   metric='correlation')
+        dMat = (1-dMat)/2
+
+        perc = 0.0
+        ep = copy.copy(eps)
+
+        # while percentage of non-noise samples < max_percentage
+        while perc < max_percent:
+
+            # apply DBSCAN, update epsilon parameter (neighborhood size)
+            model = cluster.DBSCAN(eps=ep,metric='precomputed',n_jobs=-1)
+            model.fit(dMat)
+            predLabs = model.labels_            
+            clusters = np.where(predLabs != -1)[0]
+            
+            perc = (1.*len(clusters))/len(predLabs)
+            ep += 0.025
+
+        accepted.append(dataSubset[clusters,:])
+    
+    accepted = np.row_stack(accepted)
+    
+    return accepted
+        
 #####
 """
 Methods to compute level structures on a cortical map file

@@ -181,11 +181,10 @@ class Atlas(object):
             classifier : model to use
 
             kwargs : optional arguments for classifier
-
         """
 
         self.model_type = model_type
-        self._initializeTraining(trainObject,neighborhoodMap)
+        self._initializeTraining(trainObject,neighborhoodMap,**kwargs)
 
         # get valid arguments for supplied classifier
         # get valid parameters passed by user
@@ -223,7 +222,7 @@ class Atlas(object):
         self.models = models
         self._fit = True
         
-    def _initializeTraining(self,trainObject,neighborhoodMap):
+    def _initializeTraining(self,trainObject,neighborhoodMap,**kwargs):
         
         """
         Initialize the object with the training data.
@@ -235,6 +234,11 @@ class Atlas(object):
             neighborhoodMap : Dijkstra distance file or MergedMappings file
 
         """
+        
+        kw = ['DBSCAN','load','save']
+        
+        if kwargs:
+            
 
         # load the training data
 
