@@ -309,7 +309,7 @@ class Atlas(object):
             print 'DBSCAN argument provided.'
             if 'load' in largs:
                 print 'Loading now.'
-                dbs = ld.loadh5_dbscan(largs['load'])
+                dbs = ld.loadH5_dbscan(largs['load'])
             else:
                 print 'Computing now.'
                 dbs = regm.trainDBSCAN(self.labelData)
@@ -387,6 +387,16 @@ class Atlas(object):
         # initialize prediction dictionary
         baseline = {k: [] for k in verts}
         
+        funcs = {'BASE': self.softmax_base,
+                 'TREES': self.softmax_trees,
+                 'FORESTS': self.softmax_forests}
+        
+        for lab in self.labels:
+            if lab in self.neighbors.keys():
+                members = self.labelToVertexmaps[lab]
+                
+                preds = funcs[softmax_type](lab,members,)
+        
         # check to see what type of processing option was provided
         if softmax_type == 'BASE':
             for lab in self.labels:
@@ -433,6 +443,30 @@ class Atlas(object):
         
         self.predicted = self._classify(baseline)
         self._classified = True
+        
+        def softmax_base(self,label,members,cutoffs,mtd):
+            
+            scores = self._predictPoint(mtd,lab,members)
+            
+            return scores
+        
+        def softmax_trees(self,label,members,cutoffs,mtd):
+            
+            sfmxLabs = treeSoftMax(self.models[lab],cutoffs,
+                                   members,mtd[members,:])
+            
+            predLabs = np.squeeze(sfmxLabs)
+            
+            return predLabs
+        
+        def softmax_forest(self,label,members,cutoffs,mtd):
+            
+            sfmxLabs = forestSoftMax(self.models[label],cutoffs,
+                                     members,mtd[members,:])
+            
+            predLabs = np.squeeze(sfmxLabs)
+            
+            return predLabs
 
     def _predictPoint(self,data,label,members):
         

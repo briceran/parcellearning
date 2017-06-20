@@ -253,7 +253,7 @@ def parseH5(h5Object,features):
     return parsedData
 
 
-def loadh5_dbscan(inFile):
+def loadH5_dbscan(inFile):
     
     """
     Method to load results of dbscan sample reduction.
@@ -264,14 +264,14 @@ def loadh5_dbscan(inFile):
     dbscan_data = {}.fromkeys(labels)
     
     for feat in labels:
-        dbscan_data[feat] = np.asarray(inData['dbscan_data'][feat])
+        dbscan_data[feat] = np.asarray(inData['dbscan_data'][str(feat)])
         
     inData.close()
     
     return dbscan_data
     
     
-def saveh5_dbscan(outFile,inDict):
+def saveH5_dbscan(outFile,inDict):
     
     """
     Method to save results of dbscan sample reduction.

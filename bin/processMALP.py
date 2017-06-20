@@ -38,7 +38,7 @@ kars = {'atlas_size': 1,
 
 feats = ['fs_cort','subcort','sulcal','myelin']
 
-iters = 15
+iters = 2
 testSize = 10
 
 inMyl = dataDir + 'MyelinDensity/285345.L.MyelinMap.32k_fs_LR.func.gii'
@@ -46,7 +46,7 @@ myl = ld.loadGii(inMyl)
 
 Myl = nb.gifti.giftiio.read(inMyl)
 
-for k in np.arange(iters):
+for k in np.arange(iters+4):
     
     print('Training Iteration: {}'.format(k+1))
     
@@ -70,8 +70,8 @@ for k in np.arange(iters):
     
     Atlases = malp.parallelFitting(M,mapData,feats,**kars)
 
-    extension = '.L.MALP.Atlases_{}.nEst_{}.Size_{}.Depth_{}'.format((k+1),
-                              L,kars['n_estimators'],kars['atlas_size'],kars['max_depth'])
+    extension = '.L.MALP.Atlases_{}.nEst_{}.Size_{}.Depth_{}'.format(L,
+                                 kars['n_estimators'],kars['atlas_size'],kars['max_depth'])
     
     outPickle = dataDir + 'CrossValidated/Iteration_{}'.format(k+1) + extension + '.p'
     
