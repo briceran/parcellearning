@@ -8,8 +8,10 @@ Created on Tue May  9 18:17:38 2017
 """
 
 import classifier_utilities as cu
-import matchingLibraries as lb
 import loaded as ld
+import matchingLibraries as lb
+import regionalizationMethods as regm
+
 
 import copy
 import h5py
@@ -235,10 +237,14 @@ class Atlas(object):
 
         """
         
-        kw = ['DBSCAN','load','save']
+        kw = ['DBSCAN','save']
         
         if kwargs:
-            
+            args = copy.copy(kwargs)
+        
+        for k in args:
+            if k not in kw:
+                del args[k]
 
         # load the training data
 
@@ -294,6 +300,9 @@ class Atlas(object):
         # isolate training data corresponding to each label
         self.labelData = cu.partitionData(trainData,feats = self.features)
         
+        if args['DBSCAN']:
+            self.labelData = regm.trainDBSCAN(self.labelData)
+
         # build response vector for each label
         self.response = cu.buildResponseVector(self.labels,self.labelData)
 
