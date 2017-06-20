@@ -300,6 +300,7 @@ class Atlas(object):
         # isolate training data corresponding to each label
         self.labelData = cu.partitionData(trainData,feats = self.features)
         
+        print 'Checking DBSCAN'
         if args['DBSCAN']:
             self.labelData = regm.trainDBSCAN(self.labelData)
 
