@@ -112,15 +112,17 @@ def trainDBSCAN(labelData, eps=0.5, mxs = 10000, mxp = 0.7):
     
     for lab in labels:
         
-        dbsData[lab] = labelDBSCAN(labelData[lab], eps, mxs, mxp)
+        dbsData[lab] = labelDBSCAN(lab,labelData[lab], eps, mxs, mxp)
         
     return dbsData
     
-def labelDBSCAN(labelData,eps,max_samples,max_percent):
+def labelDBSCAN(label,labelData,eps,max_samples,max_percent):
     
     """
     Method to perform DBSCAN for training data belong to a single label.
     """
+    
+    print 'Applying DBSCAN for label {}'.format(label)
 
     # Shuffle compiled training data for current label.  Shuffling is performed
     # because training data is stacked 1 subject at a time -- we want DBSCAN to
