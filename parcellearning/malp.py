@@ -304,7 +304,6 @@ class Atlas(object):
         self.labelData = cu.partitionData(trainData,feats = self.features)
 
         if cond:
-            print 'Sample reduction using DBSCAN.'
             if 'load' in largs:
                 dbs = ld.loadH5_dbscan(largs['load'])
             else:
