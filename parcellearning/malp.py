@@ -244,7 +244,8 @@ class Atlas(object):
             largs = copy.copy(kwargs)
             for k in largs:
                 if k == 'DBSCAN':
-                    cond = True
+                    if largs[k]:
+                        cond = True
                 if k not in kw:
                     del(largs[k])
                     
@@ -872,12 +873,19 @@ def parallelFitting(multiAtlas,maps,features,
     
     print 'Atlas softmax type: {}'.format(BaseAtlas.softmax_type)
     
+    kw = ['DBSCAN']
+    cpKW = copy.deepcopy(kwargs)
+    
+    for k in cpKW:
+        if k not in kw:
+            del(cpKW[k])
 
     # fit atlas on each component
 
     fittedAtlases = Parallel(n_jobs=NUM_CORES)(delayed(atlasFit)(BaseAtlas,
                             d,maps,
-                            classifier=classifier) for d in multiAtlas.datasets)
+                            classifier=classifier,
+                            **cpKW) for d in multiAtlas.datasets)
     
     return fittedAtlases
     
@@ -889,7 +897,7 @@ def atlasFit(baseAtlas,data,maps,classifier,**kwargs):
 
     atl = copy.deepcopy(baseAtlas)
     
-    atl.fit(data,maps,classifier = classifier)
+    atl.fit(data,maps,classifier = classifier,**kwargs)
     
     return atl
 
