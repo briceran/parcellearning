@@ -387,59 +387,15 @@ class Atlas(object):
                              self.mappingsCutoff,mtd)
                 
                 baseline = cu.updatePredictions(baseline,members,preds)
-        
-        """
-        # check to see what type of processing option was provided
-        if softmax_type == 'BASE':
-            for lab in self.labels:
-                if lab in self.neighbors.keys():
-
-                    # compute vertices that map to that label
-                    members = self.labelToVertexMaps[lab]
-                                
-                    if len(members) > 0:
-        
-                        # compute member labels from lab core classifier
-                        scores = self._predictPoint(mtd,lab,members) 
-        
-                        # save results in self.predict
-                        baseline = cu.updatePredictions(baseline,members,scores)
-                    
-        else:
-            for lab in self.labels:
-                if lab in self.neighbors.keys():
-                    
-                    members = self.labelToVertexMaps[lab]
-                    
-                    if len(members) > 0:
-                        
-                        if softmax_type == 'TREES':
-                            
-                            sfmxLabs = treeSoftMax(self.models[lab],
-                                                   self.mappingsCutoff,
-                                                   members,
-                                                   mtd[members,:])
-                                    
-                        elif softmax_type == 'FORESTS':
-                            
-                            sfmxLabs = forestSoftMax(self.models[lab],
-                                                            self.mappingsCutoff,
-                                                            members,
-                                                            mtd[members,:])
-    
-                        predLabs = np.squeeze(sfmxLabs)
-                        baseline = cu.updatePredictions(baseline,members,
-                                                        predLabs)
-        """
 
         self.baseline = baseline
         
-        self.predicted = self._classify(baseline)
+        self.predicted = self.classify(baseline)
         self._classified = True
         
     def softmax_base(self,label,members,cutoffs,mtd):
         
-        scores = self._predictPoint(mtd,label,members)
+        scores = self.predictPoint(mtd,label,members)
         
         return scores
     
@@ -461,7 +417,7 @@ class Atlas(object):
         
         return predLabs
 
-    def _predictPoint(self,data,label,members):
+    def predictPoint(self,data,label,members):
         
         """
         Compute predicted label of test vertices with specific mapping style.
@@ -482,7 +438,7 @@ class Atlas(object):
 
         return predictedLabels
     
-    def _classify(self,storage):
+    def classify(self,storage):
         
         """
         For each vertex, returns label that it is classified as most frequently.
