@@ -242,7 +242,7 @@ class Atlas(object):
         cond = False
         if kwargs:
             largs = copy.copy(kwargs)
-            for k in largs:
+            for k in kwargs:
                 if k == 'DBSCAN':
                     if largs[k]:
                         cond = True
