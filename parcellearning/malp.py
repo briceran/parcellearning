@@ -872,20 +872,13 @@ def parallelFitting(multiAtlas,maps,features,
     BaseAtlas.set_params(**atlasArgs)
     
     print 'Atlas softmax type: {}'.format(BaseAtlas.softmax_type)
-    
-    kw = ['DBSCAN']
-    cpKW = copy.deepcopy(kwargs)
-    
-    for k in cpKW:
-        if k not in kw:
-            del(cpKW[k])
 
     # fit atlas on each component
 
     fittedAtlases = Parallel(n_jobs=NUM_CORES)(delayed(atlasFit)(BaseAtlas,
                             d,maps,
                             classifier=classifier,
-                            **cpKW) for d in multiAtlas.datasets)
+                            **kwargs) for d in multiAtlas.datasets)
     
     return fittedAtlases
     
