@@ -38,8 +38,8 @@ kars = {'atlas_size': 1,
 
 feats = ['fs_cort','subcort','sulcal','myelin']
 
-iters = 5
-testSize = 10
+iters = 7
+testSize = 15
 
 inMyl = dataDir + 'MyelinDensity/285345.L.MyelinMap.32k_fs_LR.func.gii'
 myl = ld.loadGii(inMyl)
