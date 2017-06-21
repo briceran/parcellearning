@@ -363,6 +363,10 @@ class Atlas(object):
         """
         
         softmax_type = self.softmax_type
+        
+        funcs = {'BASE': self.softmax_base,
+                 'TREES': self.softmax_tree,
+                 'FORESTS': self.softmax_forest}
 
         # load the testing data
         self._loadTest(y,yMatch)
@@ -374,14 +378,10 @@ class Atlas(object):
 
         # initialize prediction dictionary
         baseline = {k: [] for k in verts}
-        
-        funcs = {'BASE': self.softmax_base,
-                 'TREES': self.softmax_trees,
-                 'FORESTS': self.softmax_forests}
-        
+
         for lab in self.labels:
             if lab in self.neighbors.keys():
-                members = self.labelToVertexmaps[lab]
+                members = self.labelToVertexMaps[lab]
                 
                 preds = funcs[softmax_type](lab,members,
                              self.mappingsCutoff,mtd)
@@ -437,29 +437,29 @@ class Atlas(object):
         self.predicted = self._classify(baseline)
         self._classified = True
         
-        def softmax_base(self,label,members,cutoffs,mtd):
-            
-            scores = self._predictPoint(mtd,lab,members)
-            
-            return scores
+    def softmax_base(self,label,members,cutoffs,mtd):
         
-        def softmax_trees(self,label,members,cutoffs,mtd):
-            
-            sfmxLabs = treeSoftMax(self.models[lab],cutoffs,
-                                   members,mtd[members,:])
-            
-            predLabs = np.squeeze(sfmxLabs)
-            
-            return predLabs
+        scores = self._predictPoint(mtd,label,members)
         
-        def softmax_forest(self,label,members,cutoffs,mtd):
-            
-            sfmxLabs = forestSoftMax(self.models[label],cutoffs,
-                                     members,mtd[members,:])
-            
-            predLabs = np.squeeze(sfmxLabs)
-            
-            return predLabs
+        return scores
+    
+    def softmax_tree(self,label,members,cutoffs,mtd):
+        
+        sfmxLabs = treeSoftMax(self.models[label],cutoffs,
+                               members,mtd[members,:])
+        
+        predLabs = np.squeeze(sfmxLabs)
+        
+        return predLabs
+    
+    def softmax_forest(self,label,members,cutoffs,mtd):
+        
+        sfmxLabs = forestSoftMax(self.models[label],cutoffs,
+                                 members,mtd[members,:])
+        
+        predLabs = np.squeeze(sfmxLabs)
+        
+        return predLabs
 
     def _predictPoint(self,data,label,members):
         
@@ -469,9 +469,7 @@ class Atlas(object):
         Parameters:
         - - - - - 
             data : merged data array
-            
             label : label of interest
-        
             members : vertices mapping to label
         """
         
@@ -514,11 +512,9 @@ class Atlas(object):
         Parameters:
         - - - - -
             y : SubjectFeatures object for a test brain      
-            
             yMatch : MatchingFeaturesTest object containing vertLib attribute 
                     detailing which labels each vertex in surface y maps to 
                     in the training data
-
         """
         
         # get Atlas attributes
@@ -574,7 +570,7 @@ class Atlas(object):
         
         # Otherwise, compute label-vertex memberships.
         else:
-            self.labelToVertexMaps = cu.vertexMemberships(freqMaps,labels)
+            self.labelToVertexMaps = cu.vertexMemberships(threshed,labels)
 
         # if save is provided, save label-vertex memberships to file
         if save:
