@@ -186,7 +186,7 @@ class Atlas(object):
         """
 
         self.model_type = model_type
-        
+
         cond = False
         if kwargs:
             if 'DBSCAN' in kwargs:
@@ -308,22 +308,15 @@ class Atlas(object):
 
         # get unique labels in training set
         self.labels = set(cu.getLabels(trainData)).difference({0,-1})
-        
+
         # isolate training data corresponding to each label
         self.preLabData = cu.partitionData(trainData,feats = self.features)
         self.preResp = cu.buildResponseVector(self.labels,self.preLabData)
-        
+
         if not hasattr(self,'dbs'):
-        
-            if cond and 'load' in largs:
-                self.dbs = ld.loadH5_dbscan(largs['load'])
-            else:
-                self.dbs = regm.trainDBSCAN(self.preLabData)
-                
+            
+            self.dbs = regm.trainDBSCAN(self.preLabData)
             self.dbsResp = cu.buildResponseVector(self.labels,self.dbs)
-                
-            if cond and 'save' in largs:
-                ld.saveH5_dbscan(largs['save'],self.dbs)
 
         # load and prepare neighborhoodMap
         neighborhoodMap = ld.loadPick(neighborhoodMap)
@@ -363,7 +356,7 @@ class Atlas(object):
             
         if not cond:
             raise ValueError('Training data is flawed.')
-  
+
     def predict(self,y,yMatch):
         
         """
@@ -890,10 +883,8 @@ def atlasFit(baseAtlas,data,maps,classifier,**kwargs):
     """
 
     atl = copy.deepcopy(baseAtlas)
-    
-    if not hasattr(atl,'labelData'):
-        atl.initializeTraining(data,maps,**kwargs)
-        
+
+    atl.initializeTraining(data,maps,**kwargs)
     atl.fit(classifier = classifier,**kwargs)
     
     return atl

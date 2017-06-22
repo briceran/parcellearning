@@ -102,16 +102,18 @@ def trainDBSCAN(labelData, eps=0.025, mxs = 7500, mxp = 0.7):
                 completed round of DBSCAN
     """
     
-    labels = labelData.keys()
+    labDat = copy.deepcopy(labelData)
+    
+    labels = labDat.keys()
     dbsData = {}.fromkeys(labels)
 
     for lab in labels:
-        dbsData[lab] = labelDBSCAN(lab,labelData[lab],eps,mxs,mxp)
+        tempData = labDat[lab]
+        dbsData[lab] = labelDBSCAN(lab,tempData,eps,mxs,mxp)
         
-    
     return dbsData
     
-def labelDBSCAN(label,labelData,eps,max_samples,max_percent):
+def labelDBSCAN(label,data,eps,max_samples,max_percent):
     
     """
     Method to perform DBSCAN for training data belong to a single label.
@@ -120,12 +122,12 @@ def labelDBSCAN(label,labelData,eps,max_samples,max_percent):
     # Shuffle compiled training data for current label.  Shuffling is performed
     # because training data is stacked 1 subject at a time -- we want DBSCAN to
     # find central samples across all training data, not within each subject.
-    np.random.shuffle(labelData)
-    samples,_ = labelData.shape    
+    np.random.shuffle(data)
+    samples,_ = data.shape    
 
     # if labelData has fewer samples than max_samples, convert to list
     if samples <= max_samples:
-        subsets = list([labelData])
+        subsets = list([data])
         
     # otherwise break into subsets of size max_samples
     # will generally produce one smaller subset
@@ -137,19 +139,19 @@ def labelDBSCAN(label,labelData,eps,max_samples,max_percent):
             
             bc = i*max_samples
             uc = (i+1)*max_samples
-            subsets.append(labelData[bc:uc,:])
+            subsets.append(data[bc:uc,:])
         
-        subsets.append(labelData[(i+1)*max_samples:,:])
+        subsets.append(data[(i+1)*max_samples:,:])
 
     accepted = []
-    
+
     # for each subset
     for dataSubset in subsets:
 
         # compute correlation distance (1-corrcoef) and scale to 0-1
         dMat = metrics.pairwise.pairwise_distances(dataSubset,
                                                    metric='correlation')
-        dMat = (1-dMat)/2
+        dMat = dMat/2
 
         perc = 0.0
         ep = copy.copy(eps)
@@ -162,14 +164,14 @@ def labelDBSCAN(label,labelData,eps,max_samples,max_percent):
             model.fit(dMat)
             predLabs = model.labels_            
             clusters = np.where(predLabs != -1)[0]
-            
-            perc = (1.*len(clusters))/len(predLabs)
-            ep += 0.02
+
+            perc = (1.*len(clusters))/(1.*len(predLabs))
+            ep += 0.01
 
         accepted.append(dataSubset[clusters,:])
-    
+
     accepted = np.row_stack(accepted)
-    
+
     return accepted
         
 #####
