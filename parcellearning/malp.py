@@ -345,12 +345,20 @@ class Atlas(object):
         # all response vectors have the same number of samples, and that all training data
         # has the same features
         cond = True
-        if not self._compareTrainingDataKeys():
-            print('WARNING: Training data and response vectors do not have the same keys.')
+        if not self._compareTrainingDataKeys(self.preLabData,self.preResp):
+            print('WARNING: Pre-DBS data and pre-DBS response do not have same keys.')
+            cond = False
+        
+        if not self._compareTrainingDataKeys(self.dbs,self.dbsResp):
+            print('WARNING: DBS data and DBS response do not have same keys.')
             cond = False
 
-        if not self._compareTrainingDataSize():
-            print('WARNING: Training data and response vectors are not the same length.')
+        if not self._compareTrainingDataSize(self.preLabData,self.preResp):
+            print('WARNING: Pre-DBS data and pre-DBS response are not same length.')
+            cond = False
+            
+        if not self._compareTrainingDataSize(self.dbs,self.dbsResp):
+            print('WARNING: DBS data and DBS response are not same length.')
             cond = False
             
         if not cond:
@@ -547,7 +555,7 @@ class Atlas(object):
 
         self._loadedTest = True
     
-    def _compareTrainingDataSize(self):
+    def _compareTrainingDataSize(self,labelData,response):
         
         """
         Method to ensure that the length of the response vector is the same 
@@ -557,10 +565,7 @@ class Atlas(object):
         label.
         """
         cond = True
-        
-        labelData = self.labelData
-        response = self.response
-        
+
         for f,r in zip(set(labelData.keys()),set(response.keys())):
             
             sf = labelData[f].shape[0]
@@ -571,17 +576,14 @@ class Atlas(object):
         
         return cond
             
-    def _compareTrainingDataKeys(self):
+    def _compareTrainingDataKeys(self,labelData,response):
         
         """
         Method to ensure that the keys for the training data for the response
         vectors are the same.  These must be the same in order to properly
         access the training data for training the classifiers.
         """
-        
-        labelData = self.labelData
-        response = self.response
-        
+
         sf = set(labelData.keys())
         sr = set(response.keys())
         
