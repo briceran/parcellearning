@@ -165,7 +165,7 @@ class Atlas(object):
                 if key in args:
                     setattr(self,key,kwargs[key])
             
-    def fit(self, trainObject, neighborhoodMap,model_type='ori',
+    def fit(self, model_type='ori',
             classifier = ensemble.RandomForestClassifier(n_jobs=-1),**kwargs):
         
         """
@@ -186,7 +186,18 @@ class Atlas(object):
         """
 
         self.model_type = model_type
-        self._initializeTraining(trainObject,neighborhoodMap,**kwargs)
+        
+        cond = False
+        if kwargs:
+            if 'DBSCAN' in kwargs:
+                cond = kwargs['DBSCAN']
+                
+        if cond:
+            self.labelData = self.dbs
+            self.response = self.dbsResp
+        else:
+            self.labelData = self.preLabData
+            self.response = self.preResp
 
         # get valid arguments for supplied classifier
         # get valid parameters passed by user
@@ -224,7 +235,7 @@ class Atlas(object):
         self.models = models
         self._fit = True
         
-    def _initializeTraining(self,trainObject,neighborhoodMap,**kwargs):
+    def initializeTraining(self,trainObject,neighborhoodMap,**kwargs):
         
         """
         Initialize the object with the training data.
@@ -241,11 +252,9 @@ class Atlas(object):
         
         cond = False
         if kwargs:
+            cond = True
             largs = copy.copy(kwargs)
             for k in kwargs:
-                if k == 'DBSCAN':
-                    if largs[k]:
-                        cond = True
                 if k not in kw:
                     del(largs[k])
                     
@@ -301,20 +310,20 @@ class Atlas(object):
         self.labels = set(cu.getLabels(trainData)).difference({0,-1})
         
         # isolate training data corresponding to each label
-        self.labelData = cu.partitionData(trainData,feats = self.features)
-
-        if cond:
-            if 'load' in largs:
-                dbs = ld.loadH5_dbscan(largs['load'])
+        self.preLabData = cu.partitionData(trainData,feats = self.features)
+        self.preResp = cu.buildResponseVector(self.labels,self.preLabData)
+        
+        if not hasattr(self,'dbs'):
+        
+            if cond and 'load' in largs:
+                self.dbs = ld.loadH5_dbscan(largs['load'])
             else:
-                dbs = regm.trainDBSCAN(self.labelData)
-            if 'save' in largs:
-                ld.saveH5_dbscan(largs['save'],dbs)
-
-            self.labelData = dbs
-
-        # build response vector for each label
-        self.response = cu.buildResponseVector(self.labels,self.labelData)
+                self.dbs = regm.trainDBSCAN(self.preLabData)
+                
+            self.dbsResp = cu.buildResponseVector(self.labels,self.dbs)
+                
+            if cond and 'save' in largs:
+                ld.saveH5_dbscan(largs['save'],self.dbs)
 
         # load and prepare neighborhoodMap
         neighborhoodMap = ld.loadPick(neighborhoodMap)
@@ -719,7 +728,7 @@ class MultiAtlas(object):
     """
     
     def __init__(self,features,atlas_size = 1,atlases=None,
-                 exclude_testing = None,cv=False,cv_size=20):
+                 exclude_testing = None):
         
         """
         Method to initialize Mutli-Atlas label propagation scheme.
@@ -748,20 +757,11 @@ class MultiAtlas(object):
                 isinstance(exclude_testing,list):
             raise ValueError('exclude_testing must by a string or None.')
 
-        if not isinstance(cv,bool):
-            raise ValueError('cv must be of type boolean.')
-
-        if not isinstance(cv_size,int) and cv_size < 1:
-            raise ValueError('cv_size must be a positive integer.')
-        
         self.atlas_size = atlas_size
         self.atlases = atlases
         self.features = features
         self.exclude_testing = exclude_testing
 
-        self.cv = cv
-        self.cv_size = cv_size
-        
     def set_params(self,**kwargs):
         
         """
@@ -889,7 +889,10 @@ def atlasFit(baseAtlas,data,maps,classifier,**kwargs):
 
     atl = copy.deepcopy(baseAtlas)
     
-    atl.fit(data,maps,classifier = classifier,**kwargs)
+    if not hasattr(atl,'labelData'):
+        atl.initializeTraining(data,maps,**kwargs)
+        
+    atl.fit(classifier = classifier,**kwargs)
     
     return atl
 

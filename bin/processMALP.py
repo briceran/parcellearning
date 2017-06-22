@@ -140,7 +140,6 @@ for k in np.arange(1,iters+1):
     kars.update({'DBSCAN':False})
     
     # initialize malp.MultiAtlas with parameters
-    M = malp.MultiAtlas(feats)
     M.set_params(**kars)
     M.initializeTraining(trainData)
 
