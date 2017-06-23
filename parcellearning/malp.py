@@ -193,9 +193,11 @@ class Atlas(object):
                 cond = kwargs['DBSCAN']
                 
         if cond:
+            print 'Label data is DBSCANed'
             self.labelData = self.dbs
             self.response = self.dbsResp
         else:
+            print 'Label data is original'
             self.labelData = self.preLabData
             self.response = self.preResp
 

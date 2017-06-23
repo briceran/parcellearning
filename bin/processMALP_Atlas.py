@@ -94,7 +94,7 @@ for k in np.arange(P,P+1):
     M = malp.Atlas(feats)
     M.set_params(**kars)
     M.initializeTraining(trainData,mapData)
-    M.fit()
+    M.fit(**kars)
 
     print 'Training size: {}'.format(len(training))
     print 'DBSCAN status: {}'.format(kars['DBSCAN'])
@@ -152,7 +152,7 @@ for k in np.arange(P,P+1):
     M = malp.Atlas(feats)
     M.set_params(**kars)
     M.initializeTraining(trainData,mapData)
-    M.fit()
+    M.fit(**kars)
 
     print 'Training size: {}'.format(len(training))
     print 'DBSCAN status: {}'.format(kars['DBSCAN'])
