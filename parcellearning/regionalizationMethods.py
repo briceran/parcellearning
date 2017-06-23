@@ -288,22 +288,18 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
         # make sure subgraph has more than a single component
         if len(sg_nodes) > 1:
             
-            # get subgraph border indices
             sg_border = list(set(sg_nodes).intersection(borderIndices))
-            # get subgraph internal indices
-            sg_internal = list(set(sg_nodes).intersection(internalNodes))
+            sg_intern = list(set(sg_nodes).intersection(internalNodes))
             
-            sp = nx.all_pairs_shortest_path_length(subGraph)
+            external = [i for i,j in enumerate(sg_nodes) if j in sg_border]
             
-            for k in sg_internal:
-                
-                distances[k] = [v for j,v in sp[k].items() if j in sg_border]
-    
-    for k in distances.keys():
-        if len(distances[k]):
-            distances[k] = min(distances[k])
-        else:
-            distances[k] = None
+            sp = nx.floyd_warshall_numpy(subGraph)
+            se = sp[:,external]
+            minDist = np.min(se,axis=1)
+            
+            for k,v in enumerate(sg_nodes):
+                if v in sg_intern:
+                    distances[v] = int(np.asarray(minDist[k]))
 
     layered = {k: [] for k in set(distances.values())}
     
