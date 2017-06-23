@@ -26,8 +26,7 @@ import numpy as np
 import os
 import pickle
 
-#dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
-dataDir = '/Users/kristianeschenburg/Desktop/Programming/Data/'
+dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
 
 subjectList = dataDir + 'HCP_Subjects.txt'
 
@@ -46,8 +45,8 @@ kars = {'n_estimators': 10,
 
 feats = ['fs_cort','subcort','sulcal','myelin']
 
-iters = 4
-testSize = 2
+iters = 5
+testSize = 10
 
 inMyl = dataDir + 'MyelinDensity/285345.L.MyelinMap.32k_fs_LR.func.gii'
 myl = ld.loadGii(inMyl)
@@ -76,7 +75,7 @@ for k in np.arange(1,iters+1):
     # # atlases = len(training)
     # DBSCAN = True
     
-    kars.update({'atlas_size': 3})
+    kars.update({'atlas_size': len(training)})
     kars.update({'atlases': 1})
     kars.update({'DBSCAN': True})
     
