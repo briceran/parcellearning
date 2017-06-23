@@ -134,7 +134,7 @@ for k in np.arange(P,P+1):
             Preds = M.predicted
 
         testPredictions[test_subj] = Preds
-        Myl.darrays[0].data = Preds.astype(np.float32)
+        Myl.darrays[0].data = np.asarray(Preds).astype(np.float32)
         nb.save(Myl,outFunc)
         
     with open(outPickle,"wb") as outFile:
@@ -192,7 +192,7 @@ for k in np.arange(P,P+1):
             Preds = M.predicted
 
         testPredictions[test_subj] = Preds
-        Myl.darrays[0].data = Preds.astype(np.float32)
+        Myl.darrays[0].data = np.asarray(Preds).astype(np.float32)
         nb.save(Myl,outFunc)
         
     with open(outPickle,"wb") as outFile:
