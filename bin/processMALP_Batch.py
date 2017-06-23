@@ -14,6 +14,8 @@ Created on Thu Jun 15 12:26:17 2017
 @author: kristianeschenburg
 """
 
+import argparse
+
 import sys
 sys.path.append('..')
 
@@ -25,6 +27,11 @@ import numpy as np
 
 import os
 import pickle
+
+parser = argparse.ArgumentParser(description='Compute random forest predictions.')
+parser.add_argument('-k','--iterations', help='Range of values.',required=True)
+args = parser.parse_args()
+P = args.iterations
 
 dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
 
@@ -53,7 +60,7 @@ myl = ld.loadGii(inMyl)
 
 Myl = nb.gifti.giftiio.read(inMyl)
 
-for k in np.arange(1,iters+1):
+for k in np.arange(P,P+1):
     
     print('Training Iteration: {}'.format(k))
     
