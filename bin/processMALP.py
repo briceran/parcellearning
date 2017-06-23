@@ -37,7 +37,7 @@ kars = {'n_estimators': 60,
 
 feats = ['fs_cort','subcort','sulcal','myelin']
 
-iters = 5
+iters = 4
 testSize = 10
 
 inMyl = dataDir + 'MyelinDensity/285345.L.MyelinMap.32k_fs_LR.func.gii'
@@ -140,140 +140,6 @@ for k in np.arange(1,iters+1):
     kars.update({'DBSCAN':False})
     
     # initialize malp.MultiAtlas with parameters
-    M.set_params(**kars)
-    M.initializeTraining(trainData)
-
-    print 'Atlas size: {}'.format(kars['atlas_size'])
-    print 'Training size: {}'.format(kars['atlases'])
-    print 'DBSCAN status: {}'.format(kars['DBSCAN'])
-    
-    Atlases = malp.parallelFitting(M,mapData,feats,**kars)
-
-    exten = '.L.MALP.atlases_{}.nEst_{}.size_{}.depth_{}.dbscan_{}'.format(kars['atlases'],
-                                 kars['n_estimators'],
-                                 kars['atlas_size'],
-                                 kars['max_depth'],
-                                 kars['DBSCAN'])
-    
-    outPickle = dataDir + 'CrossValidated/Iteration_{}'.format(k) + exten + '.p'
-    
-    for j,test_subj in enumerate(testing):
-
-        outFunc = dataDir + 'CrossValidated/' + test_subj + exten + '.Iter_{}.func.gii'.format(k)
-        
-        print 'Test subject {}, {} of {}.'.format(test_subj,(j+1),len(testing))
-        
-        teobj = dataDir + 'TrainingObjects/FreeSurfer/' + test_subj + '.L.TrainingObject.aparc.a2009s.h5'
-        temps = dataDir + 'MatchingLibraries/Test/' + test_subj + '.VertexLibrary.Test.p'
-        
-        cond = True
-        
-        if not os.path.isfile(teobj):
-            cond = False
-            print 'Training object for {} does not exist.'.format(test_subj)
-        if not os.path.isfile(temps):
-            cond = False
-            print 'Matching library for {} does not exist.'.format(test_subj)
-        if os.path.isfile(outFunc):
-            cond = False
-            print 'Label file for {} already exists.'.format(test_subj)
-        
-        if cond:
-            
-            Preds = malp.parallelPredicting(Atlases,teobj,temps,**kars)
-            Preds = np.column_stack(Preds)
-            outPreds = np.zeros((myl.shape))
-            
-            for h in np.arange(Preds.shape[0]):
-            
-                outPreds[h] = max(set(list(Preds[h,:])),
-                        key=list(Preds[h,:]).count)
-            
-        testPredictions[test_subj] = outPreds
-        Myl.darrays[0].data = outPreds.astype(np.float32)
-        nb.save(Myl,outFunc)
-        
-    with open(outPickle,"wb") as outFile:
-        pickle.dump(testPredictions,outFile,-1)
-        
-    # Option 3
-    # atlas size = len(training)
-    # # atlases = 1
-    # DBSCAN = True
-    
-    kars.update({'atlas_size': len(training)})
-    kars.update({'atlases': 1})
-    kars.update({'DBSCAN': True})
-    
-    # initialize malp.MultiAtlas with parameters
-    M = malp.MultiAtlas(feats)
-    M.set_params(**kars)
-    M.initializeTraining(trainData)
-
-    print 'Atlas size: {}'.format(kars['atlas_size'])
-    print 'Training size: {}'.format(kars['atlases'])
-    print 'DBSCAN status: {}'.format(kars['DBSCAN'])
-    
-    Atlases = malp.parallelFitting(M,mapData,feats,**kars)
-
-    exten = '.L.MALP.atlases_{}.nEst_{}.size_{}.depth_{}.dbscan_{}'.format(kars['atlases'],
-                                 kars['n_estimators'],
-                                 kars['atlas_size'],
-                                 kars['max_depth'],
-                                 kars['DBSCAN'])
-    
-    outPickle = dataDir + 'CrossValidated/Iteration_{}'.format(k) + exten + '.p'
-    
-    for j,test_subj in enumerate(testing):
-
-        outFunc = dataDir + 'CrossValidated/' + test_subj + exten + '.Iter_{}.func.gii'.format(k)
-        
-        print 'Test subject {}, {} of {}.'.format(test_subj,(j+1),len(testing))
-        
-        teobj = dataDir + 'TrainingObjects/FreeSurfer/' + test_subj + '.L.TrainingObject.aparc.a2009s.h5'
-        temps = dataDir + 'MatchingLibraries/Test/' + test_subj + '.VertexLibrary.Test.p'
-        
-        cond = True
-        
-        if not os.path.isfile(teobj):
-            cond = False
-            print 'Training object for {} does not exist.'.format(test_subj)
-        if not os.path.isfile(temps):
-            cond = False
-            print 'Matching library for {} does not exist.'.format(test_subj)
-        if os.path.isfile(outFunc):
-            cond = False
-            print 'Label file for {} already exists.'.format(test_subj)
-        
-        if cond:
-            
-            Preds = malp.parallelPredicting(Atlases,teobj,temps,**kars)
-            Preds = np.column_stack(Preds)
-            outPreds = np.zeros((myl.shape))
-            
-            for h in np.arange(Preds.shape[0]):
-            
-                outPreds[h] = max(set(list(Preds[h,:])),
-                        key=list(Preds[h,:]).count)
-            
-        testPredictions[test_subj] = outPreds
-        Myl.darrays[0].data = outPreds.astype(np.float32)
-        nb.save(Myl,outFunc)
-        
-    with open(outPickle,"wb") as outFile:
-        pickle.dump(testPredictions,outFile,-1)
-        
-    # Option 3
-    # atlas size = len(training)
-    # # atlases = 1
-    # DBSCAN = False
-    
-    kars.update({'atlas_size': len(training)})
-    kars.update({'atlases': 1})
-    kars.update({'DBSCAN': False})
-    
-    # initialize malp.MultiAtlas with parameters
-    M = malp.MultiAtlas(feats)
     M.set_params(**kars)
     M.initializeTraining(trainData)
 
