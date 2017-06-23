@@ -31,7 +31,7 @@ import pickle
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
 parser.add_argument('-k','--iterations', help='Range of values.',required=True)
 args = parser.parse_args()
-P = args.iterations
+P = int(args.iterations)
 
 dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
 
