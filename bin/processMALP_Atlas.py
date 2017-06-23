@@ -149,9 +149,6 @@ for k in np.arange(P,P+1):
     kars.update({'DBSCAN': False})
     
         # initialize malp.MultiAtlas with parameters
-    M = malp.Atlas(feats)
-    M.set_params(**kars)
-    M.initializeTraining(trainData,mapData)
     M.fit(**kars)
 
     print 'Training size: {}'.format(len(training))
