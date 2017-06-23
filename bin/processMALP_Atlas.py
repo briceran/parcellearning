@@ -54,7 +54,7 @@ mapData = dataDir + 'LabelAdjacency/HCP/Compiled.L.HCP.LabelAdjacency.p'
 
 inMatchingDir = dataDir + 'MatchingLibraries/Test/'
 
-kars = {'n_estimators': 10,
+kars = {'n_estimators': 60,
         'max_depth': 5,
         'softmax_type': 'FORESTS'}
 
