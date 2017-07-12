@@ -279,6 +279,8 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
     
     distances = {n: [] for n in internalNodes}
     
+    
+    print 'distances'
     # here, we allow for connected components in the regions
     for subGraph in nx.connected_component_subgraphs(G):
         
@@ -301,6 +303,7 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
                 if v in sg_intern:
                     distances[v] = int(np.asarray(minDist[k]))
 
+    print 'layers'
     layered = {k: [] for k in set(distances.values())}
     
     for vertex in distances.keys():
@@ -492,6 +495,48 @@ def processNeighborhoodCM(labVal,labelAdjacency,truthLabFile,
     print(1)
     os.system(cmd_call)
     print(2)
+        
+    
+"""
+Classifier evaluation methods.
+"""
+
+def populationRegionSize(subjectList,labelDirectory,extension):
+    
+    """
+    Method to compute the sizes of each region across the training set.
+    
+    Parameters:
+    - - - - - 
+        subjectList : (list,.txt) list of subjects to include
+        labelDirectory : directory containing the label files
+        extension : label file extension
+    """
+    
+    if isinstance(subjectList,str):
+        with open(subjectList,'r') as inFile:
+            subjects = inFile.readlines()
+        subjects = [x.strip() for x in subjects]
+    elif isinstance(subjectList,list):
+        subjects = subjectList
+    else:
+        print 'Incorrect subject list type.'
+        
+    labelSizes = {k: [] for k in np.arange(1,181)}
+    
+    for subj in subjects:
+        
+        inLabel = labelDirectory + str(subj) + extension
+        
+        if os.path.isfile(inLabel):
+            
+            pred = ld.loadGii(inLabel)
+            
+            for k in labelSizes.keys():
+                if k in set(pred):
+                    labelSizes[k].append(len(np.where(pred == k)[0]))
+    
+    return labelSizes
         
         
         
