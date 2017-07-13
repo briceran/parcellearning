@@ -15,6 +15,7 @@ sys.path.append('..')
 import parcellearning.loaded as ld
 import parcellearning.classifier_utilities as cu
 import numpy as np
+import sklearn
 import os
 
 from keras.models import Sequential
@@ -92,8 +93,11 @@ subjects = [x.strip() for x in subjects]
 
 trainingData = loadData(subjects,dataDir,features)
 
-xTrain = trainingData[:,:-1]
-y = trainingData[:,-1].astype(np.int32)
+S = sklearn.preprocessing.StandardScaler()
+training = S.fit_transform(trainingData)
+
+xTrain = training[:,:-1]
+y = training[:,-1].astype(np.int32)
 
 oneHotY = utils.to_categorical(y, num_classes=len(set(y))+1)
 oneHotY = oneHotY[:,1:]
