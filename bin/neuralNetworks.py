@@ -92,6 +92,7 @@ with open(subjectFile,'r') as inFile:
 subjects = [x.strip() for x in subjects]
 
 trainingData = loadData(subjects,dataDir,features)
+trainingData = sklearn.utils.shuffle(trainingData)
 
 S = sklearn.preprocessing.StandardScaler()
 training = S.fit_transform(trainingData)
