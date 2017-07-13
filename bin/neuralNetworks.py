@@ -97,6 +97,7 @@ while c < levels:
     model.add(Dense(64, activation='relu'))
     model.add(BatchNormalization())
     model.add(Dropout(0.5))
+    c+=1
 
 # we can think of this chunk as the output layer
 model.add(Dense(len(set(y)), activation='softmax'))
