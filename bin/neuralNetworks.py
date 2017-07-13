@@ -87,12 +87,12 @@ subjects = [x.strip() for x in subjects]
 trainingData = loadData(subjects,dataDir,features)
 
 xTrain = trainingData[:,:-1]
-y = trainingData[:,-1]
+y = trainingData[:,-1].astype(np.int32)
 
 print set(y)
 print 'Number of labels: {}'.format(len(set(y)))
 
-oneHotY = utils.to_categorical(y, num_classes=len(set(y)))
+oneHotY = utils.to_categorical(y, num_classes=len(set(y))+1)
 
 samps = xTrain.shape[0]
 dims = xTrain.shape[1]
