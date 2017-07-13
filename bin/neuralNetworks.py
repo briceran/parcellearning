@@ -55,7 +55,6 @@ def loadData(subjectList,dataDir,features):
             
             coords = np.asarray(list(samples.difference(mids)))
             mergedData = mergedData[coords,:]
-            print mergedData.shape
             
             data.append(mergedData)
     
@@ -75,8 +74,8 @@ args = parser.parse_args()
 
 levels = np.int(args.levels)
 nodes = np.int(args.nodes)
-epochs = args.epochs
-batch = args.batchSize
+epochs = np.int(args.epochs)
+batch = np.int(args.batchSize)
 
 dataDir = args.dataDirectory
 features = list(args.features.split(','))
@@ -95,9 +94,6 @@ trainingData = loadData(subjects,dataDir,features)
 
 xTrain = trainingData[:,:-1]
 y = trainingData[:,-1].astype(np.int32)
-
-print set(y)
-print 'Number of labels: {}'.format(len(set(y)))
 
 oneHotY = utils.to_categorical(y, num_classes=len(set(y))+1)
 oneHotY = oneHotY[:,1:]
