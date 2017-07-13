@@ -93,7 +93,7 @@ with open(subjectFile,'r') as inFile:
     subjects = inFile.readlines()
 subjects = [x.strip() for x in subjects]
 
-ns = np.min(len(subjects),args.ns)
+ns = np.min([len(subjects),args.ns])
 print 'Number of training subjects: {}'.format(ns)
 subjects = np.random.choice(subjects,size=ns,replace=False)
 
