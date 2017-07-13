@@ -13,6 +13,7 @@ import sys
 sys.path.append('..')
 
 import parcellearning.loaded as ld
+import parcellearning.classifier_utilities as cu
 import numpy as np
 import os
 
@@ -38,6 +39,7 @@ def loadData(subjectList,dataDir,features):
     for s in subjects:
         
         inTrain = dataDir + fExt + s + ext
+        print(inTrain)
         
         if os.path.isfile(inTrain):
             
@@ -45,7 +47,9 @@ def loadData(subjectList,dataDir,features):
             train = ld.parseH5(train,features)
             train = train[s]
             
-            data.append(train)
+            mergedData = cu.mergeFeatures(train,features)
+            
+            data.append(mergedData)
     
     data = np.row_stack(data)
     
