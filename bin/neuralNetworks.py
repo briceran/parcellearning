@@ -62,10 +62,13 @@ parser.add_argument('-f','--features',help='Features to include in model.',requi
 parser.add_argument('-sl','--subjectList',help='List of subjects to include.',required=True)
 args = parser.parse_args()
 
-levels = args.levels
-nodes = args.nodes
+levels = np.int(args.levels)
+nodes = np.int(args.nodes)
 dataDir = args.dataDirectory
 features = list(args.features.split(','))
+
+print 'Levels: {}'.format(levels)
+print 'Nodes: {}'.format(nodes)
 
 subjectFile = args.subjectList
 with open(subjectFile,'r') as inFile:
