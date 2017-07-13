@@ -94,6 +94,8 @@ model.add(Dropout(0.30))
 c = 0
 while c < levels:
     
+    print 'Adding layer {}'.format(c+1)
+    
     model.add(Dense(64, activation='relu'))
     model.add(BatchNormalization())
     model.add(Dropout(0.5))
