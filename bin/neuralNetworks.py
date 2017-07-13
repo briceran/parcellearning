@@ -74,10 +74,10 @@ parser.add_argument('-sl','--subjectList',help='List of subjects to include.',re
 parser.add_argument('-ns','-numSubj',help='Number of subjects.',type=int,default=30)
 args = parser.parse_args()
 
-levels = np.int(args.levels)
-nodes = np.int(args.nodes)
-epochs = np.int(args.epochs)
-batch = np.int(args.batchSize)
+levels = args.levels
+nodes = args.nodes
+epochs = args.epochs
+batch = args.batchSize
 
 dataDir = args.dataDirectory
 features = list(args.features.split(','))
@@ -87,23 +87,31 @@ print 'Nodes: {}'.format(nodes)
 print 'Epochs: {}'.format(epochs)
 print 'Batch Size: {}'.format(batch)
 
+# Load subject data
 subjectFile = args.subjectList
 with open(subjectFile,'r') as inFile:
     subjects = inFile.readlines()
 subjects = [x.strip() for x in subjects]
 
+ns = np.min(len(subjects),args.ns)
+print 'Number of training subjects: {}'.format(ns)
+subjects = np.random.choice(subjects,size=ns,replace=False)
+
 trainingData = loadData(subjects,dataDir,features)
 trainingData = sklearn.utils.shuffle(trainingData)
 
+# Standardize subject features
 S = sklearn.preprocessing.StandardScaler()
 training = S.fit_transform(trainingData)
 
+# Get training features and responses
 xTrain = training[:,:-1]
 y = training[:,-1].astype(np.int32)
 
 oneHotY = utils.to_categorical(y, num_classes=len(set(y))+1)
 oneHotY = oneHotY[:,1:]
 
+# Dimensions of training data
 samps = xTrain.shape[0]
 dims = xTrain.shape[1]
 
