@@ -64,13 +64,14 @@ def loadData(subjectList,dataDir,features):
     return data
 
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
-parser.add_argument('-l','--levels', help='Number of levels to include in network.',required=True)
-parser.add_argument('-n','--nodes',help='Number of nodes to include in each level.',required=True)
-parser.add_argument('-e','--epochs',help='Number of epochs.',required=True)
-parser.add_argument('-b','--batchSize',help='Batsh size.',required=True)
+parser.add_argument('-l','--levels', help='Number of levels to include in network.',type=int,required=True)
+parser.add_argument('-n','--nodes',help='Number of nodes to include in each level.',type=int,required=True)
+parser.add_argument('-e','--epochs',help='Number of epochs.',type=int,required=True)
+parser.add_argument('-b','--batchSize',help='Batsh size.',type=int,required=True)
 parser.add_argument('-dDir','--dataDirectory',help='Directory where data exists.',required=True)
 parser.add_argument('-f','--features',help='Features to include in model.',required=True)
 parser.add_argument('-sl','--subjectList',help='List of subjects to include.',required=True)
+parser.add_argument('-ns','-numSubj',help='Number of subjects.',type=int,default=30)
 args = parser.parse_args()
 
 levels = np.int(args.levels)
