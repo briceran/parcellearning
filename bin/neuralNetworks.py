@@ -32,6 +32,7 @@ def loadData(subjectList,dataDir,features):
     """
     
     fExt = 'TrainingObjects/FreeSurfer/'
+    mExt = 'Midlines/'
     ext = '.L.TrainingObject.aparc.a2009s.h5'
     
     data = []
@@ -39,14 +40,21 @@ def loadData(subjectList,dataDir,features):
     for s in subjects:
         
         inTrain = dataDir + fExt + s + ext
+        mids = dataDir + mExt + s + '_Midline_Indices.mat'
         
-        if os.path.isfile(inTrain):
+        if os.path.isfile(inTrain) and os.path.isfile(mids):
             
             train = ld.loadH5(inTrain,*['full'])
             train = ld.parseH5(train,features)
             train = train[s]
             
             mergedData = cu.mergeFeatures(train,features)
+            
+            samples = set(np.arange(mergedData.shape[0]))
+            mids = set(ld.loadMat(mids))
+            
+            coords = np.asarray(samples.difference(mids))
+            mergedData = mergedData[coords,:]
             
             data.append(mergedData)
     
@@ -89,9 +97,9 @@ print 'Building a network with {} hidden layers, each with {} nodes.'.format(lev
 
 # instantiate model
 model = Sequential()
-model.add(Dense(64, activation='sigmoid', input_dim=dims))
+model.add(Dense(64, activation='relu', input_dim=dims))
 model.add(BatchNormalization())
-model.add(Activation('sigmoid'))
+model.add(Activation('relu'))
 model.add(Dropout(0.30))
 
 c = 0
