@@ -93,6 +93,7 @@ print set(y)
 print 'Number of labels: {}'.format(len(set(y)))
 
 oneHotY = utils.to_categorical(y, num_classes=len(set(y))+1)
+oneHotY = oneHotY[:,1:]
 
 samps = xTrain.shape[0]
 dims = xTrain.shape[1]
