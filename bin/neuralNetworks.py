@@ -55,6 +55,7 @@ def loadData(subjectList,dataDir,features):
             
             coords = np.asarray(list(samples.difference(mids)))
             mergedData = mergedData[coords,:]
+            print mergedData.shape
             
             data.append(mergedData)
     
