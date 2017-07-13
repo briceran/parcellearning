@@ -53,7 +53,7 @@ def loadData(subjectList,dataDir,features):
             samples = set(np.arange(mergedData.shape[0]))
             mids = set(ld.loadMat(mids))
             
-            coords = np.asarray(samples.difference(mids))
+            coords = np.asarray(list(samples.difference(mids)))
             mergedData = mergedData[coords,:]
             
             data.append(mergedData)
