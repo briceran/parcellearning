@@ -20,6 +20,7 @@ import os
 
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
+from keras.optimizers import SGD
 from keras import utils
 # Import Batch Normalization
 from keras.layers.normalization import BatchNormalization
@@ -64,15 +65,30 @@ def loadData(subjectList,dataDir,features):
     return data
 
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
-parser.add_argument('-l','--levels', help='Number of levels to include in network.',type=int,required=True)
-parser.add_argument('-n','--nodes',help='Number of nodes to include in each level.',type=int,required=True)
-parser.add_argument('-e','--epochs',help='Number of epochs.',type=int,required=True)
-parser.add_argument('-b','--batchSize',help='Batsh size.',type=int,required=True)
+
 parser.add_argument('-dDir','--dataDirectory',help='Directory where data exists.',required=True)
 parser.add_argument('-f','--features',help='Features to include in model.',required=True)
 parser.add_argument('-sl','--subjectList',help='List of subjects to include.',required=True)
+
+parser.add_argument('-l','--levels', help='Number of levels to include in network.',type=int,default=10)
+parser.add_argument('-n','--nodes',help='Number of nodes to include in each level.',type=int,default=5)
+parser.add_argument('-e','--epochs',help='Number of epochs.',type=int,default=20)
+parser.add_argument('-b','--batchSize',help='Batsh size.',type=int,default=128)
+
 parser.add_argument('-ns','-numSubj',help='Number of subjects.',type=int,default=30)
+
+parser.add_argument('-opt','--optimizer',help='Optimization scheme.',default='rmsprop',choices=['rmsprop','sgd'])
+parser.add_argument('-r','--rate',help='Learning rate.',type=float,default=0.001)
 args = parser.parse_args()
+
+
+optm = args.optimizer
+if optm == 'rmsprop':
+    opt = 'rmsprop'
+    rate = args.rate
+else:
+    opt = SGD(lr=rate, decay=1e-6, momentum=0.9, nesterov=True)
+    rate = 0.01
 
 levels = args.levels
 nodes = args.nodes
@@ -145,12 +161,10 @@ model.add(Dense(len(set(y)), activation='softmax'))
 model.add(BatchNormalization())
 model.add(Activation('softmax'))
 
-optim = 'rmsprop'
-
 model.compile(loss='categorical_crossentropy',
-              optimizer= optim,
+              optimizer= opt,
               metrics=['accuracy'])
 
-print 'Model built using {} optimization.  Training now.'.format(optim)
+print 'Model built using {} optimization.  Training now.'.format(args.optimizer)
 
 model.fit(xTrain, oneHotY, epochs=epochs, batch_size=batch, verbose=1)
