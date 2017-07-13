@@ -39,7 +39,6 @@ def loadData(subjectList,dataDir,features):
     for s in subjects:
         
         inTrain = dataDir + fExt + s + ext
-        print(inTrain)
         
         if os.path.isfile(inTrain):
             
@@ -95,9 +94,8 @@ model.add(Dropout(0.30))
 c = 0
 while c < levels:
     
-    model.add(Dense(64, init='uniform'))
+    model.add(Dense(64, activation='relu'))
     model.add(BatchNormalization())
-    model.add(Activation('relu'))
     model.add(Dropout(0.5))
 
 # we can think of this chunk as the output layer
@@ -113,4 +111,4 @@ model.compile(loss='categorical_crossentropy',
 
 print 'Model built using {} optimization.  Training now.'.format(optim)
 
-model.fit(xTrain, oneHotY, epochs=50, batch_size=64)
+model.fit(xTrain, oneHotY, epochs=50, batch_size=64,verbose=2)
