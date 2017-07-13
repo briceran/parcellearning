@@ -66,6 +66,8 @@ def loadData(subjectList,dataDir,features):
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
 parser.add_argument('-l','--levels', help='Number of levels to include in network.',required=True)
 parser.add_argument('-n','--nodes',help='Number of nodes to include in each level.',required=True)
+parser.add_argument('-e','--epochs',help='Number of epochs.',required=True)
+parser.add_argument('-b','--batchSize',help='Batsh size.',required=True)
 parser.add_argument('-dDir','--dataDirectory',help='Directory where data exists.',required=True)
 parser.add_argument('-f','--features',help='Features to include in model.',required=True)
 parser.add_argument('-sl','--subjectList',help='List of subjects to include.',required=True)
@@ -73,11 +75,16 @@ args = parser.parse_args()
 
 levels = np.int(args.levels)
 nodes = np.int(args.nodes)
+epochs = args.epochs
+batch = args.batchSize
+
 dataDir = args.dataDirectory
 features = list(args.features.split(','))
 
 print 'Levels: {}'.format(levels)
 print 'Nodes: {}'.format(nodes)
+print 'Epochs: {}'.format(epochs)
+print 'Batch Size: {}'.format(batch)
 
 subjectFile = args.subjectList
 with open(subjectFile,'r') as inFile:
@@ -111,11 +118,16 @@ model.add(Dropout(0.30))
 c = 0
 while c < levels:
     
-    print 'Adding layer {}'.format(c+1)
+    if c % 2 == 0:
+
+        model.add(Dense(128, activation='relu'))
+        model.add(BatchNormalization())
+        model.add(Dropout(0.5))
+    else:
+        model.add(Dense(128, activation='sigmoid'))
+        model.add(BatchNormalization())
+        model.add(Dropout(0.5))
     
-    model.add(Dense(64, activation='relu'))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.5))
     c+=1
 
 # we can think of this chunk as the output layer
@@ -131,4 +143,4 @@ model.compile(loss='categorical_crossentropy',
 
 print 'Model built using {} optimization.  Training now.'.format(optim)
 
-model.fit(xTrain, oneHotY, epochs=50, batch_size=64,verbose=2)
+model.fit(xTrain, oneHotY, epochs=epochs, batch_size=batch, verbose=1)
