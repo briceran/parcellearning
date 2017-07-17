@@ -52,6 +52,8 @@ funcs = {'gii': ld.loadGii,
 
 for s in subjects:
     
+    print s
+    
     inTrain = trainingDirectory + s + atlasExt
     inFeatr = dataDir + subDir + s + fExt
     
