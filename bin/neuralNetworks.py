@@ -33,7 +33,6 @@ import parcellearning.loaded as ld
 import parcellearning.classifier_utilities as cu
 import parcellearning.regionalizationMethods as regm
 
-import copy
 import numpy as np
 import sklearn
 import os
@@ -187,7 +186,7 @@ def dbsDS(trainingData,labelVector):
     # get samples for each label
     coreData = labelData(trainingData,labelVector)
     # downsample data for each label using DBSCAN
-    dbscanData = regm.trainDBSCAN(coreData,mxp=0.5)
+    dbscanData = regm.trainDBSCAN(coreData,mxp=0.70)
     
     # apply down-sampling scheme to DBSCAN-ed data
     dbsDataDWS = downsampleData(dbscanData,labels)
@@ -200,7 +199,14 @@ def dbsDS(trainingData,labelVector):
     
     # return samples and response arrays
     return (aggDBS,aggResp)
+
+def shuffleData(training,responses):
     
+    tempData = np.column_stack((training,responses))
+    shuffled = sklearn.utils.shuffle(tempData)
+    
+    return (shuffled[:,:-1],shuffled[:,-1])
+
 
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
 
@@ -258,32 +264,34 @@ ns = np.min([len(subjects),args.ns])
 print 'Number of training subjects: {}'.format(ns)
 subjects = np.random.choice(subjects,size=ns,replace=False)
 
+# Load training data
 trainingData,labels = loadData(subjects,dataDir,features)
-trainingData = sklearn.utils.shuffle(trainingData)
+
+# Down-sample the data using parameters specified by args.downSample
+tempX,tempY = ds_funcs[args.downSample](trainingData,labels)
 
 # Standardize subject features
 S = sklearn.preprocessing.StandardScaler()
-training = S.fit_transform(trainingData)
+training = S.fit_transform(tempX)
 
-# Get training features and responses
-xTrain = training
-yTrain = labels.astype(np.int32)
+# Shuffle features and responses
+xTrain,yTrain = shuffleData(training,tempY)
+yTrain = yTrain.astype(np.int32)
 
-xTrain = ds_funcs(args.downSample)(xTrain,yTrain)
-
-oneHotY = utils.to_categorical(y, num_classes=len(set(y))+1)
+# Generate one-hot encoded categorical array of response values
+oneHotY = utils.to_categorical(yTrain, num_classes=len(set(yTrain))+1)
 oneHotY = oneHotY[:,1:]
 
 # Dimensions of training data
-samps = xTrain.shape[0]
-dims = xTrain.shape[1]
+nSamples = xTrain.shape[0]
+nDims = xTrain.shape[1]
 
-print 'Training data has {} samples, and {} features.'.format(samps,dims)
+print 'Training data has {} samples, and {} features.'.format(nSamples,nDims)
 print 'Building a network with {} hidden layers, each with {} nodes.'.format(levels,nodes)
 
 # instantiate model
 model = Sequential()
-model.add(Dense(64, activation='relu', input_dim=dims))
+model.add(Dense(64, activation='relu', input_dim=nDims))
 model.add(BatchNormalization())
 model.add(Activation('relu'))
 model.add(Dropout(0.30))
@@ -304,7 +312,7 @@ while c < levels:
     c+=1
 
 # we can think of this chunk as the output layer
-model.add(Dense(len(set(y)), activation='softmax'))
+model.add(Dense(len(set(yTrain)), activation='softmax'))
 model.add(BatchNormalization())
 model.add(Activation('softmax'))
 
