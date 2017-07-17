@@ -300,7 +300,7 @@ yTrain = yTrain[train_coor,:]
 
 xEval = xTrain[eval_coor,:]
 yEval = yTrain[eval_coor,:]
-
+valData = (xEval,yEval)
 
 # Generate one-hot encoded categorical array of response values
 oneHotY = utils.to_categorical(yTrain, num_classes=len(set(yTrain))+1)
@@ -345,4 +345,5 @@ model.compile(loss='categorical_crossentropy',
 print 'Model built using {} optimization.  Training now.'.format(args.optimizer)
 
 model.fit(xTrain, oneHotY, epochs=epochs, validation_split=0.2,
-          batch_size=batch, verbose=1,shuffle=True)
+          batch_size=batch, verbose=1,shuffle=True,
+          validation_set=valData)
