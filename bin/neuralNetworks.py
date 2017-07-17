@@ -44,6 +44,14 @@ from keras import utils
 # Import Batch Normalization
 from keras.layers.normalization import BatchNormalization
 
+###
+# Hard coded factors:
+    
+EVAL_FACTOR = 0.2
+DBSCAN_PERC = 0.7
+
+###
+
 
 ## Method to load the training data and aggregate into a single array
 def loadData(subjectList,dataDir,features):
@@ -186,7 +194,7 @@ def dbsDS(trainingData,labelVector):
     # get samples for each label
     coreData = labelData(trainingData,labelVector)
     # downsample data for each label using DBSCAN
-    dbscanData = regm.trainDBSCAN(coreData,mxp=0.70)
+    dbscanData = regm.trainDBSCAN(coreData,mxp=DBSCAN_PERC)
     
     # apply down-sampling scheme to DBSCAN-ed data
     dbsDataDWS = downsampleData(dbscanData,labels)
@@ -278,13 +286,27 @@ training = S.fit_transform(tempX)
 xTrain,yTrain = shuffleData(training,tempY)
 yTrain = yTrain.astype(np.int32)
 
+# Dimensions of training data
+nSamples = xTrain.shape[0]
+nDims = xTrain.shape[1]
+
+eval_size = np.floor(EVAL_FACTOR*nSamples)
+eval_coor = np.squeeze(np.random.choice(np.arange(nSamples),
+                                        size=(eval_size,1),replace=False))
+train_coor = list(set(np.arange(nSamples)).difference(set(eval_coor)))
+
+xTrain = xTrain[train_coor,:]
+yTrain = yTrain[train_coor,:]
+
+xEval = xTrain[eval_coor,:]
+yEval = yTrain[eval_coor,:]
+
+
 # Generate one-hot encoded categorical array of response values
 oneHotY = utils.to_categorical(yTrain, num_classes=len(set(yTrain))+1)
 oneHotY = oneHotY[:,1:]
 
-# Dimensions of training data
-nSamples = xTrain.shape[0]
-nDims = xTrain.shape[1]
+
 
 print 'Training data has {} samples, and {} features.'.format(nSamples,nDims)
 print 'Building a network with {} hidden layers, each with {} nodes.'.format(levels,nodes)
