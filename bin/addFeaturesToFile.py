@@ -31,12 +31,13 @@ subjectList = args.subjectList
 cond = True
 try:
     parts = str.split(subjectList[0],'.')
+    inputList = subjectList[0]
 except:
     print 'Failed'
     cond = False
 
 if cond:
-    with open(subjectList,'r') as inFile:
+    with open(inputList,'r') as inFile:
         subjects = inFile.readlines()
     subjects = [x.strip() for x in subjects]
 else:
