@@ -29,11 +29,13 @@ args = parser.parse_args()
 subjectList = args.subjectList
 
 if isinstance(subjectList,str):
+    print 'File name: ' + subjectList
     with open(subjectList,'r') as inFile:
         subjects = inFile.readlines()
     subjects = [x.strip() for x in subjects]
     
 elif isinstance(subjectList,list):
+    print 'List'
     subjects = subjectList
     
 print 'len subjects: ' + str(len(subjects))
