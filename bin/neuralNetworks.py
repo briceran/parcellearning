@@ -6,6 +6,23 @@ Created on Wed Jul 12 19:34:27 2017
 @author: kristianeschenburg
 """
 
+"""
+Notes on implementing neural network:
+
+Data is shuffled during training in model.fit if "shuffle" argument is set to true.
+
+Validation is not the same as test data.  Validation data is not used for training or
+development of the model -- rather is it used to track the progress of the model 
+through loss and accuracy (or other metrics) while the model is being learned.
+
+Test data is held out from both the validation and training data, and used to 
+evaluate the model once it has been trained.
+
+We can use the "validation_split" or "validation_data" options as parameters
+in model.fit.
+
+"""
+
 
 import argparse
 
@@ -14,6 +31,9 @@ sys.path.append('..')
 
 import parcellearning.loaded as ld
 import parcellearning.classifier_utilities as cu
+import parcellearning.regionalizationMethods as regm
+
+import copy
 import numpy as np
 import sklearn
 import os
@@ -25,6 +45,8 @@ from keras import utils
 # Import Batch Normalization
 from keras.layers.normalization import BatchNormalization
 
+
+## Method to load the training data and aggregate into a single array
 def loadData(subjectList,dataDir,features):
     
     """
@@ -37,32 +59,148 @@ def loadData(subjectList,dataDir,features):
     mExt = 'Midlines/'
     ext = '.L.TrainingObject.aparc.a2009s.h5'
     
-    data = []
+    data = {}
+    labs = {}
     
-    for s in subjects:
+    dataFeatures = list(set(features).difference({'label'}))
+    
+    for s in subjectList:
         
         inTrain = dataDir + fExt + s + ext
         mids = dataDir + mExt + s + '_Midline_Indices.mat'
         
         if os.path.isfile(inTrain) and os.path.isfile(mids):
+
+            trainH5 = ld.loadH5(inTrain,*['full'])
             
-            train = ld.loadH5(inTrain,*['full'])
-            train = ld.parseH5(train,features)
-            train = train[s]
+            trainFeatures = ld.parseH5(trainH5,dataFeatures)
+            trainFeatures = trainFeatures[s]
             
-            mergedData = cu.mergeFeatures(train,features)
+            labelFeatures = ld.parseH5(trainH5,['label'])
+            labelFeatures = labelFeatures[s]
             
-            samples = set(np.arange(mergedData.shape[0]))
+            mergedDataFeatures = cu.mergeFeatures(trainFeatures,dataFeatures)
+            mergedLablFeatures = cu.mergeFeatures(labelFeatures,['label'])
+            
+            nSamples = set(np.arange(mergedDataFeatures.shape[0]))
             mids = set(ld.loadMat(mids))
+            coords = np.asarray(list(nSamples.difference(mids)))
+
+            mergedDataFeatures = mergedDataFeatures[coords,:]
+            mergedLablFeatures = mergedLablFeatures[coords,:]
             
-            coords = np.asarray(list(samples.difference(mids)))
-            mergedData = mergedData[coords,:]
-            
-            data.append(mergedData)
+            data[s] = mergedDataFeatures
+            labs[s] = mergedLablFeatures
+
+    data = aggregateDictValues(data)
+    labs = aggregateDictValues(labs)
     
+    return (data,labs)
+
+def aggregateDictValues(inDict):
+    
+    """
+    Method to aggregate the values of a dictionary, where the values are assumed
+    to be numpy arrays.
+    """
+    
+    data = [inDict[k] for k in inDict.keys()]
     data = np.row_stack(data)
     
     return data
+
+def labelData(trainingData,labelVector):
+    
+    """
+    Get samples data for each label, aggregate into dictionary.
+    """
+    
+    labels = set(np.squeeze(labelVector)).difference({0})
+    
+    coreData = {}.fromkeys(labels)
+    
+    for l in labels:
+        inds = np.where(labelVector == l)[0]
+        coreData[l] = trainingData[inds,:]
+    
+    return coreData
+
+## Functions for Down-sampling data
+
+def noDS(trainingData,labelVector):
+    
+    """
+    Don't apply downsampling
+    """
+    return (trainingData,labelVector)
+
+def equalDS(trainingData,labelVector):
+    
+    """
+    Apply equal downsampling, where sample number is = min(label samples)
+    """
+    
+    labels = set(np.squeeze(labelVector)).difference({0})
+    
+    # Get samples for each label
+    coreData = labelData(trainingData,labelVector)
+    # downsample the data
+    downData = downsampleData(coreData,labels)
+    # build response response vectors for each label
+    downResp = cu.buildResponseVector(labels,downData)
+
+    # aggregate samples and response vectors
+    equalData = aggregateDictValues(downData)
+    equalResp = aggregateDictValues(downResp)
+    
+    # return sample and response arrays
+    return (equalData,equalResp)
+
+def downsampleData(coreData,labels):
+    
+    """
+    Apply equal downsampling scheme.
+    """
+    
+    m = 1000000
+    for k in labels:
+        m = np.min([m,coreData[k].shape[0]])
+    
+    downData = {}.fromkeys(labels)
+    
+    for k in labels:
+        dims = coreData[k].shape[0]
+        coords = np.arange(dims)
+        tempCoords = np.random.choice(coords,size=m,replace=False)
+        downData[k] = coreData[k][tempCoords,:]
+    
+    return downData
+
+def dbsDS(trainingData,labelVector):
+    
+    """
+    Apply DBSCAN to each label sample set, then apply down-sampling.
+    """
+    
+    labels = set(np.squeeze(labelVector)).difference({0})
+
+    # get samples for each label
+    coreData = labelData(trainingData,labelVector)
+    # downsample data for each label using DBSCAN
+    dbscanData = regm.trainDBSCAN(coreData,mxp=0.5)
+    
+    # apply down-sampling scheme to DBSCAN-ed data
+    dbsDataDWS = downsampleData(dbscanData,labels)
+    # build response vectors for each label
+    dbsRespDWS = cu.buildResponseVector(labels,dbsDataDWS)
+    
+    # aggregate samples and response vectors
+    aggDBS = aggregateDictValues(dbsDataDWS)
+    aggResp = aggregateDictValues(dbsRespDWS)
+    
+    # return samples and response arrays
+    return (aggDBS,aggResp)
+    
 
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
 
@@ -79,8 +217,15 @@ parser.add_argument('-ns','-numSubj',help='Number of subjects.',type=int,default
 
 parser.add_argument('-opt','--optimizer',help='Optimization scheme.',default='rmsprop',choices=['rmsprop','sgd'])
 parser.add_argument('-r','--rate',help='Learning rate.',type=float,default=0.001)
+
+parser.add_argument('-ds','--downSample',help='Type of downsampling to perform.',default='none',
+                    choices=['none','equal','dbscan'])
+
 args = parser.parse_args()
 
+ds_funcs = {'none': noDS,
+            'equal': equalDS,
+            'dbscan': dbsDS}
 
 optm = args.optimizer
 if optm == 'rmsprop':
@@ -113,7 +258,7 @@ ns = np.min([len(subjects),args.ns])
 print 'Number of training subjects: {}'.format(ns)
 subjects = np.random.choice(subjects,size=ns,replace=False)
 
-trainingData = loadData(subjects,dataDir,features)
+trainingData,labels = loadData(subjects,dataDir,features)
 trainingData = sklearn.utils.shuffle(trainingData)
 
 # Standardize subject features
@@ -121,8 +266,10 @@ S = sklearn.preprocessing.StandardScaler()
 training = S.fit_transform(trainingData)
 
 # Get training features and responses
-xTrain = training[:,:-1]
-y = training[:,-1].astype(np.int32)
+xTrain = training
+yTrain = labels.astype(np.int32)
+
+xTrain = ds_funcs(args.downSample)(xTrain,yTrain)
 
 oneHotY = utils.to_categorical(y, num_classes=len(set(y))+1)
 oneHotY = oneHotY[:,1:]
@@ -167,4 +314,5 @@ model.compile(loss='categorical_crossentropy',
 
 print 'Model built using {} optimization.  Training now.'.format(args.optimizer)
 
-model.fit(xTrain, oneHotY, epochs=epochs, batch_size=batch, verbose=1)
+model.fit(xTrain, oneHotY, epochs=epochs, validation_split=0.2,
+          batch_size=batch, verbose=1,shuffle=True)
