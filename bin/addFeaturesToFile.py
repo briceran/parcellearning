@@ -35,6 +35,8 @@ if isinstance(subjectList,str):
     
 elif isinstance(subjectList,list):
     subjects = subjectList
+    
+print 'Sujects: ' + subjects
 
 dataDir = args.dataDirectory
 atlasDir = args.atlasDirectory
