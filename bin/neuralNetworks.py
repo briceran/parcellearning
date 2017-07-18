@@ -73,21 +73,17 @@ def loadData(subjectList,dataDir,features):
     dataFeatures = list(set(features).difference({'label'}))
     
     for s in subjectList:
-        
-        print(s)
-        
+
         inTrain = dataDir + fExt + s + ext
         mids = dataDir + mExt + s + '_Midline_Indices.mat'
         
         if os.path.isfile(inTrain) and os.path.isfile(mids):
 
             trainH5 = h5py.File(inTrain,mode='r')
-            print(trainH5.keys())
             
             uni_subj = unicode(s, "utf-8")
             
             trainFeatures = ld.parseH5(trainH5,dataFeatures)
-            print(trainFeatures.keys())
             trainFeatures = trainFeatures[uni_subj]
             
             labelFeatures = ld.parseH5(trainH5,['label'])
