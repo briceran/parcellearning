@@ -311,6 +311,7 @@ yTrain=np.squeeze(yTrain)
 """
 
 # Generate one-hot encoded categorical array of response values
+yTrain = np.squeeze(yTrain)
 E = sklearn.preprocessing.LabelEncoder()
 E.fit(np.squeeze(yTrain))
 
