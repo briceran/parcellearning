@@ -295,6 +295,7 @@ yTrain.shape+=(1,)
 nSamples = xTrain.shape[0]
 nDims = xTrain.shape[1]
 
+"""
 eval_size = int(np.floor(EVAL_FACTOR*nSamples))
 eval_coor = np.squeeze(np.random.choice(np.arange(nSamples),
                                         size=(eval_size,1),replace=False))
@@ -307,23 +308,27 @@ xTrain = xTrain[train_coor,:]
 yTrain = yTrain[train_coor,:]
 
 yTrain=np.squeeze(yTrain)
+"""
 
 # Generate one-hot encoded categorical array of response values
 E = sklearn.preprocessing.LabelEncoder()
 E.fit(np.squeeze(yTrain))
+
 encoded_Y = E.transform(np.squeeze(yTrain))
 oneHotY = utils.to_categorical(encoded_Y, num_classes=len(set(yTrain)))
 
 
 print(xTrain.shape)
 print(yTrain.shape)
-print(xEval.shape)
-print(yEval.shape)
+# print(xEval.shape)
+# print(yEval.shape)
 
+"""
 encode_yEval = E.transform(np.squeeze(yEval))
 yEval_cat = utils.to_categorical(encode_yEval,num_classes=len(set(yTrain)))
 
 valData = (xEval,yEval_cat)
+"""
 
 print 'Training data has {} samples, and {} features.'.format(nSamples,nDims)
 print 'Building a network with {} hidden layers, each with {} nodes.'.format(levels,nodes)
@@ -357,5 +362,4 @@ model.compile(loss='categorical_crossentropy',optimizer= opt,metrics=['accuracy'
 print 'Model built using {} optimization.  Training now.'.format(args.optimizer)
 
 model.fit(xTrain, oneHotY, epochs=epochs,
-          batch_size=batch, verbose=1,shuffle=True,
-          validation_data=valData)
+          batch_size=batch, verbose=1,shuffle=True)
