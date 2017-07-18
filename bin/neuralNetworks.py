@@ -87,6 +87,7 @@ def loadData(subjectList,dataDir,features):
             uni_subj = unicode(s, "utf-8")
             
             trainFeatures = ld.parseH5(trainH5,dataFeatures)
+            print(trainFeatures.keys())
             trainFeatures = trainFeatures[uni_subj]
             
             labelFeatures = ld.parseH5(trainH5,['label'])
