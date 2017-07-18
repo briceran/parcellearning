@@ -274,6 +274,7 @@ subjects = np.random.choice(subjects,size=ns,replace=False)
 
 # Load training data
 trainingData,labels = loadData(subjects,dataDir,features)
+labels = labels
 
 # Down-sample the data using parameters specified by args.downSample
 tempX,tempY = ds_funcs[args.downSample](trainingData,labels)
@@ -285,37 +286,49 @@ training = S.fit_transform(tempX)
 # Shuffle features and responses
 xTrain,yTrain = shuffleData(training,tempY)
 yTrain = yTrain.astype(np.int32)
+yTrain.shape+=(1,)
 
 # Dimensions of training data
 nSamples = xTrain.shape[0]
 nDims = xTrain.shape[1]
 
-eval_size = np.floor(EVAL_FACTOR*nSamples)
+eval_size = int(np.floor(EVAL_FACTOR*nSamples))
 eval_coor = np.squeeze(np.random.choice(np.arange(nSamples),
                                         size=(eval_size,1),replace=False))
 train_coor = list(set(np.arange(nSamples)).difference(set(eval_coor)))
 
+xEval = xTrain[eval_coor,:]
+yEval = yTrain[eval_coor,:]
+
 xTrain = xTrain[train_coor,:]
 yTrain = yTrain[train_coor,:]
 
-xEval = xTrain[eval_coor,:]
-yEval = yTrain[eval_coor,:]
-valData = (xEval,yEval)
+yTrain=np.squeeze(yTrain)
 
 # Generate one-hot encoded categorical array of response values
-oneHotY = utils.to_categorical(yTrain, num_classes=len(set(yTrain))+1)
-oneHotY = oneHotY[:,1:]
+E = sklearn.preprocessing.LabelEncoder()
+E.fit(np.squeeze(yTrain))
+encoded_Y = E.transform(np.squeeze(yTrain))
+oneHotY = utils.to_categorical(encoded_Y, num_classes=len(set(yTrain)))
 
 
+print(xTrain.shape)
+print(yTrain.shape)
+print(xEval.shape)
+print(yEval.shape)
+
+encode_yEval = E.transform(np.squeeze(yEval))
+yEval_cat = utils.to_categorical(encode_yEval,num_classes=len(set(yTrain)))
+
+valData = (xEval,yEval_cat)
 
 print 'Training data has {} samples, and {} features.'.format(nSamples,nDims)
 print 'Building a network with {} hidden layers, each with {} nodes.'.format(levels,nodes)
 
 # instantiate model
 model = Sequential()
-model.add(Dense(64, activation='relu', input_dim=nDims))
+model.add(Dense(128, activation='relu', input_dim=nDims))
 model.add(BatchNormalization())
-model.add(Activation('relu'))
 model.add(Dropout(0.30))
 
 c = 0
@@ -335,15 +348,11 @@ while c < levels:
 
 # we can think of this chunk as the output layer
 model.add(Dense(len(set(yTrain)), activation='softmax'))
-model.add(BatchNormalization())
-model.add(Activation('softmax'))
 
-model.compile(loss='categorical_crossentropy',
-              optimizer= opt,
-              metrics=['accuracy'])
+model.compile(loss='categorical_crossentropy',optimizer= opt,metrics=['accuracy'])
 
 print 'Model built using {} optimization.  Training now.'.format(args.optimizer)
 
-model.fit(xTrain, oneHotY, epochs=epochs, validation_split=0.2,
+model.fit(xTrain, oneHotY, epochs=epochs,
           batch_size=batch, verbose=1,shuffle=True,
-          validation_set=valData)
+          validation_data=valData)
