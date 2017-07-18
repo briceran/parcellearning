@@ -40,8 +40,9 @@ import os
 
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
+from keras import utils,optimizers
 from keras.optimizers import SGD
-from keras import utils
+
 # Import Batch Normalization
 from keras.layers.normalization import BatchNormalization
 
@@ -244,18 +245,18 @@ ds_funcs = {'none': noDS,
             'equal': equalDS,
             'dbscan': dbsDS}
 
-optm = args.optimizer
-if optm == 'rmsprop':
-    opt = 'rmsprop'
-    rate = args.rate
-else:
-    opt = SGD(lr=rate, decay=1e-6, momentum=0.9, nesterov=True)
-    rate = 0.01
-
 levels = args.levels
 nodes = args.nodes
 epochs = args.epochs
 batch = args.batchSize
+rate = args.rate
+
+optm = args.optimizer
+if optm == 'rmsprop':
+    opt = optimizers.RMSprop(lr=rate, rho=0.9, epsilon=1e-08, decay=0.0)
+else:
+    opt = optimizers.SGD(lr=rate, decay=1e-6, momentum=0.9, nesterov=True)
+
 
 dataDir = args.dataDirectory
 features = list(args.features.split(','))
