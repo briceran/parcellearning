@@ -108,6 +108,7 @@ def trainDBSCAN(labelData, eps=0.025, mxs = 7500, mxp = 0.7):
     dbsData = {}.fromkeys(labels)
 
     for lab in labels:
+        print 'Label {}'.format(lab)
         tempData = labDat[lab]
         dbsData[lab] = labelDBSCAN(lab,tempData,eps,mxs,mxp)
         
@@ -136,6 +137,7 @@ def labelDBSCAN(label,data,eps,max_samples,max_percent):
         subsets = []
         
         for i in np.arange(iters):
+            print 'Iteration {}'.format(i)
             
             bc = i*max_samples
             uc = (i+1)*max_samples
