@@ -79,6 +79,7 @@ def loadData(subjectList,dataDir,features):
         if os.path.isfile(inTrain) and os.path.isfile(mids):
 
             trainH5 = ld.loadH5(inTrain,*['full'])
+            print(trainH5.keys())
             
             trainFeatures = ld.parseH5(trainH5,dataFeatures)
             trainFeatures = trainFeatures[s]
