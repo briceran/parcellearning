@@ -231,7 +231,7 @@ parser.add_argument('-n','--nodes',help='Number of nodes to include in each leve
 parser.add_argument('-e','--epochs',help='Number of epochs.',type=int,default=20)
 parser.add_argument('-b','--batchSize',help='Batsh size.',type=int,default=128)
 
-parser.add_argument('-ns','-numSubj',help='Number of subjects.',type=int,default=30)
+#parser.add_argument('-ns','-numSubj',help='Number of subjects.',type=int,default=30)
 
 parser.add_argument('-opt','--optimizer',help='Optimization scheme.',default='rmsprop',choices=['rmsprop','sgd'])
 parser.add_argument('-r','--rate',help='Learning rate.',type=float,default=0.001)
@@ -272,9 +272,9 @@ with open(subjectFile,'r') as inFile:
     subjects = inFile.readlines()
 subjects = [x.strip() for x in subjects]
 
-ns = np.min([len(subjects),args.ns])
-print 'Number of training subjects: {}'.format(ns)
-subjects = np.random.choice(subjects,size=ns,replace=False)
+#ns = np.min([len(subjects),args.ns])
+#print 'Number of training subjects: {}'.format(ns)
+#subjects = np.random.choice(subjects,size=ns,replace=False)
 
 # Load training data
 trainingData,labels = loadData(subjects,dataDir,features)
