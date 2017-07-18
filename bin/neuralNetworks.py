@@ -83,9 +83,7 @@ def loadData(subjectList,dataDir,features):
             trainH5 = h5py.File(inTrain,mode='r')
             
             uni_subj = unicode(s, "utf-8")
-            print uni_subj
-            print s
-            
+
             trainFeatures = ld.parseH5(trainH5,dataFeatures)
             trainFeatures = trainFeatures[uni_subj]
             
@@ -283,7 +281,10 @@ subjects = [x.strip() for x in subjects]
 
 # Load training data
 trainingData,labels = loadData(subjects,dataDir,features)
-labels = labels
+
+O = sklearn.preprocessing.OneHotEncoder(sparse=False)
+O.fit(labels)
+OneHotLabels = O.transform(labels)
 
 # Down-sample the data using parameters specified by args.downSample
 tempX,tempY = ds_funcs[args.downSample](trainingData,labels)
@@ -299,7 +300,8 @@ yTrain.shape+=(1,)
 
 # Dimensions of training data
 nSamples = xTrain.shape[0]
-nDims = xTrain.shape[1]
+input_dim = xTrain.shape[1]
+output_dim = OneHotLabels.shape[1]
 
 """
 eval_size = int(np.floor(EVAL_FACTOR*nSamples))
@@ -317,16 +319,9 @@ yTrain=np.squeeze(yTrain)
 """
 
 # Generate one-hot encoded categorical array of response values
-yTrain = np.squeeze(yTrain)
-E = sklearn.preprocessing.LabelEncoder()
-E.fit(np.squeeze(yTrain))
-
-encoded_Y = E.transform(np.squeeze(yTrain))
-oneHotY = utils.to_categorical(encoded_Y, num_classes=len(set(yTrain)))
-
 
 print(xTrain.shape)
-print(yTrain.shape)
+print(OneHotLabels.shape)
 # print(xEval.shape)
 # print(yEval.shape)
 
@@ -337,12 +332,12 @@ yEval_cat = utils.to_categorical(encode_yEval,num_classes=len(set(yTrain)))
 valData = (xEval,yEval_cat)
 """
 
-print 'Training data has {} samples, and {} features.'.format(nSamples,nDims)
+print 'Training data has {} samples, and {} features.'.format(nSamples,input_dim)
 print 'Building a network with {} hidden layers, each with {} nodes.'.format(levels,nodes)
 
 # instantiate model
 model = Sequential()
-model.add(Dense(128, activation='relu', input_dim=nDims))
+model.add(Dense(128, activation='relu', input_dim=input_dim))
 model.add(BatchNormalization())
 model.add(Dropout(0.30))
 
@@ -351,22 +346,22 @@ while c < levels:
     
     if c % 2 == 0:
 
-        model.add(Dense(nodes, activation='sigmoid'))
+        model.add(Dense(nodes, activation='relu',init='uniform'))
         model.add(BatchNormalization())
         model.add(Dropout(0.5))
     else:
-        model.add(Dense(nodes, activation='sigmoid'))
+        model.add(Dense(nodes, activation='relu',init='uniform'))
         model.add(BatchNormalization())
         model.add(Dropout(0.5))
     
     c+=1
 
 # we can think of this chunk as the output layer
-model.add(Dense(len(set(yTrain)), activation='softmax'))
+model.add(Dense(output_dim, activation='softmax'))
 
 model.compile(loss='categorical_crossentropy',optimizer= opt,metrics=['accuracy'])
 
 print 'Model built using {} optimization.  Training now.'.format(args.optimizer)
 
-model.fit(xTrain, oneHotY, epochs=epochs,
-          batch_size=batch, verbose=1,shuffle=True)
+model.fit(xTrain, OneHotLabels, epochs=epochs,
+          batch_size=batch,verbose=1,shuffle=True)
