@@ -346,11 +346,11 @@ while c < levels:
     
     if c % 2 == 0:
 
-        model.add(Dense(nodes, activation='sigmoid',init='uniform'))
+        model.add(Dense(nodes, activation='relu',init='uniform'))
         model.add(BatchNormalization())
         model.add(Dropout(0.5))
     else:
-        model.add(Dense(nodes, activation='tanh',init='uniform'))
+        model.add(Dense(nodes, activation='relu',init='uniform'))
         model.add(BatchNormalization())
         model.add(Dropout(0.5))
     
