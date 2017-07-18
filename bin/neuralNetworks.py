@@ -83,6 +83,8 @@ def loadData(subjectList,dataDir,features):
             trainH5 = h5py.File(inTrain,mode='r')
             
             uni_subj = unicode(s, "utf-8")
+            print uni_subj
+            print s
             
             trainFeatures = ld.parseH5(trainH5,dataFeatures)
             trainFeatures = trainFeatures[uni_subj]
@@ -102,6 +104,8 @@ def loadData(subjectList,dataDir,features):
             
             data[s] = mergedDataFeatures
             labs[s] = mergedLablFeatures
+            
+            trainH5.close()
 
     data = aggregateDictValues(data)
     labs = aggregateDictValues(labs)
@@ -265,6 +269,7 @@ print 'Levels: {}'.format(levels)
 print 'Nodes: {}'.format(nodes)
 print 'Epochs: {}'.format(epochs)
 print 'Batch Size: {}'.format(batch)
+print 'Learning rate: {}'.format(rate)
 
 # Load subject data
 subjectFile = args.subjectList
@@ -346,11 +351,11 @@ while c < levels:
     
     if c % 2 == 0:
 
-        model.add(Dense(nodes, activation='relu'))
+        model.add(Dense(nodes, activation='sigmoid'))
         model.add(BatchNormalization())
         model.add(Dropout(0.5))
     else:
-        model.add(Dense(nodes, activation='relu'))
+        model.add(Dense(nodes, activation='sigmoid'))
         model.add(BatchNormalization())
         model.add(Dropout(0.5))
     
