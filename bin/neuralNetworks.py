@@ -73,6 +73,8 @@ def loadData(subjectList,dataDir,features):
     
     for s in subjectList:
         
+        print(s)
+        
         inTrain = dataDir + fExt + s + ext
         mids = dataDir + mExt + s + '_Midline_Indices.mat'
         
