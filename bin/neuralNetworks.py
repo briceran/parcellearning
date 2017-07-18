@@ -33,6 +33,7 @@ import parcellearning.loaded as ld
 import parcellearning.classifier_utilities as cu
 import parcellearning.regionalizationMethods as regm
 
+import h5py
 import numpy as np
 import sklearn
 import os
@@ -80,7 +81,7 @@ def loadData(subjectList,dataDir,features):
         
         if os.path.isfile(inTrain) and os.path.isfile(mids):
 
-            trainH5 = ld.loadH5(inTrain,*['full'])
+            trainH5 = h5py.File(inTrain,mode='r')
             print(trainH5.keys())
             
             trainFeatures = ld.parseH5(trainH5,dataFeatures)
