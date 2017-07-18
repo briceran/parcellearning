@@ -282,10 +282,6 @@ subjects = [x.strip() for x in subjects]
 # Load training data
 trainingData,labels = loadData(subjects,dataDir,features)
 
-O = sklearn.preprocessing.OneHotEncoder(sparse=False)
-O.fit(labels)
-OneHotLabels = O.transform(labels)
-
 # Down-sample the data using parameters specified by args.downSample
 tempX,tempY = ds_funcs[args.downSample](trainingData,labels)
 
@@ -297,6 +293,10 @@ training = S.fit_transform(tempX)
 xTrain,yTrain = shuffleData(training,tempY)
 yTrain = yTrain.astype(np.int32)
 yTrain.shape+=(1,)
+
+O = sklearn.preprocessing.OneHotEncoder(sparse=False)
+O.fit(yTrain)
+OneHotLabels = O.transform(yTrain)
 
 # Dimensions of training data
 nSamples = xTrain.shape[0]
