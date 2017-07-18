@@ -84,11 +84,13 @@ def loadData(subjectList,dataDir,features):
             trainH5 = h5py.File(inTrain,mode='r')
             print(trainH5.keys())
             
+            uni_subj = unicode(s, "utf-8")
+            
             trainFeatures = ld.parseH5(trainH5,dataFeatures)
-            trainFeatures = trainFeatures[s]
+            trainFeatures = trainFeatures[uni_subj]
             
             labelFeatures = ld.parseH5(trainH5,['label'])
-            labelFeatures = labelFeatures[s]
+            labelFeatures = labelFeatures[uni_subj]
             
             mergedDataFeatures = cu.mergeFeatures(trainFeatures,dataFeatures)
             mergedLablFeatures = cu.mergeFeatures(labelFeatures,['label'])
