@@ -339,7 +339,6 @@ print 'Building a network with {} hidden layers, each with {} nodes.'.format(lev
 model = Sequential()
 model.add(Dense(128, activation='relu', input_dim=input_dim))
 model.add(BatchNormalization())
-model.add(Dropout(0.30))
 
 c = 0
 while c < levels:
@@ -348,12 +347,10 @@ while c < levels:
 
         model.add(Dense(nodes, activation='relu',init='uniform'))
         model.add(BatchNormalization())
-        model.add(Dropout(0.5))
     else:
         model.add(Dense(nodes, activation='relu',init='uniform'))
         model.add(BatchNormalization())
-        model.add(Dropout(0.5))
-    
+
     c+=1
 
 # we can think of this chunk as the output layer
