@@ -349,7 +349,7 @@ while c < levels:
         model.add(BatchNormalization())
         model.add(Dropout(0.5))
     else:
-        model.add(Dense(nodes, activation='sigmoid'))
+        model.add(Dense(nodes, activation='relu'))
         model.add(BatchNormalization())
         model.add(Dropout(0.5))
     
