@@ -225,8 +225,8 @@ parser.add_argument('-dDir','--dataDirectory',help='Directory where data exists.
 parser.add_argument('-f','--features',help='Features to include in model.',required=True)
 parser.add_argument('-sl','--subjectList',help='List of subjects to include.',required=True)
 
-parser.add_argument('-l','--levels', help='Number of levels to include in network.',type=int,default=10)
-parser.add_argument('-n','--nodes',help='Number of nodes to include in each level.',type=int,default=5)
+parser.add_argument('-l','--levels', help='Number of levels to include in network.',type=int,default=20)
+parser.add_argument('-n','--nodes',help='Number of nodes to include in each level.',type=int,default=100)
 parser.add_argument('-e','--epochs',help='Number of epochs.',type=int,default=20)
 parser.add_argument('-b','--batchSize',help='Batsh size.',type=int,default=128)
 
@@ -339,11 +339,11 @@ while c < levels:
     
     if c % 2 == 0:
 
-        model.add(Dense(128, activation='relu'))
+        model.add(Dense(nodes, activation='relu'))
         model.add(BatchNormalization())
         model.add(Dropout(0.5))
     else:
-        model.add(Dense(128, activation='sigmoid'))
+        model.add(Dense(nodes, activation='sigmoid'))
         model.add(BatchNormalization())
         model.add(Dropout(0.5))
     
