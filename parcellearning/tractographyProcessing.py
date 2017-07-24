@@ -83,7 +83,7 @@ if __name__=='__main__':
     
     lookUpFile = 'lookup_tractspace_fdt_matrix2.nii.gz'
     coords = 'tract_space_coords_for_fdt_matrix2'
-    rois = '.ROIS.acpc_dc.1.25.nii.gz'
+    roisExt = '.ROIS.acpc_dc.1.25.nii.gz'
     
     rois = ['Accumbens','Amygdala','Caudate','Hippocampus',
             'Pallidum','Putamen','Thalamus']
@@ -110,7 +110,7 @@ if __name__=='__main__':
         
             inLookUp = ptxDir + h + '/' + lookUpFile
             inCoords = ptxDir + h + '/' + coords
-            inROIs = roiDir + h + rois
+            inROIs = roiDir + h + roisExt
             
             outJson = ptxDir + h + '.VoxelMappings.json'
             outH5 = ptxDir + h + '.VoxelMappings.h5'
