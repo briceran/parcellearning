@@ -143,7 +143,7 @@ if __name__=='__main__':
             out.attrs.create('regions',rois)
             out.create_group('regionValues')
             for r in rois:
-                out['regions'].attrs.create(r,roi_values[h][r])
+                out['regionValues'].attrs.create(r,roi_values[h][r])
                 
             for m in mapping.keys():
                 out.create_dataset(str(m),data=np.asarray(mapping[m]))
