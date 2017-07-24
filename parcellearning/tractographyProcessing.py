@@ -89,11 +89,13 @@ if __name__=='__main__':
     subjects = [x.strip() for x in subjects]
     
     for s in subjects:
+        print 'Subject: {}'.format(s)
         subjDir = dataDir + s
         ptxDir = subjDir + ptxExten
         roiDir = subjDir + '/Structural/'
         
         for h in hemis:
+            print 'Hemisphere: {}'.format(h)
             subjDirHemi = subjDir + h + '/'
         
             inLookUp = ptxDir + lookUpFile
