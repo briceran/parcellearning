@@ -6,6 +6,7 @@ Created on Sun Jul 23 20:16:18 2017
 @author: kristianeschenburg
 """
 
+import h5py
 import json
 import os
 import nibabel as nb
@@ -102,7 +103,8 @@ if __name__=='__main__':
             inCoords = ptxDir + h + '/' + coords
             inROIs = roiDir + h + rois
             
-            outFile = ptxDir + h + '.VoxelMappings.json'
+            outJson = ptxDir + h + '.VoxelMappings.json'
+            outH5 = ptxDir + h + '.VoxelMappings.h5'
             
             cond = True
             
@@ -121,6 +123,13 @@ if __name__=='__main__':
                 tractCoords = tractSpaceFromText(inCoords)
                 mapping = hemiSubcorticalCoordiantes(tractCoords,inROIs,inLookUp)
                 
-                with open(outFile,'w') as output:
+                with open(outJson,'w') as output:
                     json.dump(mapping,output)
+                    
+            out = h5py.File(outH5,mode='r+')
+            out.create_group('labels',data=mapping.keys())
+            for m in mapping.keys():
+                out.create_dataset(str(m),data=mapping[m])
+            
+            out.close()
                 
