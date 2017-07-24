@@ -127,9 +127,9 @@ if __name__=='__main__':
                     json.dump(mapping,output)
                     
             out = h5py.File(outH5,mode='a')
-            out.create_group('labels',data=mapping.keys())
+            out.create_dataset('labels',data=np.array(mapping.keys()))
             for m in mapping.keys():
-                out.create_dataset(str(m),data=mapping[m])
+                out.create_dataset(str(m),data=np.asarray(mapping[m]))
             
             out.close()
                 
