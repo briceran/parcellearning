@@ -98,8 +98,8 @@ if __name__=='__main__':
             print 'Hemisphere: {}'.format(h)
             subjDirHemi = subjDir + h + '/'
         
-            inLookUp = ptxDir + lookUpFile
-            inCoords = ptxDir + coords
+            inLookUp = ptxDir + h + '/' + lookUpFile
+            inCoords = ptxDir + h + '/' + coords
             inROIs = roiDir + h + rois
             
             outFile = ptxDir + h + '.VoxelMappings.json'
