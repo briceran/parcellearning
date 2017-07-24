@@ -92,7 +92,9 @@ if __name__=='__main__':
     rValues = [58,54,53,50,52,51,49]
     values = [zip(rois,lValues),zip(rois,rValues)]
     
-    roi_values = {h: dict(v) for h in hemis for v in values}
+    roi_values = {}.fromkeys(hemis)
+    roi_values['Left'] = dict(values[0])
+    roi_values['Right'] = dict(values[1])
     
     with open(subjectList,'r') as inSubjects:
         subjects = inSubjects.readlines()
