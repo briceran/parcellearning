@@ -107,10 +107,13 @@ if __name__=='__main__':
             cond = True
             
             if not os.path.isfile(inLookUp):
+                print inLookUp
                 cond = False
             if not os.path.isfile(inCoords):
+                print inCoords
                 cond = False
             if not os.path.isfile(inROIs):
+                print inROIs
                 cond = False
             
             if cond:
