@@ -85,6 +85,15 @@ if __name__=='__main__':
     coords = 'tract_space_coords_for_fdt_matrix2'
     rois = '.ROIS.acpc_dc.1.25.nii.gz'
     
+    rois = ['Accumbens','Amygdala','Caudate','Hippocampus',
+            'Pallidum','Putamen','Thalamus']
+    
+    lValues = [26,18,11,17,13,12,10]
+    rValues = [58,54,53,50,52,51,49]
+    values = [zip(rois,lValues),zip(rois,rValues)]
+    
+    roi_values = {h: dict(v) for h in hemis for v in values}
+    
     with open(subjectList,'r') as inSubjects:
         subjects = inSubjects.readlines()
     subjects = [x.strip() for x in subjects]
@@ -126,8 +135,16 @@ if __name__=='__main__':
                 with open(outJson,'w') as output:
                     json.dump(mapping,output)
                     
+            roiMaps = roi_values[h]
+            r = roiMaps.keys()
+            l = roiMaps.values()
+                    
             out = h5py.File(outH5,mode='a')
-            out.attrs.create('labels',data=mapping.keys())
+            out.attrs.create('regions',rois)
+            out.create_group('regionValues')
+            for r in rois:
+                out['regions'].attrs.create(r,roi_values[h][r])
+                
             for m in mapping.keys():
                 out.create_dataset(str(m),data=np.asarray(mapping[m]))
             
