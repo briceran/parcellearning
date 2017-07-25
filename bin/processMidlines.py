@@ -35,5 +35,5 @@ if __name__=="__main__":
     dDir = '/mnt/parcellator/parcellation/HCP/Connectome_4/'
     subjList = dDir + 'SubjectList.txt'
     
-    processMidlines(subjList,dDir)
+    processMidlines(subjList,dDir,'R')
         
