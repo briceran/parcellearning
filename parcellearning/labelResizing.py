@@ -22,7 +22,7 @@ def processLabelResizing(subjectList,dataDir,hemi):
     subjects = [x.strip() for x in subjects]
     
     hcpDir = dataDir + 'Haynor/Connectome_4_With_MMP/Labels/'
-    midDir = dataDir + 'parcellearning/Data/MidlineIndices/'
+    midDir = dataDir + 'parcellearning/Data/Midlines/'
     funDir = dataDir + 'HCP/Connectome_4/'
     outDir = dataDir + 'parcellearning/Labels/HCP/'
     
