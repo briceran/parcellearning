@@ -24,6 +24,8 @@ def gifti2mat_restingState(subjectList,dataDir):
         outRS = subjDir + 'rfMRU_Z-Trans_merged_CORTEX_RIGHT.mat'
         
         if os.path.isfile(subjRS):
+            
+            print s
         
             rs = nb.load(subjRS)
             
@@ -43,5 +45,7 @@ if __name__=="__main__":
     
     dDir = '/mnt/parcellator/parcellation/HCP/Connectome_4/'
     subjList = dDir + 'SubjectList.txt'
+    
+    print dDir
     
     gifti2mat_restingState(subjList,dDir)
