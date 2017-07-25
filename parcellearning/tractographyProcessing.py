@@ -189,6 +189,7 @@ if __name__=='__main__':
         
         for index,LAB in enumerate(zip(labs,labExts)):
             for k,HEMI in enumerate(zip(hemis,hemiExten)):
+                print HEMI
                 
                 h = '.' + hemiExten[k] + '.'
                 lExt = h + LAB[1] + '.32k_fs_LR.label.gii'
