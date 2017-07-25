@@ -124,7 +124,7 @@ def fixLabelSize(mids,dL,N):
     label file to match that of the proper file.
     """
 
-    coords = list(set(range(0,N))-set(mids))
+    coords = list(set(np.arange(N)).difference(set(mids)))
     
     cdata = np.zeros(shape=(N,1))
     cdata[coords,0] = dL
