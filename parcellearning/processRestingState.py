@@ -22,6 +22,7 @@ def gifti2mat_restingState(subjectList,dataDir):
         subjDir = dataDir + s + '/Resting_State/'
         print subjDir
         subjRS = subjDir + 'rfMRI_Z-Trans_merged_CORTEX_RIGHT.gii'
+        print
         outRS = subjDir + 'rfMRI_Z-Trans_merged_CORTEX_RIGHT.mat'
         
         if os.path.isfile(subjRS):
@@ -35,10 +36,10 @@ def gifti2mat_restingState(subjectList,dataDir):
             for k in rs.darrays:
                 RS.append(k.data)
             
-            rData = np.column_stack(RS)
+            restData = np.column_stack(RS)
             
-            rs = {}.fromkeys('rest')
-            rs['rest'] = rData
+            outDict = {}
+            outDict['rest'] = restData
             
             sio.savemat(outRS,rs);
         
