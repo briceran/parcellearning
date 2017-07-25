@@ -23,7 +23,7 @@ def gifti2mat_restingState(subjectList,dataDir):
         print subjDir
         subjRS = subjDir + 'rfMRI_Z-Trans_merged_CORTEX_RIGHT.gii'
         print
-        outRS = subjDir + 'rfMRI_Z-Trans_merged_CORTEX_RIGHT.mat'
+        outFile = subjDir + 'rfMRI_Z-Trans_merged_CORTEX_RIGHT.mat'
         
         if os.path.isfile(subjRS):
             
@@ -41,7 +41,7 @@ def gifti2mat_restingState(subjectList,dataDir):
             outDict = {}
             outDict['rest'] = restData
             
-            sio.savemat(outRS,rs);
+            sio.savemat(outFile,outDict);
         
 if __name__=="__main__":
     
