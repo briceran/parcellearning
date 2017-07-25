@@ -188,7 +188,7 @@ if __name__=='__main__':
         ptxDir = subjDir + ptxExten
         
         for index,LAB in enumerate(zip(labs,labExts)):
-            for k,HEMI in enumerate(hemiExten):
+            for k,HEMI in enumerate(zip(hemis,hemiExten)):
                 
                 h = '.' + hemiExten[k] + '.'
                 lExt = h + LAB[1] + '.32k_fs_LR.label.gii'
@@ -197,8 +197,8 @@ if __name__=='__main__':
                 if os.path.isfile(labelFile):
                     mapping = hemiCorticalCoordiantes(labelFile)
                     
-                    outJson = ptxDir + hemis[k] + '.VertexMappings.' + LAB[1] + '.json'
-                    outH5 = ptxDir + hemis[k] + '.VertexMappings.' + LAB[1] + '.h5'
+                    outJson = ptxDir + HEMI[0] + '.VertexMappings.' + LAB[1] + '.json'
+                    outH5 = ptxDir + HEMI[0] + '.VertexMappings.' + LAB[1] + '.h5'
                     
                     with open(outJson,'w') as output:
                         json.dump(mapping,output)
