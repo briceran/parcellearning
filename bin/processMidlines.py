@@ -41,7 +41,7 @@ def processMidlines(subjectList,dataDir,hemi):
                 np.sum(np.abs(rsData),axis=1)
                 sm = np.sum(np.abs(rsData),axis=1);
                 
-                mids = np.where(sm == 0)[0]
+                mids = np.where(sm == 0)[0] + 1
                 
                 m = {}
                 m['mids'] = mids
