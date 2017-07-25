@@ -24,7 +24,7 @@ def processLabelResizing(subjectList,dataDir,hemi):
     hcpDir = dataDir + 'Haynor/Connectome_4_With_MMP/Labels/'
     midDir = dataDir + 'parcellearning/Data/Midlines/'
     funDir = dataDir + 'HCP/Connectome_4/'
-    outDir = dataDir + 'parcellearning/Labels/HCP/'
+    outDir = dataDir + 'parcellearning/Data/Labels/HCP/'
     
     lExt = '.' + hemi + '.CorticalAreas_dil_NoTask_Final_Individual.32k_fs_LR.dlabel.nii'
     fExt = '.' + hemi + '.MyelinMap.32k_fs_LR.func.gii'
