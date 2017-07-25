@@ -16,7 +16,7 @@ def processLabelResizing(subjectList,dataDir,hemi):
     """
     
     """
-    
+
     with open(subjectList,'r') as inFile:
         subjects = inFile.readlines()
     subjects = [x.strip() for x in subjects]
@@ -69,7 +69,8 @@ def processLabelResizing(subjectList,dataDir,hemi):
 
 if __name__=="__main__":
     
-    subjList = 'SubjectList.txt'
-    dDir = '/mnt/parcellator/parcellation/'
     
+    dDir = '/mnt/parcellator/parcellation/'
+    subjList = dDir + 'HCP/Connectome_4/SubjectList.txt'
+
     processLabelResizing(subjList,dDir,'R')
