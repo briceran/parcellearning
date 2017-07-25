@@ -144,13 +144,10 @@ if __name__=='__main__':
             cond = True
             
             if not os.path.isfile(inLookUp):
-                print inLookUp
                 cond = False
             if not os.path.isfile(inCoords):
-                print inCoords
                 cond = False
             if not os.path.isfile(inROIs):
-                print inROIs
                 cond = False
             
             if cond:
@@ -196,13 +193,12 @@ if __name__=='__main__':
                 h = '.' + hemiExten[k] + '.'
                 lExt = h + LAB[1] + '.32k_fs_LR.label.gii'
                 labelFile = labelDir + LAB[0] + '/' + s + lExt
-                print labelFile
                 
                 if os.path.isfile(labelFile):
                     mapping = hemiCorticalCoordiantes(labelFile)
                     
-                    outJson = ptxDir + hemis[k] + '.VertexMappings.json'
-                    outH5 = ptxDir + hemis[k] + '.VertexMappings.h5'
+                    outJson = ptxDir + hemis[k] + '.VertexMappings.' + LAB[1] + '.json'
+                    outH5 = ptxDir + hemis[k] + '.VertexMappings.' + LAB[1] + '.h5'
                     
                     with open(outJson,'w') as output:
                         json.dump(mapping,output)
