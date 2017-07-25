@@ -88,11 +88,11 @@ def hemiCorticalCoordiantes(inLabel):
     
     values = set(label).difference({0})
     
-    mappings = {}.fromkeys(values)
+    mappings = {}
     
-    for m in mappings.keys():
-        inds = np.where(label == m)[0] + 1
-        mappings[str(m)] = list(inds)
+    for v in values:
+        inds = np.where(label == v)[0] + 1
+        mappings[str(v)] = list(inds)
     
     return mappings
 
