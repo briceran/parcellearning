@@ -194,8 +194,8 @@ if __name__=='__main__':
             for k,HEMI in enumerate(hemiExten):
                 
                 h = '.' + hemiExten[k] + '.'
-                lExt = h + LAB[index][1] + '.32k_fs_LR.label.gii'
-                labelFile = labelDir + LAB[index][0] + '/' + s + lExt
+                lExt = h + LAB[1] + '.32k_fs_LR.label.gii'
+                labelFile = labelDir + LAB[0] + '/' + s + lExt
                 print labelFile
                 
                 if os.path.isfile(labelFile):
