@@ -46,7 +46,7 @@ def processLabelResizing(subjectList,dataDir,hemi):
             outLabel = outDir + s + '.' + hemi + '.CorticalAreas.fixed.32k_fs_LR.label.gii'
             
             label = ld.loadGii(inLabel)
-            mids = ld.loadMat(inMid) - 1
+            mids = ld.loadMat(inMid)
             
             fixed = ld.fixLabelSize(mids,label,N)
             
