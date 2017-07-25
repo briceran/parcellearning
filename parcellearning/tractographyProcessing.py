@@ -73,6 +73,29 @@ def hemiSubcorticalCoordiantes(tractSpaceCoords,rois,labelLookUp):
     
     return mappings
 
+def hemiCorticalCoordiantes(inLabel):
+    
+    """
+    Parameters:
+    - - - - -
+        inLabel : input label file (Desikan-Killiany, Destrieux, HCP) with
+                    spatial coordiantes corresponding to surface file used
+                    to seed probtrackx2
+    """
+    
+    label = nb.load(inLabel)
+    label = label.darrays[0].data
+    
+    values = set(label).difference({0})
+    
+    mappings = {}.fromkeys(values)
+    
+    for m in mappings:
+        inds = np.where(label == m)[0] + 1
+        mappings[m] = inds
+    
+    return mappings
+
 
 if __name__=='__main__':
     
@@ -100,6 +123,7 @@ if __name__=='__main__':
         subjects = inSubjects.readlines()
     subjects = [x.strip() for x in subjects]
     
+    ## Process sub-cortical tractography data
     for s in subjects:
         print 'Subject: {}'.format(s)
         subjDir = dataDir + s
@@ -151,4 +175,43 @@ if __name__=='__main__':
                 out.create_dataset(str(m),data=np.asarray(mapping[m]))
             
             out.close()
+    
+    ## Process Cortical tractography data
+    hemiExten = ['L','R']
+    labelDir = '/mnt/parcellator/parcellation/parcellearning/Data/Labels/'
+    
+    labs = ['Desikan','Destrieux','HCP']
+    labExts = ['aparc','aparc.a2009s','CorticalAreas.fixed']
+    
+    for s in subjects:
+        
+        subjDir = dataDir + s
+        ptxDir = subjDir + ptxExten
+        
+        for index,LAB in enumerate(zip(labs,labExts)):
+            for k,HEMI in enumerate(hemiExten):
+                
+                h = '.' + hemiExten[k] + '.'
+                lExt = h + LAB[index][1] + '.32k_fs_LR.label.gii'
+                labelFile = labelDir + LAB[index][0] + '/' + s + lExt
+                print labelFile
+                
+                if os.path.isfile(labelFile):
+                    mapping = hemiCorticalCoordiantes(labelFile)
+                    
+                    outJson = ptxDir + hemis[k] + '.VertexMappings.json'
+                    outH5 = ptxDir + hemis[k] + '.VertexMappings.h5'
+                    
+                    with open(outJson,'w') as output:
+                        json.dump(mapping,output)
+                    
+                    out = h5py.File(outH5,mode='a')
+                    out.attrs.create('regions',mapping.keys())
+                    
+                    for m in mapping.keys():
+                        out.create_dataset(str(m),data=np.array(mapping[m]))
+                    
+                    out.close()
+    
+    
                 
