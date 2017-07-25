@@ -170,10 +170,14 @@ def loadGii(inFile,darray=0,*args):
     else:
         # if data is instance of GiftiImage
         if isinstance(data,nibabel.gifti.gifti.GiftiImage):
-            return np.squeeze(data.darrays[darray].data)
+            label = np.squeeze(data.darrays[darray].data)
         # if data is instance of Nifti2Image
         elif isinstance(data,nibabel.nifti2.Nifti2Image):
-            return np.squeeze(np.asarray(data.get_data()))
+            label = np.squeeze(np.asarray(data.get_data()))
+        elif isinstance(data,nibabel.cifti2.cifti2.Cifti2Image):
+            label = np.squeeze(np.asarray(data.get_data()));
+        
+        return label
         
 def loadH5(inFile,*keys):
     
