@@ -164,17 +164,19 @@ if __name__=='__main__':
             roiMaps = roi_values[h]
             r = roiMaps.keys()
             l = roiMaps.values()
-                    
-            out = h5py.File(outH5,mode='a')
-            out.attrs.create('regions',rois)
-            out.create_group('regionValues')
-            for r in rois:
-                out['regionValues'].attrs.create(r,roi_values[h][r])
-                
-            for m in mapping.keys():
-                out.create_dataset(str(m),data=np.asarray(mapping[m]))
             
-            out.close()
+            if not os.path.isfile(outH5):
+                    
+                out = h5py.File(outH5,mode='a')
+                out.attrs.create('regions',rois)
+                out.create_group('regionValues')
+                for r in rois:
+                    out['regionValues'].attrs.create(r,roi_values[h][r])
+                    
+                for m in mapping.keys():
+                    out.create_dataset(str(m),data=np.asarray(mapping[m]))
+                
+                out.close()
     
     ## Process Cortical tractography data
     hemiExten = ['L','R']
@@ -204,14 +206,16 @@ if __name__=='__main__':
                     
                     with open(outJson,'w') as output:
                         json.dump(mapping,output)
+                        
+                    if not os.path.isfile(outH5):
                     
-                    out = h5py.File(outH5,mode='a')
-                    out.attrs.create('regions',mapping.keys())
-                    
-                    for m in mapping.keys():
-                        out.create_dataset(str(m),data=np.array(mapping[m]))
-                    
-                    out.close()
+                        out = h5py.File(outH5,mode='a')
+                        out.attrs.create('regions',mapping.keys())
+                        
+                        for m in mapping.keys():
+                            out.create_dataset(str(m),data=np.array(mapping[m]))
+                        
+                        out.close()
     
     
                 
