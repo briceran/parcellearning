@@ -30,7 +30,9 @@ def processMidlines(subjectList,dataDir,hemi):
 
                 subjDir = '{}{}/RestingState/{}/'.format(dataDir,s,h)
                 subjRest = '{}rfMRI_Z-Trans_merged_CORTEX_{}.mat'.format(subjDir,H)
+                print subjRest
                 outMids = '{}{}.{}.Midline_Indices.mat'.format(subjDir,s,HH);
+                print outMids
                 
                 if os.path.isfile(subjRest):
                     S = sio.loadmat(subjRest)
