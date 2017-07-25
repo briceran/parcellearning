@@ -25,7 +25,7 @@ def processMidlines(subjectList,dataDir,hemi):
             S = sio.loadmat(subjRest)
             rsData = S['rest']
             
-            mids = np.where(np.sum(abs(rsData),axis=0)==0)[0] + 1
+            mids = np.where(np.sum(np.abs(rsData),axis=0)==0)[0] + 1
             
             m = {}
             m['mids'] = mids
