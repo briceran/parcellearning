@@ -28,7 +28,7 @@ def processMidlines(subjectList,dataDir,hemi):
                 H = 'RIGHT'
                 HH = 'R'
 
-                subjDir = '{}{}/RestingState/'.format(dataDir,s)
+                subjDir = '{}{}/RestingState/{}/'.format(dataDir,s,h)
                 subjRest = '{}rfMRI_Z-Trans_merged_CORTEX_{}.mat'.format(subjDir,H)
                 outMids = '{}{}.{}.Midline_Indices.mat'.format(subjDir,s,HH);
                 
