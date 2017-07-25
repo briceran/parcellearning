@@ -20,8 +20,9 @@ def gifti2mat_restingState(subjectList,dataDir):
     
     for s in subjects:
         subjDir = dataDir + s + 'Resting_State/'
+        print subjDir
         subjRS = subjDir + 'rfMRI_Z-Trans_merged_CORTEX_RIGHT.gii'
-        outRS = subjDir + 'rfMRU_Z-Trans_merged_CORTEX_RIGHT.mat'
+        outRS = subjDir + 'rfMRI_Z-Trans_merged_CORTEX_RIGHT.mat'
         
         if os.path.isfile(subjRS):
             
