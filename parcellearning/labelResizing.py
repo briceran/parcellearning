@@ -39,15 +39,9 @@ def processLabelResizing(subjectList,dataDir,hemi):
         inLabel = hcpDir + s + lExt
         inMid = midDir + s + mExt
         inFunc = funDir + s + '/Surface/MNI/' + s + fExt
-        
-        print inLabel
-        print inMid
-        print inFunc
-        
+
         if os.path.isfile(inLabel) and os.path.isfile(inMid) and os.path.isfile(inFunc):
-            
-            print s
-            
+
             outFunc = outDir + s + '.' + hemi + '.CorticalAreas.fixed.32k_fs_LR.func.gii'
             outLabel = outDir + s + '.' + hemi + '.CorticalAreas.fixed.32k_fs_LR.label.gii'
             
@@ -61,7 +55,7 @@ def processLabelResizing(subjectList,dataDir,hemi):
             
             nb.save(M,outFunc)
             
-            cmd = '/usr/bin/wb_command {} {} {}'.format(outFunc,inCMAP,outLabel)
+            cmd = '/usr/bin/wb_command -metric-label-import {} {} {}'.format(outFunc,inCMAP,outLabel)
             
             os.system(cmd)
         
