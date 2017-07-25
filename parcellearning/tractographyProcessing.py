@@ -92,7 +92,7 @@ def hemiCorticalCoordiantes(inLabel):
     
     for m in mappings:
         inds = np.where(label == m)[0] + 1
-        mappings[m] = inds
+        mappings[str(m)] = list(inds)
     
     return mappings
 
