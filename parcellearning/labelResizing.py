@@ -32,7 +32,7 @@ def processLabelResizing(subjectList,dataDir,hemi):
     
     N = 32492
     
-    inCMAP = dataDir + 'parcellearning/Data/Labels/ + 'Label_Lookup_300.txt'
+    inCMAP = dataDir + 'parcellearning/Data/Labels/' + 'Label_Lookup_300.txt'
     
     for s in subjects:
         
