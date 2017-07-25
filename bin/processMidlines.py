@@ -28,25 +28,25 @@ def processMidlines(subjectList,dataDir,hemi):
                 H = 'RIGHT'
                 HH = 'R'
 
-                subjDir = '{}{}/RestingState/{}/'.format(dataDir,s,h)
-                subjRest = '{}rfMRI_Z-Trans_merged_CORTEX_{}.mat'.format(subjDir,H)
-                print subjRest
-                outMids = '{}{}.{}.Midline_Indices.mat'.format(subjDir,s,HH);
-                print outMids
+            subjDir = '{}{}/RestingState/{}/'.format(dataDir,s,h)
+            subjRest = '{}rfMRI_Z-Trans_merged_CORTEX_{}.mat'.format(subjDir,H)
+            print subjRest
+            outMids = '{}{}.{}.Midline_Indices.mat'.format(subjDir,s,HH);
+            print outMids
+            
+            if os.path.isfile(subjRest):
+                S = sio.loadmat(subjRest)
+                rsData = S['rest']
                 
-                if os.path.isfile(subjRest):
-                    S = sio.loadmat(subjRest)
-                    rsData = S['rest']
-                    
-                    np.sum(np.abs(rsData),axis=1)
-                    sm = np.sum(np.abs(rsData),axis=1);
-                    
-                    mids = np.where(sm == 0)[0]
-                    
-                    m = {}
-                    m['mids'] = mids
-                    
-                    sio.savemat(outMids,m)
+                np.sum(np.abs(rsData),axis=1)
+                sm = np.sum(np.abs(rsData),axis=1);
+                
+                mids = np.where(sm == 0)[0]
+                
+                m = {}
+                m['mids'] = mids
+                
+                sio.savemat(outMids,m)
         
 if __name__=="__main__":
     
