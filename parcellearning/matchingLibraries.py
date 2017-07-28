@@ -563,7 +563,7 @@ def mappingThreshold(mapCounts,threshold,limit):
             if limit == 'inside':
                 passed = [k for k,v in zips if v <= threshold]
             else:
-                passed = [kp for k,v in zips if v >= threshold]
+                passed = [k for k,v in zips if v >= threshold]
     
             thresholdC[key] = passed
         else:
