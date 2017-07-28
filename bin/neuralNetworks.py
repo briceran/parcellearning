@@ -308,13 +308,9 @@ class TestCallback(callbacks.Callback):
         mm = self.mm
         
         print '\n'
-        print x.shape
-        print y.shape
-        print mm.shape
-        
+
         predProb = self.model.predict_proba(x)
-        print 'predProb: {}'.format(predProb)
-        
+
         threshed = mm*predProb;
         y_pred = np.argmax(threshed,axis=1)
         
