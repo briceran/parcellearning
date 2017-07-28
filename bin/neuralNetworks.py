@@ -191,8 +191,8 @@ def splitDataByLabel(fullDataArray,labelVector):
     
     return coreData
 
-## Functions for Down-sampling data
 
+## Functions for Down-sampling data
 def noDS(trainingData,labelVector,mm):
     
     """
@@ -200,7 +200,7 @@ def noDS(trainingData,labelVector,mm):
     """
     return (trainingData,labelVector,mm)
 
-def equalDS(trainingData,labelVector,mm):
+def equalDS(trainingData,mm,labelVector):
     
     """
     Apply equal downsampling, where sample number is = min(label samples)
@@ -279,17 +279,14 @@ def dbsDS(trainingData,labelVector):
 def shuffleData(training,matching,responses):
     
     [xt,yt] = training.shape
-    [xm,ym] = matching.shape
-    print 'PreShuffle shape: {}'.format(matching.shape)
+
+    N = np.arange(xt);
+    N = sklearn.utils.shuffle(N);
     
-    tempData = np.column_stack((training,matching,responses))
-    shuffled = sklearn.utils.shuffle(tempData)
-    
-    trainShuffled = shuffled[:,:yt]
-    matchShuffled = shuffled[:,yt:(yt+ym)];
-    print 'PostShuffle shape: {}'.format(matchShuffled.shape)
-    labelShuffled = shuffled[:,-1]
-    
+    trainShuffled = training[N,:]
+    matchShuffled = matching[N,:]
+    labelShuffled = responses[N,:]
+
     return (trainShuffled,matchShuffled,labelShuffled)
 
 
@@ -321,6 +318,10 @@ class TestCallback(callbacks.Callback):
         threshed = mm*predProb;
         y_pred = np.argmax(threshed,axis=1)
         
+        print 'Minimum true class: {}'.format(np.min(y))
+        print 'Minimum pred class: {}'.format(np.min(y_pred))
+        
+        print 'y_true: {}'.format(y)
         print 'y_pred: {}'.format(y_pred)
 
         loss,_ = self.model.evaluate(x, y, verbose=0)
@@ -389,29 +390,20 @@ subjects = [x.strip() for x in subjects]
 
 # Load training data
 trainingData,labels,mapMatrix = loadData(subjects,dataDir,features,hemi)
-print '1'
-print 'Training Data shape: {}'.format(trainingData.shape)
-print 'Label shape: {}'.format(labels.shape)
-print 'MapMatrix shape: {}'.format(mapMatrix.shape)
+
 
 # Down-sample the data using parameters specified by args.downSample
 # Currently, only 'equal' works
-tempX,tempMM,tempY = ds_funcs[args.downSample](trainingData,labels,mapMatrix)
-print '2'
-print 'Training Data shape: {}'.format(tempX.shape)
-print 'Label shape: {}'.format(tempY.shape)
-print 'MapMatrix shape: {}'.format(tempMM.shape)
+tempX,tempM,tempY = ds_funcs[args.downSample](trainingData,mapMatrix,labels)
+
 
 # Standardize subject features
 S = sklearn.preprocessing.StandardScaler()
-training = S.fit_transform(tempX)
+trainTransformed = S.fit_transform(tempX)
 
 # Shuffle features and responses
-xTrain,mTrain,yTrain = shuffleData(training,tempMM,tempY)
-print '3'
-print 'Training Data shape: {}'.format(xTrain.shape)
-print 'Label shape: {}'.format(yTrain.shape)
-print 'MapMatrix shape: {}'.format(mTrain.shape)
+xTrain,mTrain,yTrain = shuffleData(trainTransformed,tempM,tempY)
+
 
 yTrain = yTrain.astype(np.int32)
 yTrain.shape+=(1,)
