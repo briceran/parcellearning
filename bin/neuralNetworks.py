@@ -152,6 +152,8 @@ def loadData(subjectList,dataDir,features,hemi):
     labs = aggregateDictValues(labs)
     vlib = aggregateDictValues(vlib)
     
+    print 'MatchingMatrix shape: {}'.format(vlib.shape)
+    
     return (data,labs,vlib)
 
 def aggregateDictValues(inDict):
@@ -357,6 +359,7 @@ subjects = [x.strip() for x in subjects]
 
 # Load training data
 trainingData,labels,mapMatrix = loadData(subjects,dataDir,features,hemi)
+print '1'
 print 'Training Data shape: {}'.format(trainingData.shape)
 print 'Label shape: {}'.format(labels.shape)
 print 'MapMatrix shape: {}'.format(mapMatrix.shape)
@@ -364,6 +367,7 @@ print 'MapMatrix shape: {}'.format(mapMatrix.shape)
 # Down-sample the data using parameters specified by args.downSample
 # Currently, only 'equal' works
 tempX,tempMM,tempY = ds_funcs[args.downSample](trainingData,labels,mapMatrix)
+print '2'
 print 'Training Data shape: {}'.format(tempX.shape)
 print 'Label shape: {}'.format(tempY.shape)
 print 'MapMatrix shape: {}'.format(tempMM.shape)
@@ -374,6 +378,7 @@ training = S.fit_transform(tempX)
 
 # Shuffle features and responses
 xTrain,mTrain,yTrain = shuffleData(training,tempMM,tempY)
+print '3'
 print 'Training Data shape: {}'.format(xTrain.shape)
 print 'Label shape: {}'.format(yTrain.shape)
 print 'MapMatrix shape: {}'.format(mTrain.shape)
