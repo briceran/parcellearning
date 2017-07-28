@@ -39,9 +39,10 @@ import numpy as np
 import sklearn
 import os
 
+from keras import callbacks
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Activation
-from keras import utils,optimizers
+from keras.layers import Dense
+from keras import optimizers
 from keras.optimizers import SGD
 
 # Import Batch Normalization
@@ -291,6 +292,34 @@ def shuffleData(training,matching,responses):
     
     return (trainShuffled,matchShuffled,labelShuffled)
 
+
+class TestCallback(callbacks.Callback):
+    
+    """
+    Callback to test neighborhood constrained accuracy computations.
+    """
+    def __init__(self, mappingMatrix, test_x,test_y):
+        
+        print('yes')
+        
+        self.mm = mappingMatrix
+        self.x_test = test_x
+        self.y_test = test_y
+
+    def on_epoch_end(self, epoch, logs={}):
+        
+        x = self.x_test
+        y = self.y_test
+        mm = self.mm
+        
+        predProb = self.model.predict_proba(x)
+        y_pred = cu.maximumProbabilityClass(mm,predProb)
+        
+        loss,_ = self.model.evaluate(x, y, verbose=0)
+        acc = np.mean(y == y_pred)
+        print('\nTesting loss: {}, acc: {}\n'.format(loss, acc))
+
+
 def computeConstrained(mappingMatrix,x_test,model):
     
     predProb = model.predict_proba(x_test);
@@ -395,12 +424,22 @@ nSamples = xTrain.shape[0]
 input_dim = xTrain.shape[1]
 output_dim = OneHotLabels.shape[1]
 
-# Generate one-hot encoded categorical array of response values
 
-print(xTrain.shape)
-print(OneHotLabels.shape)
-# print(xEval.shape)
-# print(yEval.shape)
+# Generate validation data set
+N = np.arange(nSamples);
+evals_coords = np.random.choice(N, size=(nSamples*EVAL_FACTOR,), replace=False)
+train_coords = np.asarray(list(set(N).difference(set(evals_coords))))
+
+eval_x = xTrain[evals_coords,:]
+eval_y = OneHotLabels[evals_coords,:]
+eval_m = mTrain[evals_coords,:]
+
+train_x = xTrain[train_coords,:]
+train_y = OneHotLabels[train_coords,:]
+train_m = mTrain[train_coords,:]
+
+# final dimensionf of data
+nSamples = train_x.shape[0]
 
 print 'Training data has {} samples, and {} features.'.format(nSamples,input_dim)
 print 'Building a network with {} hidden layers, each with {} nodes.'.format(levels,nodes)
@@ -430,5 +469,6 @@ model.compile(loss='categorical_crossentropy',optimizer= opt,metrics=['accuracy'
 
 print 'Model built using {} optimization.  Training now.'.format(args.optimizer)
 
-model.fit(xTrain, OneHotLabels, epochs=epochs,
-          batch_size=batch,verbose=1,shuffle=True,validation_split=0.2)
+model.fit(train_x, train_y, epochs=epochs,
+          batch_size=batch,verbose=1,shuffle=True,
+          validation_split=0.2,callbacks=[TestCallback(eval_m,eval_x,eval_y)])
