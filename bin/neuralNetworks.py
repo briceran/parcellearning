@@ -320,7 +320,7 @@ subjects = [x.strip() for x in subjects]
 #subjects = np.random.choice(subjects,size=ns,replace=False)
 
 # Load training data
-trainingData,labels = loadData(subjects,dataDir,features,hemi)
+trainingData,labels,mapMatrix = loadData(subjects,dataDir,features,hemi)
 
 # Down-sample the data using parameters specified by args.downSample
 tempX,tempY = ds_funcs[args.downSample](trainingData,labels)
