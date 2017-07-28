@@ -352,16 +352,13 @@ class TestCallback(callbacks.Callback):
         # Find the class with the greatest prediction probability
         y_pred = np.argmax(threshed,axis=1)
         
-        print 'Minimum true class: {}'.format(np.min(y_true))
-        print 'Minimum pred class: {}'.format(np.min(y_pred))
-        
-        print 'y_true: {}'.format(y_true)
-        print 'y_pred: {}'.format(y_pred)
+        print '\n y_true: {}'.format(y_true)
+        print ' y_pred: {}'.format(y_pred)
 
         # Evalute the loss and accuracy of the model
         loss,_ = self.model.evaluate(x, y_oneHot, verbose=0)
         acc = np.mean(y_true == y_pred)
-        print('\nTesting loss: {}, acc: {}\n'.format(loss, acc))
+        print('\nValidation loss: {}, acc: {}\n'.format(loss, acc))
 
 
 
@@ -458,8 +455,6 @@ print yTrain.shape
 O = sklearn.preprocessing.OneHotEncoder(sparse=False)
 O.fit(yTrain.reshape(-1,1))
 OneHotLabels = O.transform(yTrain.reshape(-1,1))
-
-print 'OHL shape: {}'.format(OneHotLabels.shape)
 
 # Dimensions of training data
 nSamples = xTrain.shape[0]
