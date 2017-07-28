@@ -265,7 +265,7 @@ parser = argparse.ArgumentParser(description='Compute random forest predictions.
 parser.add_argument('-dDir','--dataDirectory',help='Directory where data exists.',required=True)
 parser.add_argument('-f','--features',help='Features to include in model.',required=True)
 parser.add_argument('-sl','--subjectList',help='List of subjects to include.',required=True)
-parser.add_argument('-h','--hemisphere',help='Hemisphere to proces.',type=str,required=True)
+parser.add_argument('-hm','--hemisphere',help='Hemisphere to proces.',type=str,required=True)
 
 parser.add_argument('-l','--levels', help='Number of levels to include in network.',type=int,default=20)
 parser.add_argument('-n','--nodes',help='Number of nodes to include in each level.',type=int,default=100)
