@@ -277,12 +277,14 @@ def shuffleData(training,matching,responses):
     
     [xt,yt] = training.shape
     [xm,ym] = matching.shape
+    print 'PreShuffle shape: {}'.format(matching.shape)
     
     tempData = np.column_stack((training,matching,responses))
     shuffled = sklearn.utils.shuffle(tempData)
     
     trainShuffled = shuffled[:,:yt]
     matchShuffled = shuffled[:,yt:(yt+ym)];
+    print 'PostShuffle shape: {}'.format(matchShuffled.shape)
     labelShuffled = shuffled[:,-1]
     
     return (trainShuffled,matchShuffled,labelShuffled)
