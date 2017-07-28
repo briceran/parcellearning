@@ -469,7 +469,7 @@ trainingData,labels,mapMatrix = loadData(subjects,dataDir,features,hemi)
 
 # Down-sample the data using parameters specified by args.downSample
 # Currently, only 'equal' works
-print 'Applying {} sample reduction.'.format(args.downsample)
+print 'Applying {} sample reduction.'.format(args.downSample)
 tempX,tempM,tempY = ds_funcs[args.downSample](trainingData,mapMatrix,labels)
 
 
