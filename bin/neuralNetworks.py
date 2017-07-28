@@ -427,10 +427,11 @@ O = sklearn.preprocessing.OneHotEncoder(sparse=False)
 O.fit(yTrain.reshape(-1,1))
 OneHotLabels = O.transform(yTrain.reshape(-1,1))
 
+print 'OHL shape: {}'.format(OneHotLabels.shape)
+
 # Dimensions of training data
 nSamples = xTrain.shape[0]
 input_dim = xTrain.shape[1]
-output_dim = OneHotLabels.shape[1]
 
 
 # Generate validation data set
@@ -451,6 +452,7 @@ train_m = mTrain[train_coords,:]
 
 # final dimensionf of data
 nSamples = train_x.shape[0]
+output_dim = train_y.shape[1]
 
 print 'Training data has {} samples, and {} features.'.format(nSamples,input_dim)
 print 'Building a network with {} hidden layers, each with {} nodes.'.format(levels,nodes)
