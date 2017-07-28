@@ -148,7 +148,10 @@ def findLabelDBSCoords(label,data,eps,max_samples,max_percent):
     coordinates = []
 
     # for each subset
-    for dataSubset in subsets:
+    baseline = 0
+    for iteration,dataSubset in enumerate(subsets):
+        
+        [xSamps,yDim] = dataSubset.shape
 
         # compute correlation distance (1-corrcoef) and scale to 0-1
         dMat = metrics.pairwise.pairwise_distances(dataSubset,
@@ -169,6 +172,9 @@ def findLabelDBSCoords(label,data,eps,max_samples,max_percent):
 
             perc = (1.*len(clusters))/(1.*len(predLabs))
             ep += 0.01
+        
+        clusters += baseline
+        baseline += xSamps
 
         coordinates.append(clusters)
 
