@@ -21,6 +21,11 @@ evaluate the model once it has been trained.
 We can use the "validation_split" or "validation_data" options as parameters
 in model.fit.
 
+
+
+Currently, the matchingMatrix option is only available for randomly
+down-sampling the data.  I need to restructure my DBSCAN code.
+
 """
 
 
@@ -300,7 +305,24 @@ def shuffleData(training,matching,responses):
 class TestCallback(callbacks.Callback):
     
     """
-    Callback to test neighborhood constrained accuracy computations.
+    Callback to test neighborhood-constrained accuracy computations.
+    
+    Parameters:
+    - - - - -
+        mappingMatrix : binary matrix of mapping results, where each row is a
+                        sample, and each column is a label.  If a sample
+                        mapped to a label during surface registration, the
+                        index [sample,label] = 1.
+                        
+        test_x : validation data feature matrix
+        
+        y_true : validation data response vector
+        
+        y_oneHot : validation data one-hot matrix
+        
+    The Keras model required one-hot arrays for evaluation of the model --
+    it does not accept multi-valued integer vectors.
+        
     """
     def __init__(self, mappingMatrix, test_x, y_true, y_oneHot):
 
@@ -318,10 +340,16 @@ class TestCallback(callbacks.Callback):
         mm = self.mm
         
         print '\n'
-
+        
+        # Compute the prediction probability of all samples for all classes.
+        # N x K matrix
         predProb = self.model.predict_proba(x)
 
+        # Include only those prediction probabilities for classes that the 
+        # samples mapped to during surface registration
         threshed = mm*predProb;
+        
+        # Find the class with the greatest prediction probability
         y_pred = np.argmax(threshed,axis=1)
         
         print 'Minimum true class: {}'.format(np.min(y_true))
@@ -330,6 +358,7 @@ class TestCallback(callbacks.Callback):
         print 'y_true: {}'.format(y_true)
         print 'y_pred: {}'.format(y_pred)
 
+        # Evalute the loss and accuracy of the model
         loss,_ = self.model.evaluate(x, y_oneHot, verbose=0)
         acc = np.mean(y_true == y_pred)
         print('\nTesting loss: {}, acc: {}\n'.format(loss, acc))
