@@ -314,18 +314,12 @@ class TestCallback(callbacks.Callback):
         
         predProb = self.model.predict_proba(x)
         y_pred = cu.maximumProbabilityClass(mm,predProb)
+        print y_pred
         
         loss,_ = self.model.evaluate(x, y, verbose=0)
         acc = np.mean(y == y_pred)
         print('\nTesting loss: {}, acc: {}\n'.format(loss, acc))
 
-
-def computeConstrained(mappingMatrix,x_test,model):
-    
-    predProb = model.predict_proba(x_test);
-    y_test = lb.maximumProbabilityClass(mappingMatrix,predProb)
-    
-    return y_test
 
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
 
