@@ -302,16 +302,19 @@ class TestCallback(callbacks.Callback):
     """
     Callback to test neighborhood constrained accuracy computations.
     """
-    def __init__(self, mappingMatrix, test_x,test_y):
+    def __init__(self, mappingMatrix, test_x, y_true, y_oneHot):
 
         self.mm = mappingMatrix
         self.x_test = test_x
-        self.y_test = test_y
+        
+        self.y_true = y_true
+        self.y_oneHot = y_oneHot
 
     def on_epoch_end(self, epoch, logs={}):
         
         x = self.x_test
-        y = self.y_test
+        y_true = self.y_true
+        y_oneHot = self.y_oneHot
         mm = self.mm
         
         print '\n'
@@ -321,14 +324,14 @@ class TestCallback(callbacks.Callback):
         threshed = mm*predProb;
         y_pred = np.argmax(threshed,axis=1)
         
-        print 'Minimum true class: {}'.format(np.min(y))
+        print 'Minimum true class: {}'.format(np.min(y_true))
         print 'Minimum pred class: {}'.format(np.min(y_pred))
         
-        print 'y_true: {}'.format(y)
+        print 'y_true: {}'.format(y_true)
         print 'y_pred: {}'.format(y_pred)
 
-        loss,_ = self.model.evaluate(x, y, verbose=0)
-        acc = np.mean(y == y_pred)
+        loss,_ = self.model.evaluate(x, y_oneHot, verbose=0)
+        acc = np.mean(y_true == y_pred)
         print('\nTesting loss: {}, acc: {}\n'.format(loss, acc))
 
 
