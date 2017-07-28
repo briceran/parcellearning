@@ -410,7 +410,6 @@ xTrain,mTrain,yTrain = shuffleData(trainTransformed,tempM,tempY)
 
 
 yTrain = yTrain.astype(np.int32)
-yTrain.shape+=(1,)
 print yTrain.shape
 
 O = sklearn.preprocessing.OneHotEncoder(sparse=False)
