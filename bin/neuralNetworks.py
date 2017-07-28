@@ -403,7 +403,7 @@ parser.add_argument('-l','--levels', help='Number of levels to include in networ
 parser.add_argument('-n','--nodes',help='Number of nodes to include in each level.',
                     type=int,default=100,required=False)
 parser.add_argument('-e','--epochs',help='Number of epochs.',type=int,
-                    default=20,requird=False)
+                    default=20,required=False)
 parser.add_argument('-b','--batchSize',help='Batch size.',type=int,
                     default=128,required=False)
 
