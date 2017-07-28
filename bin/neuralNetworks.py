@@ -424,8 +424,8 @@ yTrain.shape+=(1,)
 print yTrain.shape
 
 O = sklearn.preprocessing.OneHotEncoder(sparse=False)
-O.fit(yTrain)
-OneHotLabels = O.transform(yTrain)
+O.fit(yTrain.reshape(-1,1))
+OneHotLabels = O.transform(yTrain(-1,1))
 
 # Dimensions of training data
 nSamples = xTrain.shape[0]
@@ -463,6 +463,8 @@ model.add(BatchNormalization())
 c = 0
 while c < levels:
     
+    # in case you want to add alternating activation functions
+    # currently, all layers are relu
     if c % 2 == 0:
 
         model.add(Dense(nodes, activation='relu',init='uniform'))
