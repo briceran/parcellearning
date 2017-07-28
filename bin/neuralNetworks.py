@@ -150,9 +150,7 @@ def loadData(subjectList,dataDir,features,hemi):
     data = aggregateDictValues(data)
     labs = aggregateDictValues(labs)
     vlib = aggregateDictValues(vlib)
-    
-    print 'MatchingMatrix shape: {}'.format(vlib.shape)
-    
+        
     return (data,labs,vlib)
 
 def aggregateDictValues(inDict):
@@ -468,7 +466,7 @@ print 'Loading subject data.'
 now = time.time()
 trainingData,labels,mapMatrix = loadData(subjects,dataDir,features,hemi)
 later = time.time()
-print 'Loaded in {} seconds.'.format(int(later-now))
+print 'Loaded in {} seconds.\n'.format(int(later-now))
 
 
 # Down-sample the data using parameters specified by args.downSample
@@ -477,16 +475,16 @@ print 'Applying {} sample reduction.'.format(args.downSample)
 now = time.time()
 tempX,tempM,tempY = ds_funcs[args.downSample](trainingData,mapMatrix,labels)
 later = time.time()
-print 'Reduced in {} seconds.'.format(int(later-now))
+print 'Reduced in {} seconds.\n'.format(int(later-now))
 
 
 # Standardize subject features
-print 'Standardizing.'
+print 'Standardizing.\n'
 S = sklearn.preprocessing.StandardScaler()
 trainTransformed = S.fit_transform(tempX)
 
 # Shuffle features and responses
-print 'Shuffling.'
+print 'Shuffling.\n'
 xTrain,mTrain,yTrain = shuffleData(trainTransformed,tempM,tempY)
 
 
@@ -504,7 +502,7 @@ input_dim = xTrain.shape[1]
 
 
 # Generate validation data set
-print 'Generating validation set.'
+print 'Generating validation set.\n'
 N = np.arange(nSamples);
 dSamples = int(np.floor(nSamples*EVAL_FACTOR))
 evals_coords = np.random.choice(N, size=(dSamples,), replace=False)
@@ -525,7 +523,7 @@ nSamples = train_x.shape[0]
 output_dim = train_y.shape[1]
 
 print 'Training data has {} samples, and {} features.'.format(nSamples,input_dim)
-print 'Building a network with {} hidden layers, each with {} nodes.'.format(levels,nodes)
+print 'Building a network with {} hidden layers, each with {} nodes.\n'.format(levels,nodes)
 
 # instantiate model
 model = Sequential()
@@ -548,7 +546,7 @@ model.add(Dense(output_dim, activation='softmax'))
 
 model.compile(loss='categorical_crossentropy',optimizer= opt,metrics=['accuracy'])
 
-print 'Model built using {} optimization.  Training now.'.format(args.optimizer)
+print 'Model built using {} optimization.  Training now.\n'.format(args.optimizer)
 
 model.fit(train_x, train_y, epochs=epochs,
           batch_size=batch,verbose=1,shuffle=True,
