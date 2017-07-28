@@ -427,7 +427,8 @@ output_dim = OneHotLabels.shape[1]
 
 # Generate validation data set
 N = np.arange(nSamples);
-evals_coords = np.random.choice(N, size=(np.floor(nSamples*EVAL_FACTOR),), replace=False)
+dSamples = int(np.floor(nSamples*EVAL_FACTOR))
+evals_coords = np.random.choice(N, size=(dSamples,), replace=False)
 train_coords = np.asarray(list(set(N).difference(set(evals_coords))))
 
 eval_x = xTrain[evals_coords,:]
