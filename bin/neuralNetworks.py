@@ -92,6 +92,8 @@ def loadData(subjectList,dataDir,features,hemi):
         
         if os.path.isfile(inTrain) and os.path.isfile(inVLib) and os.path.isfile(inMids):
             
+            print s
+            
             # Load midline indices
             # Subtract 1 for differece between Matlab and Python indexing
             mids = ld.loadMat(inMids)-1
