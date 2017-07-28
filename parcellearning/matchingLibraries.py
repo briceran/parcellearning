@@ -535,10 +535,12 @@ def mappingThreshold(mapCounts,threshold,limit):
     
     Parameters:
     - - - - -
-        mapFreqs : dictionary of sub-dictionaries, where main keys
+        mapCounts : dictionary of sub-dictionaries, where main keys
                         are labels, and sub-key/label pairs are labels
                         and an associated frequency
         threshold : count cutoff
+        
+        limit : whether to include labels above or below the threhsold
     Returns:
     - - - -
         passed : list of labels with frequencies greater than the cutoff
@@ -561,10 +563,41 @@ def mappingThreshold(mapCounts,threshold,limit):
             if limit == 'inside':
                 passed = [k for k,v in zips if v <= threshold]
             else:
-                passed = [k for k,v in zips if v >= threshold]
+                passed = [kp for k,v in zips if v >= threshold]
     
             thresholdC[key] = passed
         else:
             thresholdC[key] = None
 
     return thresholdC
+
+def buildMappingMatrix(merged,R):
+    
+    """
+    Method to build a binary matrix, where entries in this matrix correspond
+    to labels that a vertex matches to.  Think of this matrix as the 
+    adjacency matrix, but rather a mapping matrix.
+    
+    Parameters:
+    - - - - -
+        merged : vertex library for a single subject.
+        R : the number of possible labels that were mapped to
+    """
+    
+    mergedFreq = mappingFrequency(merged);
+    
+    mergedThresh = mappingThreshold(mergedFreq,0.05,'outside');
+    
+    N = len(mergedThresh.keys());
+    
+    mappingMatrix = np.zeros((N,R+1))
+    
+    for v in mergedThresh.keys():
+        if mergedThresh[v]:
+            maps = mergedThresh[v]
+            mappingMatrix[v,maps] = 1;
+            
+    mappingMatrix = mappingMatrix[:,1:]
+    
+    return mappingMatrix;
+            

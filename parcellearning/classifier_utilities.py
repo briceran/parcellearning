@@ -361,6 +361,25 @@ def combineClassifications(models,ids):
                             
     return counts
 
+def combineFilter(mappings,combined,ids):
+    
+    """
+    Filter the classification results to include only those labels that a test
+    vertex mapping to using surface registration.
+    """
+    
+    filtered = {}.fromkeys(ids)
+    
+    for i in ids:
+        if combined[i] and mappings[i]:
+            
+            ic = combined[i].keys()
+            im = mappings[i].keys()
+            
+            filtered[i] = {l: combined[i][l] for l in ic if l in im}
+    
+    return filtered
+
 def countClassifications(classifications,ids):
     
     """
@@ -416,26 +435,6 @@ def frequencyClassifications(baselineCounts,predicted,ids):
     
     return maxFreq
 
-def combineFilter(mappings,combined,ids):
-    
-    """
-    Filter the classification results to include only those labels that a test
-    vertex mapping to using surface registration.
-    """
-    
-    filtered = {}.fromkeys(ids)
-    
-    for i in ids:
-        if combined[i] and mappings[i]:
-            
-            ic = combined[i].keys()
-            im = mappings[i].keys()
-            
-            filtered[i] = {l: combined[i][l] for l in ic if l in im}
-    
-    return filtered
-
-    
 def maximumLiklihood(y,yMatch):
     
     """
@@ -463,6 +462,30 @@ def maximumLiklihood(y,yMatch):
             maxLik[vert] = ml
     
     return maxLik
+
+def maximumProbabilityClass(mappingMatrix,predMatrix):
+    
+    """
+    Many classifiers output and prediction probability matrix, where each row
+    corresponds to a data point, and each column corresponds to a specific
+    class.  The value at each index corresponds to the prediction probability
+    that a given point belongs to a given class.
+    
+    This method selects the highest scoring class, given the mappingMatrix.
+    
+    Parameters:
+    - - - - -
+        mappingMatrix : binary matrix, where each index is 0 or 1, indicating
+                        whether that vertex mapping to that label.
+        predMatrix : float matrix, containing probability that a given data
+                        point belongs to a given class.
+    """
+    
+    threshed = mappingMatrix*predMatrix;
+    
+    scores = np.argmax(threshed,axis=1);
+    
+    return scores;
             
 def saveClassifier(classifier,output):
     
@@ -481,7 +504,6 @@ def saveClassifier(classifier,output):
             pass
     else:
         print('Classifier has not been trained.  Not saving.')
-
 
 def standardize(grouped, features):
     """

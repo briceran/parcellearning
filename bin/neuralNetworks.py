@@ -30,6 +30,7 @@ import sys
 sys.path.append('..')
 
 import parcellearning.loaded as ld
+import parcellearning.matchingLibraries as lb
 import parcellearning.classifier_utilities as cu
 import parcellearning.regionalizationMethods as regm
 
@@ -56,7 +57,7 @@ DBSCAN_PERC = 0.7
 
 
 ## Method to load the training data and aggregate into a single array
-def loadData(subjectList,dataDir,features):
+def loadData(subjectList,dataDir,features,hemi):
     
     """
     Generates the training data for the neural network.  Assumes that the
@@ -64,51 +65,82 @@ def loadData(subjectList,dataDir,features):
     item in "features".)
     """
     
-    fExt = 'TrainingObjects/FreeSurfer/'
-    mExt = 'Midlines/'
-    ext = '.L.TrainingObject.aparc.a2009s.h5'
+    hemisphere = {}.fromkeys('Left','Right')
+    hemisphere['Left'] = 'L'
+    hemisphere['Right'] = 'R'
     
+    
+    fDir = 'TrainingObjects/FreeSurfer/'
+    vDir = 'MatchingLibraries/Test/'
+    mDir = 'Midlines/'
+    
+    trainObjectExt = '.{}.TrainingObject.aparc.a2009s.h5'.format(hemisphere[hemi])
+    vLibExt = '.{}.VertexLibrary.Test.p'.format(hemisphere[hemi])
+    midExt = '.{}.Midline_Indices.mat'.format(hemisphere[hemi])
+
     data = {}
     labs = {}
+    vlib = {}
     
     dataFeatures = list(set(features).difference({'label'}))
     
     for s in subjectList:
 
-        inTrain = dataDir + fExt + s + ext
-        mids = dataDir + mExt + s + '_Midline_Indices.mat'
+        inTrain = dataDir + fDir + s + trainObjectExt
+        inVLib = dataDir + vDir + s + vLibExt
+        inMids = dataDir + mDir + s + midExt
         
-        if os.path.isfile(inTrain) and os.path.isfile(mids):
+        if os.path.isfile(inTrain) and os.path.isfile(inVLib) and os.path.isfile(inMids):
+            
+            # Load midline indices
+            # Subtract 1 for differece between Matlab and Python indexing
+            mids = ld.loadMat(inMids)-1
+            mids = set(mids)
+            
+            # Load Vertex Library object and convert to mapping matrix
+            vLib = ld.loadPick(inVLib)
+            vLibMatrix = lb.buildMappingMatrix(vLib,180)
+            
 
+            # Load training data and training labels
             trainH5 = h5py.File(inTrain,mode='r')
             
+            # Get unicode ID of subject name
             uni_subj = unicode(s, "utf-8")
 
+            # Get data corresponding to features of interest
             trainFeatures = ld.parseH5(trainH5,dataFeatures)
             trainFeatures = trainFeatures[uni_subj]
             
+            # Load Label data
             labelFeatures = ld.parseH5(trainH5,['label'])
             labelFeatures = labelFeatures[uni_subj]
             
+            # Merge training features into single array
             mergedDataFeatures = cu.mergeFeatures(trainFeatures,dataFeatures)
             mergedLablFeatures = cu.mergeFeatures(labelFeatures,['label'])
             
+            # Get the true data coordiantes (exclude midline coordinates)
             nSamples = set(np.arange(mergedDataFeatures.shape[0]))
-            mids = set(ld.loadMat(mids))
             coords = np.asarray(list(nSamples.difference(mids)))
 
+            # Filter the data to include only good data coordiantes
             mergedDataFeatures = mergedDataFeatures[coords,:]
             mergedLablFeatures = mergedLablFeatures[coords,:]
+            vLibMatrix = vLibMatrix[coords,1:]
             
             data[s] = mergedDataFeatures
             labs[s] = mergedLablFeatures
+            vlib[s] = vLibMatrix
             
             trainH5.close()
-
+    
+    # Merged data across all subjects in training sets
     data = aggregateDictValues(data)
     labs = aggregateDictValues(labs)
+    vlib = aggregateDictValues(vlib)
     
-    return (data,labs)
+    return (data,labs,vlib)
 
 def aggregateDictValues(inDict):
     
@@ -221,6 +253,12 @@ def shuffleData(training,responses):
     
     return (shuffled[:,:-1],shuffled[:,-1])
 
+def computeConstrained(mappingMatrix,x_test,model):
+    
+    predProb = model.predict_proba(x_test);
+    y_test = lb.maximumProbabilityClass(mappingMatrix,predProb)
+    
+    return y_test
 
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
 
@@ -303,34 +341,12 @@ nSamples = xTrain.shape[0]
 input_dim = xTrain.shape[1]
 output_dim = OneHotLabels.shape[1]
 
-"""
-eval_size = int(np.floor(EVAL_FACTOR*nSamples))
-eval_coor = np.squeeze(np.random.choice(np.arange(nSamples),
-                                        size=(eval_size,1),replace=False))
-train_coor = list(set(np.arange(nSamples)).difference(set(eval_coor)))
-
-xEval = xTrain[eval_coor,:]
-yEval = yTrain[eval_coor,:]
-
-xTrain = xTrain[train_coor,:]
-yTrain = yTrain[train_coor,:]
-
-yTrain=np.squeeze(yTrain)
-"""
-
 # Generate one-hot encoded categorical array of response values
 
 print(xTrain.shape)
 print(OneHotLabels.shape)
 # print(xEval.shape)
 # print(yEval.shape)
-
-"""
-encode_yEval = E.transform(np.squeeze(yEval))
-yEval_cat = utils.to_categorical(encode_yEval,num_classes=len(set(yTrain)))
-
-valData = (xEval,yEval_cat)
-"""
 
 print 'Training data has {} samples, and {} features.'.format(nSamples,input_dim)
 print 'Building a network with {} hidden layers, each with {} nodes.'.format(levels,nodes)
