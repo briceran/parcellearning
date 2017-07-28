@@ -110,7 +110,7 @@ def loadData(subjectList,dataDir,features,hemi):
             mids = set(mids)
             
             # Load MatchingMatrix object
-            vLibMatrix = ld.loadmat(inVLib)            
+            vLibMatrix = ld.loadMat(inVLib)            
 
             # Load training data and training labels
             trainH5 = h5py.File(inTrain,mode='r')
