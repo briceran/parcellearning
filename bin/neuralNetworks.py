@@ -21,11 +21,6 @@ evaluate the model once it has been trained.
 We can use the "validation_split" or "validation_data" options as parameters
 in model.fit.
 
-
-
-Currently, the matchingMatrix option is only available for randomly
-down-sampling the data.  I need to restructure my DBSCAN code.
-
 """
 
 
@@ -44,13 +39,9 @@ import numpy as np
 import sklearn
 import os
 
-from keras import callbacks
+from keras import callbacks, optimizers
 from keras.models import Sequential
-from keras.layers import Dense
-from keras import optimizers
-
-# Import Batch Normalization
-from keras.layers.normalization import BatchNormalization
+from keras.layers import Dense,normalization
 
 
 ###
@@ -259,7 +250,7 @@ def downsampleRandomly(coreTData,coreMData,labels):
     return downTData,downMData
 
 ### Need to fix this to incorporate matchingMatrix
-def dbsDS(trainingData,labelVector):
+def dbsDS(trainingData,mm,labelVector):
     
     """
     Apply DBSCAN to each label sample set, then apply down-sampling.
@@ -269,20 +260,43 @@ def dbsDS(trainingData,labelVector):
 
     # get samples for each label
     coreData = splitDataByLabel(trainingData,labelVector)
-    # downsample data for each label using DBSCAN
-    dbscanData = regm.trainDBSCAN(coreData,mxp=DBSCAN_PERC)
+    coreMM = splitDataByLabel(mm,labelVector)
     
-    # apply down-sampling scheme to DBSCAN-ed data
-    dbsDataDWS = downsampleRandomly(dbscanData,labels)
-    # build response vectors for each label
-    dbsRespDWS = cu.buildResponseVector(labels,dbsDataDWS)
+    # Compute filtered coordinates using DBSCAN
+    clusterCoordinates = regm.trainDBSCAN(coreData,mxp=DBSCAN_PERC)
     
-    # aggregate samples and response vectors
-    aggDBS = aggregateDictValues(dbsDataDWS)
-    aggResp = aggregateDictValues(dbsRespDWS)
+    # Extract the samples that passed using DBSCAN filtering
+    dbscanData = condenseDBSCAN(coreData,clusterCoordinates)
+    dbscanMM = condenseDBSCAN(coreMM,clusterCoordinates)
+
+    # Apply random down-sampling scheme to DBSCAN-ed data and matchingMatrix
+    dbscanDataDS = downsampleRandomly(dbscanData,labels)
+    dbscanMMDS = downsampleRandomly(dbscanMM,labels)
+    
+    # Build response vectors for each label
+    dbsRespDS = cu.buildResponseVector(labels,dbscanDataDS)
+    
+    # Aggregate samples and response vectors
+    aggDataDS= aggregateDictValues(dbscanDataDS)
+    aggMMDS = aggregateDictValues(dbscanMMDS)
+    aggRespDS = aggregateDictValues(dbsRespDS)
     
     # return samples and response arrays
-    return (aggDBS,aggResp)
+    return (aggDataDS,aggMMDS,aggRespDS)
+
+def condenseDBSCAN(inSamples,coords):
+    
+    """
+    Given the coordinates of dbscan-accepted samples, reduce the sample
+    dimensionality.
+    """
+    
+    outSamples = {}.fromkeys(coords.keys())
+    
+    for k in outSamples.keys():
+        outSamples[k] = inSamples[k][coords[k],:]
+        
+    return outSamples
 
 def shuffleData(training,matching,responses):
     
@@ -373,7 +387,7 @@ class TestCallback(callbacks.Callback):
 
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
 
-# Parameters dealing with input data
+# Parameters for input data
 parser.add_argument('-dDir','--dataDirectory',help='Directory where data exists.',required=True)
 parser.add_argument('-f','--features',help='Features to include in model.',required=True)
 parser.add_argument('-sl','--subjectList',help='List of subjects to include.',required=True)
@@ -383,17 +397,17 @@ parser.add_argument('-ds','--downSample',help='Type of downsampling to perform.'
                     choices=['none','equal','dbscan'])
 
 
-# Parameters dealing with structure of network
+# Parameters for network architecture
 parser.add_argument('-l','--levels', help='Number of levels to include in network.',
                     type=int,default=20,required=False)
 parser.add_argument('-n','--nodes',help='Number of nodes to include in each level.',
                     type=int,default=100,required=False)
 parser.add_argument('-e','--epochs',help='Number of epochs.',type=int,
                     default=20,requird=False)
-parser.add_argument('-b','--batchSize',help='Batsh size.',type=int,
+parser.add_argument('-b','--batchSize',help='Batch size.',type=int,
                     default=128,required=False)
 
-# Parameters dealing with update schemes
+# Parameters for weight updates
 parser.add_argument('-opt','--optimizer',help='Optimization scheme.',type=str,
                     default='rmsprop',choices=['rmsprop','sgd'],required=False)
 parser.add_argument('-r','--rate',help='Learning rate.',type=float,
@@ -506,7 +520,7 @@ print 'Building a network with {} hidden layers, each with {} nodes.'.format(lev
 # instantiate model
 model = Sequential()
 model.add(Dense(128, activation='relu', input_dim=input_dim))
-model.add(BatchNormalization())
+model.add(normalization.BatchNormalization())
 
 c = 0
 while c < levels:
@@ -515,7 +529,7 @@ while c < levels:
     # currently, all layers are relu
     
     model.add(Dense(nodes,activation='relu',init='uniform'))
-    model.add(BatchNormalization())
+    model.add(normalization.BatchNormalization())
 
     c+=1
 

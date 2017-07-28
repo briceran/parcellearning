@@ -105,16 +105,16 @@ def trainDBSCAN(labelData, eps=0.025, mxs = 7500, mxp = 0.7):
     labDat = copy.deepcopy(labelData)
     
     labels = labDat.keys()
-    dbsData = {}.fromkeys(labels)
+    dbscanCoords = {}.fromkeys(labels)
 
     for lab in labels:
         print 'Label {}'.format(lab)
         tempData = labDat[lab]
-        dbsData[lab] = labelDBSCAN(lab,tempData,eps,mxs,mxp)
+        dbscanCoords[lab] = findLabelDBSCoords(lab,tempData,eps,mxs,mxp)
         
-    return dbsData
+    return dbscanCoords
     
-def labelDBSCAN(label,data,eps,max_samples,max_percent):
+def findLabelDBSCoords(label,data,eps,max_samples,max_percent):
     
     """
     Method to perform DBSCAN for training data belong to a single label.
@@ -145,7 +145,7 @@ def labelDBSCAN(label,data,eps,max_samples,max_percent):
         
         subsets.append(data[(i+1)*max_samples:,:])
 
-    accepted = []
+    coordinates = []
 
     # for each subset
     for dataSubset in subsets:
@@ -170,11 +170,11 @@ def labelDBSCAN(label,data,eps,max_samples,max_percent):
             perc = (1.*len(clusters))/(1.*len(predLabs))
             ep += 0.01
 
-        accepted.append(dataSubset[clusters,:])
+        coordinates.append(clusters)
 
-    accepted = np.row_stack(accepted)
+    coordinates = np.row_stack(coordinates)
 
-    return accepted
+    return coordinates
         
 #####
 """

@@ -332,7 +332,8 @@ class Atlas(object):
             threshold = self.thresh_train
 
             neighborhoodMap = lb.mappingFrequency(neighborhoodMap)
-            neighborhoodMap = lb.mappingThreshold(neighborhoodMap, threshold, boundary)
+        
+        neighborhoodMap = lb.mappingThreshold(neighborhoodMap, threshold, boundary)
             
         self.neighbors = neighborhoodMap
 
@@ -407,14 +408,16 @@ class Atlas(object):
         
     def softmax_base(self,label,members,cutoffs,mtd):
         
-        scores = self.predictPoint(mtd,label,members)
+        R = len(self.labels)
+        scores = self.predictPoint(mtd,label,members,R)
         
         return scores
     
     def softmax_tree(self,label,members,cutoffs,mtd):
         
+        R = len(self.labels)
         sfmxLabs = treeSoftMax(self.models[label],cutoffs,
-                               members,mtd[members,:])
+                               members,mtd[members,:],R)
         
         predLabs = np.squeeze(sfmxLabs)
         
@@ -422,8 +425,9 @@ class Atlas(object):
     
     def softmax_forest(self,label,members,cutoffs,mtd):
         
+        R = len(self.labels)
         sfmxLabs = forestSoftMax(self.models[label],cutoffs,
-                                 members,mtd[members,:])
+                                 members,mtd[members,:],R)
         
         predLabs = np.squeeze(sfmxLabs)
         
@@ -529,6 +533,11 @@ class Atlas(object):
         threshed = lb.mappingThreshold(freqMaps,threshold,'outside')
         self.mappingsCutoff = threshed
         
+        # Define the matching matrix
+        R = len(self.labels)
+        self.matchingMatrix = lb.buildMatchinMatric(threshed,R)
+
+        
         # Computing label-vertex memberships is time consuming
         # If already precomputed for given test data at specified threshold,
         # can supply path to load file.
@@ -600,7 +609,7 @@ class Atlas(object):
         except:
             pass
         
-def forestSoftMax(metaEstimator,mappings,members,memberData):
+def forestSoftMax(metaEstimator,mappings,members,memberData,R):
     
     """
     Method to restrict whole random decision forest soft-max prediction to
@@ -616,6 +625,8 @@ def forestSoftMax(metaEstimator,mappings,members,memberData):
         members : current vertices of interest
         
         memberData : feature data for members
+        
+        R : number of labels in training set
     """
     
     predProbs = metaEstimator.predict_proba(memberData)
@@ -640,7 +651,7 @@ def forestSoftMax(metaEstimator,mappings,members,memberData):
     
     return labels
 
-def treeSoftMax(metaEstimator,mappings,members,memberData):
+def treeSoftMax(metaEstimator,mappings,members,memberData,R):
     
     """
     Super method for classification prediction with tree-level restriction.
@@ -654,12 +665,14 @@ def treeSoftMax(metaEstimator,mappings,members,memberData):
         members : current vertices of interest
         
         memberData : feature data for members
+        
+        R : number of labels in training set
     """
     
     cMaps = map(mappings.get,members)
     
     cMod = metaEstimator.classes_
-    
+        
     predProbs = []
     
     temporaryInds = {}.fromkeys(members)
