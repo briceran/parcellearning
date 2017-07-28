@@ -591,6 +591,7 @@ def buildMappingMatrix(merged,R):
     N = len(mergedThresh.keys());
     
     mappingMatrix = np.zeros((N,R+1))
+    print 'MappingMatrix shape: {}'.format(mappingMatrix.shape)
     
     for v in mergedThresh.keys():
         if mergedThresh[v]:
@@ -598,6 +599,7 @@ def buildMappingMatrix(merged,R):
             mappingMatrix[v,maps] = 1;
             
     mappingMatrix = mappingMatrix[:,1:]
+    print 'MappingMatrix shape: {}'.format(mappingMatrix.shape)
     
     return mappingMatrix;
             
