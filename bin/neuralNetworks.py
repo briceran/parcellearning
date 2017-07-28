@@ -52,10 +52,14 @@ from keras import optimizers
 # Import Batch Normalization
 from keras.layers.normalization import BatchNormalization
 
+
 ###
 # Hard coded factors:
     
+# default validation set size (fraction of training set)
 EVAL_FACTOR = 0.2
+
+# Default DBSCAN fraction of kept points
 DBSCAN_PERC = 0.7
 
 ###
@@ -369,24 +373,33 @@ class TestCallback(callbacks.Callback):
 
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
 
-
+# Parameters dealing with input data
 parser.add_argument('-dDir','--dataDirectory',help='Directory where data exists.',required=True)
 parser.add_argument('-f','--features',help='Features to include in model.',required=True)
 parser.add_argument('-sl','--subjectList',help='List of subjects to include.',required=True)
-parser.add_argument('-hm','--hemisphere',help='Hemisphere to proces.',type=str,required=True)
+parser.add_argument('-hm','--hemisphere',help='Hemisphere to proces.',required=True)
 
-
-parser.add_argument('-l','--levels', help='Number of levels to include in network.',type=int,default=20)
-parser.add_argument('-n','--nodes',help='Number of nodes to include in each level.',type=int,default=100)
-parser.add_argument('-e','--epochs',help='Number of epochs.',type=int,default=20)
-parser.add_argument('-b','--batchSize',help='Batsh size.',type=int,default=128)
-
-#parser.add_argument('-ns','-numSubj',help='Number of subjects.',type=int,default=30)
-
-parser.add_argument('-opt','--optimizer',help='Optimization scheme.',default='rmsprop',choices=['rmsprop','sgd'])
-parser.add_argument('-r','--rate',help='Learning rate.',type=float,default=0.001)
 parser.add_argument('-ds','--downSample',help='Type of downsampling to perform.',default='none',
                     choices=['none','equal','dbscan'])
+
+
+# Parameters dealing with structure of network
+parser.add_argument('-l','--levels', help='Number of levels to include in network.',
+                    type=int,default=20,required=False)
+parser.add_argument('-n','--nodes',help='Number of nodes to include in each level.',
+                    type=int,default=100,required=False)
+parser.add_argument('-e','--epochs',help='Number of epochs.',type=int,
+                    default=20,requird=False)
+parser.add_argument('-b','--batchSize',help='Batsh size.',type=int,
+                    default=128,required=False)
+
+# Parameters dealing with update schemes
+parser.add_argument('-opt','--optimizer',help='Optimization scheme.',type=str,
+                    default='rmsprop',choices=['rmsprop','sgd'],required=False)
+parser.add_argument('-r','--rate',help='Learning rate.',type=float,
+                    default=0.001,required=False)
+
+
 
 args = parser.parse_args()
 
@@ -394,14 +407,20 @@ ds_funcs = {'none': noDS,
             'equal': equalDS,
             'dbscan': dbsDS}
 
-
-
-levels = args.levels
-nodes = args.nodes
-epochs = args.epochs
-batch = args.batchSize
-rate = args.rate
+# Brain hemisphere
 hemi = args.hemisphere
+
+# Number of hidden layers
+levels = args.levels
+# Number of nodes per hidden layer
+nodes = args.nodes
+# Number of training epochs
+epochs = args.epochs
+# Size of each training batch
+batch = args.batchSize
+# learning rate
+rate = args.rate
+
 
 
 
