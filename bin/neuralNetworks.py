@@ -43,7 +43,6 @@ from keras import callbacks
 from keras.models import Sequential
 from keras.layers import Dense
 from keras import optimizers
-from keras.optimizers import SGD
 
 # Import Batch Normalization
 from keras.layers.normalization import BatchNormalization
@@ -333,12 +332,20 @@ class TestCallback(callbacks.Callback):
         print('\nTesting loss: {}, acc: {}\n'.format(loss, acc))
 
 
+
+########################
+# Begin scipt.
+########################
+
+
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
+
 
 parser.add_argument('-dDir','--dataDirectory',help='Directory where data exists.',required=True)
 parser.add_argument('-f','--features',help='Features to include in model.',required=True)
 parser.add_argument('-sl','--subjectList',help='List of subjects to include.',required=True)
 parser.add_argument('-hm','--hemisphere',help='Hemisphere to proces.',type=str,required=True)
+
 
 parser.add_argument('-l','--levels', help='Number of levels to include in network.',type=int,default=20)
 parser.add_argument('-n','--nodes',help='Number of nodes to include in each level.',type=int,default=100)
@@ -349,7 +356,6 @@ parser.add_argument('-b','--batchSize',help='Batsh size.',type=int,default=128)
 
 parser.add_argument('-opt','--optimizer',help='Optimization scheme.',default='rmsprop',choices=['rmsprop','sgd'])
 parser.add_argument('-r','--rate',help='Learning rate.',type=float,default=0.001)
-
 parser.add_argument('-ds','--downSample',help='Type of downsampling to perform.',default='none',
                     choices=['none','equal','dbscan'])
 
@@ -359,12 +365,16 @@ ds_funcs = {'none': noDS,
             'equal': equalDS,
             'dbscan': dbsDS}
 
+
+
 levels = args.levels
 nodes = args.nodes
 epochs = args.epochs
 batch = args.batchSize
 rate = args.rate
 hemi = args.hemisphere
+
+
 
 optm = args.optimizer
 if optm == 'rmsprop':
@@ -410,6 +420,7 @@ xTrain,mTrain,yTrain = shuffleData(trainTransformed,tempM,tempY)
 
 
 yTrain = yTrain.astype(np.int32)
+yTrain.shape+=(1,)
 print yTrain.shape
 
 O = sklearn.preprocessing.OneHotEncoder(sparse=False)
