@@ -430,6 +430,8 @@ train_coords = np.asarray(list(set(N).difference(set(evals_coords))))
 
 eval_x = xTrain[evals_coords,:]
 eval_y = OneHotLabels[evals_coords,:]
+flat_y = np.argmax(eval_y)
+
 eval_m = mTrain[evals_coords,:]
 
 train_x = xTrain[train_coords,:]
@@ -469,4 +471,4 @@ print 'Model built using {} optimization.  Training now.'.format(args.optimizer)
 
 model.fit(train_x, train_y, epochs=epochs,
           batch_size=batch,verbose=1,shuffle=True,
-          callbacks=[TestCallback(eval_m,eval_x,eval_y)])
+          callbacks=[TestCallback(eval_m,eval_x,flat_y)])
