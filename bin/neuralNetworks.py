@@ -485,4 +485,4 @@ print 'Model built using {} optimization.  Training now.'.format(args.optimizer)
 
 model.fit(train_x, train_y, epochs=epochs,
           batch_size=batch,verbose=1,shuffle=True,
-          callbacks=[TestCallback(eval_m,eval_x,flat_y)])
+          callbacks=[TestCallback(eval_m,eval_x,flat_y,eval_y)])
