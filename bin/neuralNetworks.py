@@ -463,7 +463,7 @@ while c < levels:
         model.add(BatchNormalization())
 
     c+=1
-f
+
 # we can think of this chunk as the output layer
 model.add(Dense(output_dim, activation='softmax'))
 
