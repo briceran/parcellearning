@@ -25,6 +25,7 @@ in model.fit.
 
 
 import argparse
+import time
 
 import sys
 sys.path.append('..')
@@ -464,13 +465,19 @@ subjects = [x.strip() for x in subjects]
 
 # Load training data
 print 'Loading subject data.'
+now = time.time()
 trainingData,labels,mapMatrix = loadData(subjects,dataDir,features,hemi)
+later = time.time()
+print 'Loaded in {} seconds.'.format(int(later-now))
 
 
 # Down-sample the data using parameters specified by args.downSample
 # Currently, only 'equal' works
 print 'Applying {} sample reduction.'.format(args.downSample)
+now = time.time()
 tempX,tempM,tempY = ds_funcs[args.downSample](trainingData,mapMatrix,labels)
+later = time.time()
+print 'Reduced in {} seconds.'.format(int(later-now))
 
 
 # Standardize subject features
