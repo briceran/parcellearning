@@ -465,13 +465,9 @@ while c < levels:
     
     # in case you want to add alternating activation functions
     # currently, all layers are relu
-    if c % 2 == 0:
-
-        model.add(Dense(nodes, activation='relu',init='uniform'))
-        model.add(BatchNormalization())
-    else:
-        model.add(Dense(nodes, activation='relu',init='uniform'))
-        model.add(BatchNormalization())
+    
+    model.add(Dense(nodes,activation='relu',init='uniform'))
+    model.add(BatchNormalization())
 
     c+=1
 
