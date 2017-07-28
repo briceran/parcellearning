@@ -299,9 +299,7 @@ class TestCallback(callbacks.Callback):
     Callback to test neighborhood constrained accuracy computations.
     """
     def __init__(self, mappingMatrix, test_x,test_y):
-        
-        print('yes')
-        
+
         self.mm = mappingMatrix
         self.x_test = test_x
         self.y_test = test_y
@@ -311,6 +309,10 @@ class TestCallback(callbacks.Callback):
         x = self.x_test
         y = self.y_test
         mm = self.mm
+        
+        print x.shape
+        print y.shape
+        print mm.shape
         
         predProb = self.model.predict_proba(x)
         y_pred = cu.maximumProbabilityClass(mm,predProb)
