@@ -571,7 +571,7 @@ def mappingThreshold(mapCounts,threshold,limit):
 
     return thresholdC
 
-def buildMappingMatrix(merged,R):
+def buildMappingMatrix(merged,R,*kwargs):
     
     """
     Method to build a binary matrix, where entries in this matrix correspond
@@ -584,9 +584,15 @@ def buildMappingMatrix(merged,R):
         R : the number of possible labels that were mapped to
     """
     
+    if kwargs:
+        if 'thresh' in kwargs.keys():
+            T = kwargs['thresh']
+    else:
+        T = 0.05;
+    
     mergedFreq = mappingFrequency(merged);
     
-    mergedThresh = mappingThreshold(mergedFreq,0.05,'outside');
+    mergedThresh = mappingThreshold(mergedFreq,T,'outside');
     
     N = len(mergedThresh.keys());
     

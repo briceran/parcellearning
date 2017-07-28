@@ -75,14 +75,16 @@ def loadData(subjectList,dataDir,features,hemi):
     hemisphere['Left'] = 'L'
     hemisphere['Right'] = 'R'
     
+    H = hemisphere[hemi]
+    
     # For now, we hardcode where the data is
     fDir = 'TrainingObjects/FreeSurfer/'
-    vDir = 'MatchingLibraries/Test/'
+    vDir = 'MatchingLibraries/Test/MatchingMatrices/'
     mDir = 'Midlines/'
     
-    trainObjectExt = '.{}.TrainingObject.aparc.a2009s.h5'.format(hemisphere[hemi])
-    vLibExt = '.{}.VertexLibrary.Test.p'.format(hemisphere[hemi])
-    midExt = '.{}.Midline_Indices.mat'.format(hemisphere[hemi])
+    trainObjectExt = '.{}.TrainingObject.aparc.a2009s.h5'.format(H)
+    vLibExt = '.{}.MatchingMatrix.0.05.mat'.format(H)
+    midExt = '.{}.Midline_Indices.mat'.format(H)
 
     data = {}
     labs = {}
@@ -101,18 +103,14 @@ def loadData(subjectList,dataDir,features,hemi):
         
         # Check to make sure all 3 files exist
         if os.path.isfile(inTrain) and os.path.isfile(inVLib) and os.path.isfile(inMids):
-            
-            print s
-            
+
             # Load midline indices
             # Subtract 1 for differece between Matlab and Python indexing
             mids = ld.loadMat(inMids)-1
             mids = set(mids)
             
-            # Load Vertex Library object and convert to mapping matrix
-            vLib = ld.loadPick(inVLib)
-            vLibMatrix = lb.buildMappingMatrix(vLib,180)
-            
+            # Load MatchingMatrix object
+            vLibMatrix = ld.loadmat(inVLib)            
 
             # Load training data and training labels
             trainH5 = h5py.File(inTrain,mode='r')
@@ -270,15 +268,15 @@ def dbsDS(trainingData,mm,labelVector):
     dbscanMM = condenseDBSCAN(coreMM,clusterCoordinates)
 
     # Apply random down-sampling scheme to DBSCAN-ed data and matchingMatrix
-    dbscanDataDS = downsampleRandomly(dbscanData,labels)
-    dbscanMMDS = downsampleRandomly(dbscanMM,labels)
-    
+    # so that all labels match the smallest label
+    [dataDS,mmDS] = downsampleRandomly(dbscanData,dbscanMM,labels)
+
     # Build response vectors for each label
-    dbsRespDS = cu.buildResponseVector(labels,dbscanDataDS)
+    dbsRespDS = cu.buildResponseVector(labels,dataDS)
     
     # Aggregate samples and response vectors
-    aggDataDS= aggregateDictValues(dbscanDataDS)
-    aggMMDS = aggregateDictValues(dbscanMMDS)
+    aggDataDS= aggregateDictValues(dataDS)
+    aggMMDS = aggregateDictValues(mmDS)
     aggRespDS = aggregateDictValues(dbsRespDS)
     
     # return samples and response arrays
@@ -465,19 +463,23 @@ subjects = [x.strip() for x in subjects]
 #subjects = np.random.choice(subjects,size=ns,replace=False)
 
 # Load training data
+print 'Loading subject data.'
 trainingData,labels,mapMatrix = loadData(subjects,dataDir,features,hemi)
 
 
 # Down-sample the data using parameters specified by args.downSample
 # Currently, only 'equal' works
+print 'Applying {} sample reduction.'.format(args.downsample)
 tempX,tempM,tempY = ds_funcs[args.downSample](trainingData,mapMatrix,labels)
 
 
 # Standardize subject features
+print 'Standardizing.'
 S = sklearn.preprocessing.StandardScaler()
 trainTransformed = S.fit_transform(tempX)
 
 # Shuffle features and responses
+print 'Shuffling.'
 xTrain,mTrain,yTrain = shuffleData(trainTransformed,tempM,tempY)
 
 
@@ -495,6 +497,7 @@ input_dim = xTrain.shape[1]
 
 
 # Generate validation data set
+print 'Generating validation set.'
 N = np.arange(nSamples);
 dSamples = int(np.floor(nSamples*EVAL_FACTOR))
 evals_coords = np.random.choice(N, size=(dSamples,), replace=False)
