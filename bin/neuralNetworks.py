@@ -265,6 +265,7 @@ parser = argparse.ArgumentParser(description='Compute random forest predictions.
 parser.add_argument('-dDir','--dataDirectory',help='Directory where data exists.',required=True)
 parser.add_argument('-f','--features',help='Features to include in model.',required=True)
 parser.add_argument('-sl','--subjectList',help='List of subjects to include.',required=True)
+parser.add_argument('-h','--hemisphere',help='Hemisphere to proces.',type=str,required=True)
 
 parser.add_argument('-l','--levels', help='Number of levels to include in network.',type=int,default=20)
 parser.add_argument('-n','--nodes',help='Number of nodes to include in each level.',type=int,default=100)
@@ -290,6 +291,7 @@ nodes = args.nodes
 epochs = args.epochs
 batch = args.batchSize
 rate = args.rate
+hemi = args.hemisphere
 
 optm = args.optimizer
 if optm == 'rmsprop':
@@ -318,7 +320,7 @@ subjects = [x.strip() for x in subjects]
 #subjects = np.random.choice(subjects,size=ns,replace=False)
 
 # Load training data
-trainingData,labels = loadData(subjects,dataDir,features)
+trainingData,labels = loadData(subjects,dataDir,features,hemi)
 
 # Down-sample the data using parameters specified by args.downSample
 tempX,tempY = ds_funcs[args.downSample](trainingData,labels)
