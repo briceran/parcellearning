@@ -310,14 +310,19 @@ class TestCallback(callbacks.Callback):
         y = self.y_test
         mm = self.mm
         
+        print '\n'
         print x.shape
         print y.shape
         print mm.shape
         
         predProb = self.model.predict_proba(x)
-        y_pred = cu.maximumProbabilityClass(mm,predProb)
-        print y_pred
+        print 'predProb: {}'.format(predProb)
         
+        threshed = mm*predProb;
+        y_pred = np.argmax(threshed,axis=1)
+        
+        print 'y_pred: {}'.format(y_pred)
+
         loss,_ = self.model.evaluate(x, y, verbose=0)
         acc = np.mean(y == y_pred)
         print('\nTesting loss: {}, acc: {}\n'.format(loss, acc))
@@ -458,7 +463,7 @@ while c < levels:
         model.add(BatchNormalization())
 
     c+=1
-
+f
 # we can think of this chunk as the output layer
 model.add(Dense(output_dim, activation='softmax'))
 
@@ -468,4 +473,4 @@ print 'Model built using {} optimization.  Training now.'.format(args.optimizer)
 
 model.fit(train_x, train_y, epochs=epochs,
           batch_size=batch,verbose=1,shuffle=True,
-          validation_split=0.2,callbacks=[TestCallback(eval_m,eval_x,eval_y)])
+          callbacks=[TestCallback(eval_m,eval_x,eval_y)])
