@@ -425,7 +425,7 @@ print yTrain.shape
 
 O = sklearn.preprocessing.OneHotEncoder(sparse=False)
 O.fit(yTrain.reshape(-1,1))
-OneHotLabels = O.transform(yTrain(-1,1))
+OneHotLabels = O.transform(yTrain.reshape(-1,1))
 
 # Dimensions of training data
 nSamples = xTrain.shape[0]
