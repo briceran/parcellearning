@@ -289,7 +289,7 @@ def shuffleData(training,matching,responses):
     
     trainShuffled = training[N,:]
     matchShuffled = matching[N,:]
-    labelShuffled = responses[N,:]
+    labelShuffled = responses[N]
     
     print 'training shape, post shuffle: {}'.format(trainShuffled.shape)
     print 'mm shape, post shuffle: {}'.format(matchShuffled.shape)
