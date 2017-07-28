@@ -60,16 +60,22 @@ DBSCAN_PERC = 0.7
 def loadData(subjectList,dataDir,features,hemi):
     
     """
-    Generates the training data for the neural network.  Assumes that the
-    response variable is the last column (i.e. "label" should be the last
-    item in "features".)
+    Generates the training data for the neural network.
+    
+    Parameters:
+    - - - - -
+        subjectList : list of subjects to include in training set
+        dataDir : main directory where data exists -- individual features
+                    will exist in sub-directories here
+        features : list of features to include
+        hemi : hemisphere to process
     """
     
     hemisphere = {}.fromkeys('Left','Right')
     hemisphere['Left'] = 'L'
     hemisphere['Right'] = 'R'
     
-    
+    # For now, we hardcode where the data is
     fDir = 'TrainingObjects/FreeSurfer/'
     vDir = 'MatchingLibraries/Test/'
     mDir = 'Midlines/'
@@ -86,10 +92,14 @@ def loadData(subjectList,dataDir,features,hemi):
     
     for s in subjectList:
 
+        # Training data
         inTrain = dataDir + fDir + s + trainObjectExt
+        # Vertex matching information
         inVLib = dataDir + vDir + s + vLibExt
+        # Midline indices
         inMids = dataDir + mDir + s + midExt
         
+        # Check to make sure all 3 files exist
         if os.path.isfile(inTrain) and os.path.isfile(inVLib) and os.path.isfile(inMids):
             
             print s
@@ -156,10 +166,16 @@ def aggregateDictValues(inDict):
     
     return data
 
-def labelData(trainingData,labelVector):
+def splitDataByLabel(fullDataArray,labelVector):
     
     """
-    Get samples data for each label, aggregate into dictionary.
+    Get sample data for each label and compile into dictionary, hashed by
+    label value.
+    
+    Parameters:
+    - - - - -
+        fullDataArray : data array
+        labelVector : array of labels
     """
     
     labels = set(np.squeeze(labelVector)).difference({0})
@@ -168,61 +184,70 @@ def labelData(trainingData,labelVector):
     
     for l in labels:
         inds = np.where(labelVector == l)[0]
-        coreData[l] = trainingData[inds,:]
+        coreData[l] = fullDataArray[inds,:]
     
     return coreData
 
 ## Functions for Down-sampling data
 
-def noDS(trainingData,labelVector):
+def noDS(trainingData,labelVector,mm):
     
     """
     Don't apply downsampling
     """
-    return (trainingData,labelVector)
+    return (trainingData,labelVector,mm)
 
-def equalDS(trainingData,labelVector):
+def equalDS(trainingData,labelVector,mm):
     
     """
     Apply equal downsampling, where sample number is = min(label samples)
     """
     
+    # Get all unique non-zero labels
     labels = set(np.squeeze(labelVector)).difference({0})
     
     # Get samples for each label
-    coreData = labelData(trainingData,labelVector)
+    coreTrainData = splitDataByLabel(trainingData,labelVector)
+    coreMMData = splitDataByLabel(mm,labelVector)
     # downsample the data
-    downData = downsampleData(coreData,labels)
+    
+    [downTrainData,downMMData] = downsampleRandomly(coreTrainData,coreMMData,labels)
     # build response response vectors for each label
-    downResp = cu.buildResponseVector(labels,downData)
+    downResp = cu.buildResponseVector(labels,downTrainData)
 
     # aggregate samples and response vectors
-    equalData = aggregateDictValues(downData)
+    equalTrainData = aggregateDictValues(downTrainData)
+    equalMMData = aggregateDictValues(downMMData)
     equalResp = aggregateDictValues(downResp)
     
     # return sample and response arrays
-    return (equalData,equalResp)
+    return (equalTrainData,equalMMData,equalResp)
 
-def downsampleData(coreData,labels):
+def downsampleRandomly(coreTData,coreMData,labels):
     
     """
     Apply equal downsampling scheme.
     """
     
-    m = 1000000
+    # Find sample set with minimum number of points
+    m = 10000000
     for k in labels:
-        m = np.min([m,coreData[k].shape[0]])
+        m = np.min([m,coreTData[k].shape[0]])
     
-    downData = {}.fromkeys(labels)
+    downTData = {}.fromkeys(labels)
+    downMData = {}.fromkeys(labels)
     
     for k in labels:
-        dims = coreData[k].shape[0]
+        dims = coreTData[k].shape[0]
         coords = np.arange(dims)
         tempCoords = np.random.choice(coords,size=m,replace=False)
-        downData[k] = coreData[k][tempCoords,:]
+        
+        downTData[k] = coreTData[k][tempCoords,:]
+        downMData[k] = coreMData[k][tempCoords,:]
     
-    return downData
+    return downTData,downMData
 
+### Need to fix this to incorporate matchingMatrix
 def dbsDS(trainingData,labelVector):
     
     """
@@ -232,12 +257,12 @@ def dbsDS(trainingData,labelVector):
     labels = set(np.squeeze(labelVector)).difference({0})
 
     # get samples for each label
-    coreData = labelData(trainingData,labelVector)
+    coreData = splitDataByLabel(trainingData,labelVector)
     # downsample data for each label using DBSCAN
     dbscanData = regm.trainDBSCAN(coreData,mxp=DBSCAN_PERC)
     
     # apply down-sampling scheme to DBSCAN-ed data
-    dbsDataDWS = downsampleData(dbscanData,labels)
+    dbsDataDWS = downsampleRandomly(dbscanData,labels)
     # build response vectors for each label
     dbsRespDWS = cu.buildResponseVector(labels,dbsDataDWS)
     
@@ -248,12 +273,19 @@ def dbsDS(trainingData,labelVector):
     # return samples and response arrays
     return (aggDBS,aggResp)
 
-def shuffleData(training,responses):
+def shuffleData(training,matching,responses):
     
-    tempData = np.column_stack((training,responses))
+    [xt,yt] = training.shape
+    [xm,ym] = matching.shape
+    
+    tempData = np.column_stack((training,matching,responses))
     shuffled = sklearn.utils.shuffle(tempData)
     
-    return (shuffled[:,:-1],shuffled[:,-1])
+    trainShuffled = shuffled[:,:yt]
+    matchShuffled = shuffled[:,yt:(yt+ym)];
+    labelShuffled = shuffled[:,-1]
+    
+    return (trainShuffled,matchShuffled,labelShuffled)
 
 def computeConstrained(mappingMatrix,x_test,model):
     
@@ -325,14 +357,16 @@ subjects = [x.strip() for x in subjects]
 trainingData,labels,mapMatrix = loadData(subjects,dataDir,features,hemi)
 
 # Down-sample the data using parameters specified by args.downSample
-tempX,tempY = ds_funcs[args.downSample](trainingData,labels)
+# Currently, only 'equal' works
+tempX,tempMM,tempY = ds_funcs[args.downSample](trainingData,labels,mapMatrix)
 
 # Standardize subject features
 S = sklearn.preprocessing.StandardScaler()
 training = S.fit_transform(tempX)
 
 # Shuffle features and responses
-xTrain,yTrain = shuffleData(training,tempY)
+xTrain,mTrain,yTrain = shuffleData(training,tempMM,tempY)
+
 yTrain = yTrain.astype(np.int32)
 yTrain.shape+=(1,)
 
