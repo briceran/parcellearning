@@ -139,7 +139,7 @@ def loadData(subjectList,dataDir,features,hemi):
             # Filter the data to include only good data coordiantes
             mergedDataFeatures = mergedDataFeatures[coords,:]
             mergedLablFeatures = mergedLablFeatures[coords,:]
-            vLibMatrix = vLibMatrix[coords,1:]
+            vLibMatrix = vLibMatrix[coords,:]
             
             data[s] = mergedDataFeatures
             labs[s] = mergedLablFeatures
