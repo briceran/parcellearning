@@ -430,7 +430,7 @@ train_coords = np.asarray(list(set(N).difference(set(evals_coords))))
 
 eval_x = xTrain[evals_coords,:]
 eval_y = OneHotLabels[evals_coords,:]
-flat_y = np.argmax(eval_y)
+flat_y = np.argmax(eval_y,axis=1)
 
 eval_m = mTrain[evals_coords,:]
 
