@@ -178,7 +178,7 @@ def findLabelDBSCoords(label,data,eps,max_samples,max_percent):
 
         coordinates.append(clusters)
 
-    coordinates = np.row_stack(coordinates)
+    coordinates = np.concatenate(coordinates)
 
     return coordinates
         
