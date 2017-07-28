@@ -355,10 +355,16 @@ subjects = [x.strip() for x in subjects]
 
 # Load training data
 trainingData,labels,mapMatrix = loadData(subjects,dataDir,features,hemi)
+print 'Training Data shape: {}'.format(trainingData.shape)
+print 'Label shape: {}'.format(labels.shape)
+print 'MapMatrix shape: {}'.format(mapMatrix.shape)
 
 # Down-sample the data using parameters specified by args.downSample
 # Currently, only 'equal' works
 tempX,tempMM,tempY = ds_funcs[args.downSample](trainingData,labels,mapMatrix)
+print 'Training Data shape: {}'.format(tempX.shape)
+print 'Label shape: {}'.format(tempY.shape)
+print 'MapMatrix shape: {}'.format(tempMM.shape)
 
 # Standardize subject features
 S = sklearn.preprocessing.StandardScaler()
@@ -366,6 +372,9 @@ training = S.fit_transform(tempX)
 
 # Shuffle features and responses
 xTrain,mTrain,yTrain = shuffleData(training,tempMM,tempY)
+print 'Training Data shape: {}'.format(xTrain.shape)
+print 'Label shape: {}'.format(yTrain.shape)
+print 'MapMatrix shape: {}'.format(mTrain.shape)
 
 yTrain = yTrain.astype(np.int32)
 yTrain.shape+=(1,)
