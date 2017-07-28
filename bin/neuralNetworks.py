@@ -361,4 +361,4 @@ model.compile(loss='categorical_crossentropy',optimizer= opt,metrics=['accuracy'
 print 'Model built using {} optimization.  Training now.'.format(args.optimizer)
 
 model.fit(xTrain, OneHotLabels, epochs=epochs,
-          batch_size=batch,verbose=1,shuffle=True)
+          batch_size=batch,verbose=1,shuffle=True,validation_split=0.2)
