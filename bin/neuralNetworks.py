@@ -555,7 +555,7 @@ model.compile(loss='categorical_crossentropy',optimizer= opt,metrics=['accuracy'
 print 'Model built using {} optimization.  Training now.\n'.format(args.optimizer)
 
 
-ConstrainedTE = ConstrainedCallback(eval_m,eval_x,flat_eval_y,eval_y,['consTestLost','consTestAcc'])
+ConstrainedTE = ConstrainedCallback(eval_m,eval_x,flat_eval_y,eval_y,['consTestLoss','consTestAcc'])
 ConstrainedTR = ConstrainedCallback(train_m,train_x,flat_train_y,train_y,['consTrainLoss','consTrainAcc'])
 
 history = model.fit(train_x, train_y, epochs=epochs,
