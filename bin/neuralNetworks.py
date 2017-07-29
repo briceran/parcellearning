@@ -379,7 +379,6 @@ class ConstrainedCallback(callbacks.Callback):
         
         print('\nValidation loss: {}, Constrained Acc: {}\n'.format(loss, acc))
 
-
 ########################
 # Begin scipt.
 ########################
@@ -560,7 +559,7 @@ outTrained = args.output
 outTrainedFile = ''.join([outTrained,'.h5'])
 outHistoryFile = ''.join([outTrained,'_History.p'])
 
-model.save(outTrained)
+model.save(outTrainedFile)
 
 modelHistory = history.history
 fullHistory = dict(modelHistory.items() + Constrained.metrics.items())
