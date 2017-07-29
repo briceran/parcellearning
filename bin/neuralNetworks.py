@@ -563,7 +563,7 @@ history = model.fit(train_x, train_y, epochs=epochs,
 
 outTrained = args.output
 outTrainedFile = ''.join([outTrained,'.h5'])
-outHistoryFile = ''.join([outTrained,'_History.p'])
+outHistoryFile = ''.join([outTrained,'.History.p'])
 
 model.save(outTrainedFile)
 
