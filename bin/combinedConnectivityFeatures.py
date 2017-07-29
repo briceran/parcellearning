@@ -10,6 +10,7 @@ import sys
 sys.path.append('..')
 
 import h5py
+import numpy as np
 import os
 from shutil import copyfile
 
@@ -35,6 +36,9 @@ if not os.path.isdir(fullDir):
 curDir = '{}/Curvature/'.format(dataDir)
 curExt = 'curvature.32k_fs_LR.shape.gii'
 
+fsSubCortDir = '{}SubcorticalRegionalization/RestingState/'.format(dataDir)
+fsSubCortExt = 'SubCortical.Regionalization.RestingState.aparc.a2009s.mat'
+
 ptxCortDir = '{}CorticalRegionalization/Destrieux/ProbTrackX2/'.format(dataDir)
 ptxCortExt = 'Cortical.Regionalized.ProbTrackX2.aparc.a2009s.mat'
 
@@ -52,6 +56,7 @@ for s in subjects:
     
     trainingObject = '{}{}.{}.{}'.format(troDir,s,hstr,troExt)
     curvObject = '{}{}.{}.{}'.format(curDir,s,hstr,curExt)
+    fsSubCortObject = '{}{}.{}.{}'.format(fsSubCortDir,s,hstr,fsSubCortExt)
     ptxCortObject = '{}{}.{}.{}'.format(ptxCortDir,s,hstr,ptxCortExt)
     ptxSubCortObject = '{}{}.{}.{}'.format(ptxSubCortDir,s,hstr,ptxSubCortExt)
     
@@ -62,6 +67,9 @@ for s in subjects:
         cond = False
     if not os.path.isfile(curvObject):
         print curvObject
+        cond = False
+    if not os.path.isfile(fsSubCortObject):
+        print fsSubCortObject
         cond = False
     if not os.path.isfile(ptxCortObject):
         print ptxCortObject
@@ -83,12 +91,21 @@ for s in subjects:
         arrays['fs_subcort'] = arrays.pop('subcort')
         
         curv = ld.loadGii(curvObject)
+        fsSubCort = ld.loadMat(fsSubCortObject)
+        print fsSubCort.shape
         ptxCort = ld.loadMat(ptxCortObject)
         ptxSubCort = ld.loadMat(ptxSubCortObject)
         
-        arrays['pt_cort'] = ptxCort
-        arrays['pt_subcort'] = ptxSubCort
+        arrays['fs_subcort'] = fsSubCort
+        arrays['pt_cort'] = np.log(ptxCort)
+        arrays['pt_subcort'] = np.log(ptxSubCort)
         arrays['curv'] = curv
+        
+        inds = np.isinf(arrays['pt_cort'])
+        arrays['pt_cort'][inds] = 0
+        
+        inds = np.isinf(arrays['pt_subcort'])
+        arrays['pt_subcort'][inds] = 0
         
         data.close()
         
