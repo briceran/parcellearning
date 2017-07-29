@@ -57,12 +57,16 @@ for s in subjects:
     cond = True
     
     if not os.path.isfile(trainingObject):
+        print trainingObject
         cond = False
     if not os.path.isfile(curvObject):
+        print curvObject
         cond = False
     if not os.path.isfile(ptxCortObject):
+        print ptxCortObject
         cond = False
     if not os.path.isfile(ptxSubCortObject):
+        print ptxSubCortObject
         cond = False
         
     if cond:
