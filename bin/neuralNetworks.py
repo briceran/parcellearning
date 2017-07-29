@@ -410,8 +410,6 @@ parser.add_argument('-opt','--optimizer',help='Optimization scheme.',type=str,
 parser.add_argument('-r','--rate',help='Learning rate.',type=float,
                     default=0.001,required=False)
 
-
-
 args = parser.parse_args()
 
 ds_funcs = {'none': noDS,
