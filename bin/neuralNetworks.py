@@ -317,7 +317,7 @@ def shuffleData(training,matching,responses):
     return (trainShuffled,matchShuffled,labelShuffled)
 
 
-class TestCallback(callbacks.Callback):
+class ConstrainedCallback(callbacks.Callback):
     
     """
     Callback to test neighborhood-constrained accuracy computations.
@@ -346,6 +346,10 @@ class TestCallback(callbacks.Callback):
         
         self.y_true = y_true
         self.y_oneHot = y_oneHot
+        
+        self.metrics = {}.fromkeys(['consLoss','consAcc'])
+        self.metrics['consLoss'] = []
+        self.metrics['consAcc'] = []
 
     def on_epoch_end(self, epoch, logs={}):
         
@@ -353,9 +357,7 @@ class TestCallback(callbacks.Callback):
         y_true = self.y_true
         y_oneHot = self.y_oneHot
         mm = self.mm
-        
-        print '\n'
-        
+
         # Compute the prediction probability of all samples for all classes.
         # N x K matrix
         predProb = self.model.predict_proba(x)
@@ -366,15 +368,15 @@ class TestCallback(callbacks.Callback):
         
         # Find the class with the greatest prediction probability
         y_pred = np.argmax(threshed,axis=1)
-        
-        print '\n y_true: {}'.format(y_true)
-        print ' y_pred: {}'.format(y_pred)
 
         # Evalute the loss and accuracy of the model
         loss,_ = self.model.evaluate(x, y_oneHot, verbose=0)
         acc = np.mean(y_true == y_pred)
+        
+        self.metrics['consLoss'].append(loss)
+        self.metrics['consAcc'].append(acc)
+        
         print('\nValidation loss: {}, Constrained Acc: {}\n'.format(loss, acc))
-
 
 
 ########################
@@ -389,6 +391,7 @@ parser.add_argument('-dDir','--dataDirectory',help='Directory where data exists.
 parser.add_argument('-f','--features',help='Features to include in model.',required=True)
 parser.add_argument('-sl','--subjectList',help='List of subjects to include.',required=True)
 parser.add_argument('-hm','--hemisphere',help='Hemisphere to proces.',required=True)
+parser.add_argument('-o','--output',help='Name of file storing training model',required=True)
 
 parser.add_argument('-ds','--downSample',help='Type of downsampling to perform.',default='none',
                     choices=['none','equal','dbscan'])
@@ -546,6 +549,11 @@ model.compile(loss='categorical_crossentropy',optimizer= opt,metrics=['accuracy'
 
 print 'Model built using {} optimization.  Training now.\n'.format(args.optimizer)
 
+
+Constrained = ConstrainedCallback(eval_m,eval_x,flat_y,eval_y)
 model.fit(train_x, train_y, epochs=epochs,
           batch_size=batch,verbose=2,shuffle=True,
-          callbacks=[TestCallback(eval_m,eval_x,flat_y,eval_y)])
+          callbacks=[Constrained])
+
+outTrained = args.output
+model.save(outTrained)
