@@ -120,6 +120,7 @@ def loadData(subjectList,dataDir,features,hemi):
 
             # Get data corresponding to features of interest
             trainFeatures = ld.parseH5(trainH5,dataFeatures)
+            print trainFeatures.keys()
             try:
                 trainFeatures = trainFeatures[uni_subj]
             except:
