@@ -99,11 +99,22 @@ for s in subjects:
         ptxCort = ld.loadMat(ptxCortObject)
         ptxSubCort = ld.loadMat(ptxSubCortObject)
         
-        arrays['fs_subcort'] = fsSubCort
-        arrays['pt_cort'] = np.log(ptxCort)
-        arrays['pt_subcort'] = np.log(ptxSubCort)
-        arrays['curv'] = curv
+        if 'fs_subcort' in arrays.keys():
+            del(arrays['fs_subcort'])
+            arrays['fs_subcort'] = fsSubCort
         
+        if 'curv' in arrays.keys():
+            del(arrays['curv'])
+            arrays['curv'] = curv
+        
+        if 'pt_cort' in arrays.keys():
+            del(arrays['pt_cort'])
+            arrays['pt_cort'] = np.log(ptxCort)
+        
+        if 'pt_subcort' in arrays.keys():
+            del(arrays['pt_subcort'])
+            arrays['pt_subcort'] = np.log(ptxSubCort)
+ 
         inds = np.isinf(arrays['pt_cort'])
         arrays['pt_cort'][inds] = 0
         
