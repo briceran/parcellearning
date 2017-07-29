@@ -85,16 +85,16 @@ for s in subjects:
         print curvObject
         cond = False
     if not os.path.isfile(mylObject):
-        print fsSubCortObject
+        print mylObject
         cond = False
     if not os.path.isfile(sulObject):
-        print trainingObject
+        print sulObject
         cond = False
     if not os.path.isfile(labObject):
-        print fsSubCortObject
+        print labObject
         cond = False
     if not os.path.isfile(fsCortObject):
-        print trainingObject
+        print fsCortObject
         cond = False
     if not os.path.isfile(fsSubCortObject):
         print fsSubCortObject
@@ -105,6 +105,9 @@ for s in subjects:
     if not os.path.isfile(ptxSubCortObject):
         print ptxSubCortObject
         cond = False
+        
+    if not cond:
+        print s + ' has missing files.'
         
     if cond:
         
