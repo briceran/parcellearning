@@ -40,8 +40,6 @@ subjects = [x.strip() for x in subjects]
 troDir = '{}TrainingObjects/FreeSurfer/'.format(dataDir)
 troExt = 'TrainingObject.aparc.a2009s.h5'
 
-
-
 curDir = '{}Curvature/'.format(dataDir)
 curExt = 'curvature.32k_fs_LR.shape.gii'
 
@@ -126,7 +124,11 @@ for s in subjects:
         inds = np.isinf(ptxSubCort)
         ptxSubCort[inds] = 0
         
-        data = h5py.File(trainingObject,mode='r+')
+        if not os.path.isfile(trainingObject):
+            data = h5py.File(trainingObject,mode='w')
+        else:
+            data = h5py.File(trainingObject,mode='r+')
+            
         data.create_group(s)
         
         data[s].create_dataset('curv',data=curv)
