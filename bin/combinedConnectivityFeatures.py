@@ -25,7 +25,7 @@ homeDir = '{}HCP/Connectome_4/'.format(baseDir)
 
 subjectList = '{}SubjectList.txt'.format(homeDir)
 
-troDir = '{}/TrainingObjects/FreeSurfer/'.format(dataDir)
+troDir = '{}TrainingObjects/FreeSurfer/'.format(dataDir)
 troExt = 'TrainingObject.aparc.a2009s.h5'
 
 fullDir = '{}FullObjects/'.format(troDir)
@@ -35,7 +35,7 @@ if not os.path.isdir(fullDir):
 curDir = '{}/Curvature/'.format(dataDir)
 curExt = 'curvature.32k_fs_LR.shape.gii'
 
-ptxCortDir = '{}CorticalRegionalization/Destrieux/ProbTrackX2/'
+ptxCortDir = '{}CorticalRegionalization/Destrieux/ProbTrackX2/'.format(dataDir)
 ptxCortExt = 'Cortical.Regionalized.ProbTrackX2.aparc.a2009s.mat'
 
 ptxSubCortDir = '{}SubcorticalRegionalization/ProbTrackX2/'.format(dataDir)
