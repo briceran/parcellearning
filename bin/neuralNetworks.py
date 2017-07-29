@@ -120,7 +120,10 @@ def loadData(subjectList,dataDir,features,hemi):
 
             # Get data corresponding to features of interest
             trainFeatures = ld.parseH5(trainH5,dataFeatures)
-            trainFeatures = trainFeatures[uni_subj]
+            try:
+                trainFeatures = trainFeatures[uni_subj]
+            except:
+                trainFeatures = trainFeatures[s]
             
             # Load Label data
             labelFeatures = ld.parseH5(trainH5,['label'])
