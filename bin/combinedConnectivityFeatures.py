@@ -29,7 +29,8 @@ troDir = '{}/TrainingObjects/FreeSurfer/'.format(dataDir)
 troExt = 'TrainingObject.aparc.a2009s.h5'
 
 fullDir = '{}FullObjects/'.format(troDir)
-os.mkdir(fullDir)
+if not os.path.isdir(fullDir):
+    os.mkdir(fullDir)
 
 curDir = '{}/Curvature/'.format(dataDir)
 curExt = 'curvature.32k_fs_LR.shape.gii'
