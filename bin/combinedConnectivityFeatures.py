@@ -85,10 +85,13 @@ for s in subjects:
         data = h5py.File(trainingObject,mode='r+')
         arrays = data[data.keys()[0]]
         
-        del(arrays['fs_central'])
-        del(arrays['vertVar'])
+        if 'fs_central' in arrays.keys():
+            del(arrays['fs_central'])
+        if 'vertVar' in arrays.keys():
+            del(arrays['vertVar'])
         
-        arrays['fs_subcort'] = arrays.pop('subcort')
+        if 'subcort' in arrays.keys():
+            arrays['fs_subcort'] = arrays.pop('subcort')
         
         curv = ld.loadGii(curvObject)
         fsSubCort = ld.loadMat(fsSubCortObject)
