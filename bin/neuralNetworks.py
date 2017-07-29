@@ -382,7 +382,7 @@ class ConstrainedCallback(callbacks.Callback):
         self.metrics[self.metricKeys[0]].append(loss)
         self.metrics[self.metricKeys[1]].append(acc)
         
-        print('\nValidation loss: {}, Constrained Acc: {}\n'.format(loss, acc))
+        print('\n{}: {}, {}: {}\n'.format(self.metrics[0],loss,self.metrics[1],acc))
 
 ########################
 # Begin scipt.
