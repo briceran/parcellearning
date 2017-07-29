@@ -297,11 +297,7 @@ def condenseDBSCAN(inSamples,coords):
     return outSamples
 
 def shuffleData(training,matching,responses):
-    
-    print 'training shape, pre shuffle: {}'.format(training.shape)
-    print 'mm shape, pre shuffle: {}'.format(matching.shape)
-    print 'label shape, pre shuffle: {}'.format(responses.shape)
-    
+
     [xt,yt] = training.shape
 
     N = np.arange(xt);
@@ -310,10 +306,6 @@ def shuffleData(training,matching,responses):
     trainShuffled = training[N,:]
     matchShuffled = matching[N,:]
     labelShuffled = responses[N]
-    
-    print 'training shape, post shuffle: {}'.format(trainShuffled.shape)
-    print 'mm shape, post shuffle: {}'.format(matchShuffled.shape)
-    print 'label shape, post shuffle: {}'.format(labelShuffled.shape)
 
     return (trainShuffled,matchShuffled,labelShuffled)
 
@@ -496,7 +488,6 @@ xTrain,mTrain,yTrain = shuffleData(trainTransformed,tempM,tempY)
 
 yTrain = yTrain.astype(np.int32)
 yTrain.shape+=(1,)
-print yTrain.shape
 
 O = sklearn.preprocessing.OneHotEncoder(sparse=False)
 O.fit(yTrain.reshape(-1,1))
