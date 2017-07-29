@@ -336,21 +336,26 @@ class ConstrainedCallback(callbacks.Callback):
         
         y_oneHot : validation data one-hot matrix
         
+        metricKeys : if we wish to save the loss and accuracy using the 
+                    contsrained method, provide key names in format 
+                    [lossKeyName, accKeyName] to save these values in a 
+                    dictionary
+                    
+        
     The Keras model required one-hot arrays for evaluation of the model --
     it does not accept multi-valued integer vectors.
         
     """
-    def __init__(self, mappingMatrix, test_x, y_true, y_oneHot):
+    def __init__(self, mappingMatrix, test_x, y_true, y_oneHot,metricKeys):
 
         self.mm = mappingMatrix
         self.x_test = test_x
         
         self.y_true = y_true
         self.y_oneHot = y_oneHot
+        self.metricKeys = metricKeys
         
-        self.metrics = {}.fromkeys(['consLoss','consAcc'])
-        self.metrics['consLoss'] = []
-        self.metrics['consAcc'] = []
+        self.metrics = {k: [] for k in metricKeys}
 
     def on_epoch_end(self, epoch, logs={}):
         
@@ -374,8 +379,8 @@ class ConstrainedCallback(callbacks.Callback):
         loss,_ = self.model.evaluate(x, y_oneHot, verbose=0)
         acc = np.mean(y_true == y_pred)
         
-        self.metrics['consLoss'].append(loss)
-        self.metrics['consAcc'].append(acc)
+        self.metrics[self.metricKeys[0]].append(loss)
+        self.metrics[self.metricKeys[1]].append(acc)
         
         print('\nValidation loss: {}, Constrained Acc: {}\n'.format(loss, acc))
 
@@ -511,12 +516,12 @@ train_coords = np.asarray(list(set(N).difference(set(evals_coords))))
 
 eval_x = xTrain[evals_coords,:]
 eval_y = OneHotLabels[evals_coords,:]
-flat_y = np.argmax(eval_y,axis=1)
-
+flat_eval_y = np.argmax(eval_y,axis=1)
 eval_m = mTrain[evals_coords,:]
 
 train_x = xTrain[train_coords,:]
 train_y = OneHotLabels[train_coords,:]
+flat_train_y = np.argmax(train_y,axis=1)
 train_m = mTrain[train_coords,:]
 
 # final dimensionf of data
@@ -550,10 +555,12 @@ model.compile(loss='categorical_crossentropy',optimizer= opt,metrics=['accuracy'
 print 'Model built using {} optimization.  Training now.\n'.format(args.optimizer)
 
 
-Constrained = ConstrainedCallback(eval_m,eval_x,flat_y,eval_y)
+ConstrainedTE = ConstrainedCallback(eval_m,eval_x,flat_eval_y,eval_y,['consTestLost','consTestAcc'])
+ConstrainedTR = ConstrainedCallback(train_m,train_x,flat_train_y,train_y,['consTrainLoss','consTrainAcc'])
+
 history = model.fit(train_x, train_y, epochs=epochs,
           batch_size=batch,verbose=2,shuffle=True,
-          callbacks=[Constrained])
+          callbacks=[ConstrainedTE,ConstrainedTR])
 
 outTrained = args.output
 outTrainedFile = ''.join([outTrained,'.h5'])
@@ -562,7 +569,7 @@ outHistoryFile = ''.join([outTrained,'_History.p'])
 model.save(outTrainedFile)
 
 modelHistory = history.history
-fullHistory = dict(modelHistory.items() + Constrained.metrics.items())
+fullHistory = dict(modelHistory.items() + ConstrainedTE.metrics.items() + ConstrainedTR.metrics.items())
 
 with open(outHistoryFile,'w') as outFile:
     pickle.dump(fullHistory,outFile,-1)
