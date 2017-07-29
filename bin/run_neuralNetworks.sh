@@ -20,7 +20,7 @@ N=9
 inSubj=${dataDir}SmallList.txt
 
 if [ $kind = "ptx" ]; then
-	exten="ProbTracX2"
+	exten="ProbTrackX2"
 	feats="pt_cort,pt_subcort,sulcal,myelin,curv,label"
 elif [ $kind = "fs" ]; then
 	exten="RestingState"
