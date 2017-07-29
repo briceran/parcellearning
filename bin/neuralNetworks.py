@@ -23,7 +23,6 @@ in model.fit.
 
 """
 
-
 import argparse
 import time
 
@@ -56,7 +55,6 @@ EVAL_FACTOR = 0.2
 DBSCAN_PERC = 0.7
 
 ###
-
 
 ## Method to load the training data and aggregate into a single array
 def loadData(subjectList,dataDir,features,hemi):
@@ -376,9 +374,14 @@ class ConstrainedCallback(callbacks.Callback):
         
         print('\n{}: {}, {}: {}\n'.format(self.metricKeys[0],loss,self.metricKeys[1],acc))
 
-########################
+
+
+
+################################################
+################################################
+################################################
+        
 # Begin scipt.
-########################
 
 
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
