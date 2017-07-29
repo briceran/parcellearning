@@ -39,6 +39,7 @@ import h5py
 import numpy as np
 import sklearn
 import os
+import pickle
 
 from keras import callbacks, optimizers
 from keras.models import Sequential
@@ -551,9 +552,18 @@ print 'Model built using {} optimization.  Training now.\n'.format(args.optimize
 
 
 Constrained = ConstrainedCallback(eval_m,eval_x,flat_y,eval_y)
-model.fit(train_x, train_y, epochs=epochs,
+history = model.fit(train_x, train_y, epochs=epochs,
           batch_size=batch,verbose=2,shuffle=True,
           callbacks=[Constrained])
 
 outTrained = args.output
+outTrainedFile = ''.join([outTrained,'.h5'])
+outHistoryFile = ''.join([outTrained,'_History.p'])
+
 model.save(outTrained)
+
+modelHistory = history.history
+fullHistory = dict(modelHistory.items() + Constrained.metrics.items())
+
+with open(outHistoryFile,'w') as outFile:
+    pickle.dump(fullHistory,outFile,-1)
