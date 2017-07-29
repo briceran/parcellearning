@@ -373,7 +373,7 @@ class TestCallback(callbacks.Callback):
         # Evalute the loss and accuracy of the model
         loss,_ = self.model.evaluate(x, y_oneHot, verbose=0)
         acc = np.mean(y_true == y_pred)
-        print('\nValidation loss: {}, acc: {}\n'.format(loss, acc))
+        print('\nValidation loss: {}, Constrained Acc: {}\n'.format(loss, acc))
 
 
 
@@ -547,5 +547,5 @@ model.compile(loss='categorical_crossentropy',optimizer= opt,metrics=['accuracy'
 print 'Model built using {} optimization.  Training now.\n'.format(args.optimizer)
 
 model.fit(train_x, train_y, epochs=epochs,
-          batch_size=batch,verbose=1,shuffle=True,
+          batch_size=batch,verbose=2,shuffle=True,
           callbacks=[TestCallback(eval_m,eval_x,flat_y,eval_y)])
