@@ -55,62 +55,6 @@ def buildResponseVector(labels,labelData):
     
     return response
     
-def coreData(trainData,core,feats):
-    
-    """
-    Method to collect feature data corresponding to a "core" label.  By core, 
-    we mean each unique label across the training data.  For HCP, this will
-    generally be 180 unique "core" labels.
-    
-    Concantenates data for "core" for all features in "feats".
-    
-    Parameters:
-    - - - - - 
-        trainData : loaded training data object        
-        core : unique label value
-        feats : list of features to extract data for
-    Returns:
-    - - - -
-        featsData : array of feature data corresponding to core label value        
-    """
-
-    featsData = []
-
-    for subj in trainData:
-        
-        # get training data for single subject
-        # these subjects will not have been included in the data object
-        # unless "train" attribute == True, so they will have a "label" 
-        # attribute as well
-        subjFullData = trainData[subj]
-        
-        # get subject-specific label data
-        label = np.asarray(subjFullData['label'])
-        
-        # list, containing "core" label data for each feature
-        subjFeatData = []
-            
-        # get indices where core label exists
-        #ix = np.in1d(label.ravel(),core).reshape(label.shape)
-        ix = np.where(label == core)[0]
-
-        # loop over specified-features
-        for f in feats:
-            # make sure specified features exist in subject data
-            try:
-                fData = subjFullData[f]
-            except KeyError:
-                raise
-            else:
-                subjFeatData.append(fData[ix,:])
-
-        # stack subject-specific features
-        featsData.append(np.column_stack(subjFeatData))
-        
-    # stack subject features to make matrix 'tall' (Subjects by Features)
-    featsData = np.row_stack(featsData)
-    
-    return featsData
 
 def getLabels(trainData):
         
@@ -170,7 +114,6 @@ def mergeFeatures(yData,feats,**kwargs):
             except:
                 pass
             else:
-                print('scalers exist.')
                 featData = scalers[f].transform(featData)
             finally:
                 data.append(featData)
@@ -245,7 +188,7 @@ def parseKwargs(acceptable,kwargs):
 
     return output
 
-def partitionData(trainData,feats):
+def partitionData(trainingData,responseVector,labelSet):
     
     """
     Method to parition feature data for all labels, from all training subjects
@@ -264,14 +207,12 @@ def partitionData(trainData,feats):
                     training data object
     """
     
-    labs = set(getLabels(trainData)).difference({0,-1})
-    labelData = {}
+    labelData = {}.fromkeys(labelSet)
+    for lab in labelSet:
         
-    for l in labs:
-        if l > 0:
-            
-            labelData[l] = coreData(trainData,l,feats)
-                
+        inds = np.where(responseVector == lab)[0]
+        labelData[lab] = trainingData[inds,:]
+
     return labelData
 
 def prepareUnitaryFeatures(trainingObject):

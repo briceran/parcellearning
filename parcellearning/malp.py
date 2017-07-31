@@ -21,7 +21,7 @@ from joblib import Parallel, delayed
 import multiprocessing
 
 import numpy as np
-from sklearn import ensemble
+from sklearn import ensemble,preprocessing
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 
 # number of cores to parallelize over
@@ -79,13 +79,9 @@ class Atlas(object):
 
     """
     
-    def __init__(self,feats,scale=True, thresh_train = 0.05, thresh_test = 0.05, hop_size = 1, neighborhood = 'adjacency',
+    def __init__(self,scale=True, thresh_train = 0.05, thresh_test = 0.05, hop_size = 1, neighborhood = 'adjacency',
                  softmax_type = 'BASE', classifier_type = 'random_forest', exclude_testing = None, random = None,
                  load = None, save = None):
-
-        # check feature value
-        if not feats and not isinstance(feats,list):
-            raise ValueError('Features cannot be empty.  Must be a list.')
 
         # check scale type value
         if scale not in [True, False]:
@@ -93,10 +89,6 @@ class Atlas(object):
 
         # check thresh_train value
         if thresh_train < 0 or thresh_train > 1:
-            raise ValueError('Threshold value must be within [0,1].')
-
-        # check tresh_test value
-        if thresh_test < 0 or thresh_test > 1:
             raise ValueError('Threshold value must be within [0,1].')
 
         # check hop_size value
@@ -127,7 +119,6 @@ class Atlas(object):
             raise ValueError('save must be a string or None.')
 
         # training-related attributes
-        self.features = feats
         self.scale = scale
         self.thresh_train = thresh_train
         self.hop_size = hop_size
@@ -135,7 +126,6 @@ class Atlas(object):
         self.exclude_testing = exclude_testing
 
         # testing-related attributes
-        self.thresh_test = thresh_test
         self.random = random
         self.load = load
         self.save = save
@@ -153,7 +143,7 @@ class Atlas(object):
                 if key in args:
                     setattr(self,key,kwargs[key])
             
-    def fit(self, trainObject, neighborhoodMap, model_type='ori',
+    def fit(self, x_train, y_train, model_type='ori',
             classifier = ensemble.RandomForestClassifier(n_jobs=-1),**kwargs):
         
         """
@@ -161,8 +151,7 @@ class Atlas(object):
         
         Parameters:
         - - - - -
-            trainObject : training data (either '.p' file, or dictionary)
-            
+
             mergedMaps : merged MatchingLibraries corresponding to training data
             
             model_type : type of classification scheme for multi-class 
@@ -174,8 +163,8 @@ class Atlas(object):
         """
 
         self.model_type = model_type
-        
-        [labelData,response] = self.loadTraining(self,trainObject,neighborhoodMap)
+        labelData = x_train
+        response = y_train
 
         labels = self.labels
 
@@ -187,6 +176,9 @@ class Atlas(object):
         classArgs = cu.parseKwargs(classifier_params,kwargs)
         classifier.set_params(**classArgs)
         self.classifier = classifier
+        
+        print 'depth: {}'.format(classifier.max_depth)
+        print 'nEst: {}'.format(classifier.n_estimators)
             
         model_selector = {'oVo': OneVsOneClassifier(classifier),
                           'oVr': OneVsRestClassifier(classifier),
@@ -215,7 +207,8 @@ class Atlas(object):
         self.models = models
         self._fit = True
 
-    def loadTraining(self,trainObject,neighborhoodMap):
+    def loadTraining(self,trainObject,neighborhoodMap,dataDir,hemisphere,
+                     features):
         
         """
         Initialize the object with the training data.
@@ -225,17 +218,31 @@ class Atlas(object):
             trainObject : input training data (either '.p' file, or dictionary)
             
             neighborhoodMap : Dijkstra distance file or MergedMappings file
+            
+            dataDir : input directory where data exists
+            
+            hemisphere : 'Left' or 'Right'
+            
+            features : features to train the classifier on ('label' is implicit)
 
         """
 
+        # check feature value
+        if not features and not isinstance(features,list):
+            raise ValueError('Features cannot be empty.  Must be a list.')
+        else:
+            self.features = features
+
         # load the training data
+        loadingFeatures = copy.copy(features)
+        loadingFeatures.append('label')
 
         if isinstance(trainObject,str):
             trainData = ld.loadH5(trainObject,*['full'])
-        elif isinstance(trainObject,h5py._hl.files.File):
+        elif isinstance(trainObject,h5py._hl.files.File) or isinstance(trainObject,dict):
             trainData = trainObject
-        elif isinstance(trainObject,dict):
-            trainData = trainObject
+        elif isinstance(trainObject,list):
+            trainData = loadDataFromList(trainObject,dataDir,loadingFeatures,hemisphere)
         else:
             raise ValueError('Training object is of incorrect type.')
 
@@ -253,6 +260,8 @@ class Atlas(object):
         # get subject IDs in training data
         subjects = trainData.keys()
 
+
+
         # if exclude_testing is set, the data for these subjects when fitting the models
         if self.exclude_testing:
             subjects = list(set(subjects).difference(set(self.exclude_testing)))
@@ -264,24 +273,36 @@ class Atlas(object):
             randomSample = min(self.random,len(subjects))
 
         sample = np.random.choice(subjects,size=randomSample,replace=False)
-        sampleData = {s: trainData[s] for s in sample}
-        trainData = sampleData
-
-        # if scale is True, scale each feature of the training data and save the transformation
-        # transformation will be applied to incoming test data
+        trainData = {s: trainData[s] for s in sample}
+        
+        
+        
+        training = []
+        labels = []
+        
+        trainFeatures = list(set(self.features).difference('label'))
+        for subj in trainData.keys():
+            training.append(cu.mergeFeatures(trainData[subj],trainFeatures))
+            labels.append(cu.mergeFeatures(trainData[subj],['label']))
+        
+        trainData = np.squeeze(np.row_stack(training))
+        labelVector = np.squeeze(np.concatenate(labels))
+        self.labels = set(labelVector).difference({0,-1})
+        
+        
         if self.scale:
-            [trainData,scalers] = cu.standardize(trainData,self.features)
             
-            # scaler objects to transform test data
-            self.scalers = scalers
-            self._scaled = True
+            scaler = preprocessing.StandardScaler(with_mean=True,with_std=True)
+            trainData = scaler.fit_transform(trainData)
+            self.scaler = scaler
+            self.scaled=True
 
-        # get unique labels in training set
-        self.labels = set(cu.getLabels(trainData)).difference({0,-1})
 
         # isolate training data corresponding to each label
-        labelData = cu.partitionData(trainData,feats = self.features)
+        labelData = cu.partitionData(trainData,labelVector,self.labels)
         response = cu.buildResponseVector(self.labels,labelData)
+        
+        self.input_dim = labelData[labelData.keys()[0]].shape[1]
 
         # load and prepare neighborhoodMap
         neighborhoodMap = ld.loadPick(neighborhoodMap)
@@ -297,6 +318,8 @@ class Atlas(object):
             neighborhoodMap = lb.mappingFrequency(neighborhoodMap)
         
         self.neighbors = lb.mappingThreshold(neighborhoodMap, threshold, boundary)
+
+
 
         # check quality of training data to ensure all features have same length,
         # all response vectors have the same number of samples, and that all training data
@@ -338,12 +361,13 @@ class Atlas(object):
         labels = self.labels
         neighbors = self.neighbors
 
-        [tMatch,mtd,mapCut,ltvm] = self.loadTest(y,yMatch)
-        
-        # Define the matching matrix
-        # R = len(labels)
         R = 180
-        mm = lb.buildMatchinMatric(mtd,R)
+        [mm,mtd,ltvm] = self.loadTest(y,yMatch)
+        
+        [xTest,yTest] = mtd.shape
+        if yTest != self.input_dim:
+            raise Warning('Test data does not have the same number \
+                          features as the training data.')
 
         # initialize prediction dictionary
         baseline = np.zeros((mtd.shape[0],R+1))
@@ -358,10 +382,12 @@ class Atlas(object):
                 preds = funcs[softmax_type](estimator,members,memberData,mm,R)
 
                 baseline = cu.updatePredictions(baseline,members,preds)
-
+                
+        predicted = np.argmax(baseline,axis=1)
         self.baseline = baseline
+        self.predicted = predicted
 
-        return np.argmax(baseline,axis=1)
+        return (baseline,predicted)
 
     def loadTest(self,y,yMatch):
         
@@ -379,54 +405,37 @@ class Atlas(object):
         """
         
         # get Atlas attributes
-        threshold = self.thresh_test
         load = self.load
         save = self.save
         
-        labels = self.labels
         features = self.features
  
         # load test subject data, save as attribtues
         tObject = ld.loadH5(y,*['full'])
         ID = tObject.attrs['ID']
         
-        parsedData = ld.parseH5(tObject,self.features)
+        parsedData = ld.parseH5(tObject,features)
         tObject.close()
 
         data = parsedData[ID]
-        
-        tMatch = ld.loadPick(yMatch)
-
-        if self._scaled:
-            scalers = self.scalers
-            
-            for feat in features:
-                if feat in data.keys():
-                    data[feat] = scalers[feat].transform(data[feat])
-                    
         mtd = cu.mergeFeatures(data,features)
+        print 'Testing shape: {}'.format(mtd.shape)
 
-        # generate a label : vertex dictionary, the vertex contains all 
-        # vertices that mapped to label via surface registration
-        
-        # get vertex to label mapping counts
-        vtlm = copy.deepcopy(tMatch)
-        
-        # convert vertex to label mapping counts to frequencies
-        # and threshold labels to include by the mapping frequency
-        freqMaps = lb.mappingFrequency(vtlm)
-        threshed = lb.mappingThreshold(freqMaps,threshold,'outside')
-        
+        if self.scaled:
+            scaler = self.scaler
+            mtd = scaler.transform(mtd)
+            
+        threshed = ld.loadMat(yMatch)
+
         # Computing label-vertex memberships is time consuming
         # If already precomputed for given test data at specified threshold,
         # can supply path to load file.
         if load:
             if os.path.isfile(load):
                 ltvm = ld.loadPick(load)
-        
         # Otherwise, compute label-vertex memberships.
         else:
-            ltvm = cu.vertexMemberships(threshed,labels)
+            ltvm = cu.vertexMemberships(threshed,180)
         
         self.ltvm = ltvm
 
@@ -438,7 +447,7 @@ class Atlas(object):
             except IOError:
                 print('Cannot save label-vertex memberships to file.')
                 
-        return [tMatch,mtd,threshed,ltvm]
+        return [threshed,mtd,ltvm]
 
     def _compareTrainingDataSize(self,labelData,response):
         
@@ -521,7 +530,14 @@ def forestSoftMax(metaEstimator,members,memberData,mm,R):
     
     memberMatrix = mm[members,:]
     predProbs = metaEstimator.predict_proba(memberData)
-    predThresh = memberMatrix*predProbs
+    
+    classes = metaEstimator.classes_
+    print classes
+    forestMatrix = np.zeros((len(members),mm.shape[1]+1))
+    forestMatrix[:,classes] = predProbs
+    forestMatrix = forestMatrix[:,1:]
+    
+    predThresh = memberMatrix*forestMatrix
     
     labels = np.argmax(predThresh,axis=1)+1
 
@@ -543,19 +559,38 @@ def treeSoftMax(metaEstimator,members,memberData,mm,R):
         mm : binary matching matrix
         
         R : number of labels in training set
-    """
+        
+    A single metaEstimator consists of a set of sub-estimators.  The classes 
+    for the metaEstimator corresponds to a list of K values to predict 
+    i.e. [1,5,6,7,100]
     
+    Each sub-estimator, however, has 0-K indexed classes (i.e. [0,1,2,3,4]), 
+    where the index corresponds to the position in the metaEstimator 
+    class list.
+    """
+
     memberMatrix = mm[members,:]
 
     treeProbs = []
-    for estimator in metaEstimator.estimators_:
-        treeProbs.append(estimator.predict_proba(memberData))
-        
+    classes = []
+    for est in metaEstimator.estimators_:
+        classes.append(metaEstimator.classes_)
+        treeProbs.append(est.predict_proba(memberData))
+
     predictedLabels = []
+    
+    treeMatrix = np.zeros((len(members),mm.shape[1]+1))
         
     for k in np.arange(len(treeProbs)):
         
-        treeThresh = memberMatrix*treeProbs[k]
+        treeClasses = np.squeeze(classes[k]).astype(np.int32)
+        treeProbabilities = treeProbs[k]
+        
+        tm = copy.deepcopy(treeMatrix)
+        tm[:,treeClasses] = treeProbabilities
+        tm = tm[:,1:]
+        
+        treeThresh = memberMatrix*tm
         predictedLabels.append(np.argmax(treeThresh,axis=1)+1)
     
     predictedLabels = np.column_stack(predictedLabels)
@@ -571,6 +606,66 @@ def treeSoftMax(metaEstimator,members,memberData,mm,R):
     classification = np.asarray(classification)
         
     return classification
+
+def loadDataFromList(subjectList,dataDir,features,hemi):
+    
+    """
+    Generates the training data for the neural network.
+    
+    Parameters:
+    - - - - -
+        subjectList : list of subjects to include in training set
+        dataDir : main directory where data exists -- individual features
+                    will exist in sub-directories here
+        features : list of features to include
+        hemi : hemisphere to process
+    """
+    
+    hemisphere = {}.fromkeys('Left','Right')
+    hemisphere['Left'] = 'L'
+    hemisphere['Right'] = 'R'
+    
+    H = hemisphere[hemi]
+    
+    # For now, we hardcode where the data is
+    trainDir = '{}TrainingObjects/FreeSurfer/'.format(dataDir)
+    trainExt = '.{}.TrainingObject.aparc.a2009s.h5'.format(H)
+    
+    midDir = '{}Midlines/'.format(dataDir)
+    midExt = '.{}.Midline_Indices.mat'.format(H)
+
+    data = {}
+
+    for s in subjectList:
+
+        # Training data
+        trainObject = '{}{}{}'.format(trainDir,s,trainExt)
+        midObject = '{}{}{}'.format(midDir,s,midExt)
+
+        # Check to make sure all 3 files exist
+        if os.path.isfile(trainObject) and os.path.isfile(midObject):
+
+            # Load midline indices
+            # Subtract 1 for differece between Matlab and Python indexing
+            mids = ld.loadMat(midObject)-1
+            mids = set(mids)
+
+            # Load training data and training labels
+            trainH5 = h5py.File(trainObject,mode='r')
+
+            # Get data corresponding to features of interest
+            subjData = ld.parseH5(trainH5,features)
+            trainH5.close()
+            
+            nSamples = set(np.arange(subjData[s][features[0]].shape[0]))
+            coords = np.asarray(list(nSamples.difference(mids)))
+            
+            for f in subjData[s].keys():
+                subjData[s][f] = subjData[s][f][coords,:]
+            
+            data[s] = subjData[s]
+
+    return data
 
 
 class MultiAtlas(object):
@@ -589,7 +684,7 @@ class MultiAtlas(object):
 
     """
     
-    def __init__(self,features,atlas_size = 1,atlases=None,
+    def __init__(self,atlas_size = 1,atlases=None,
                  exclude_testing = None):
         
         """
@@ -621,7 +716,6 @@ class MultiAtlas(object):
 
         self.atlas_size = atlas_size
         self.atlases = atlases
-        self.features = features
         self.exclude_testing = exclude_testing
 
     def set_params(self,**kwargs):
@@ -644,7 +738,7 @@ class MultiAtlas(object):
                   'New parameters will have no effect.  '
                   'Reinstantiate the class to update the parameters.')
 
-    def initializeTraining(self,trainObject,**kwargs):
+    def loadTraining(self,trainObject,dataDir,hemisphere,features,**kwargs):
         
         """
         Private method to load and initialize training data.
@@ -654,6 +748,9 @@ class MultiAtlas(object):
             trainObject : training data (either '.p' file, or dictionary)
         """
         
+        loadingFeatures = copy.copy(features)
+        loadingFeatures.append('label')
+        
         # load a single SubjectFeatures object or a nested dictionary structure
         if isinstance(trainObject,str):
             trainData = ld.loadH5(trainObject,*['full'])
@@ -661,6 +758,8 @@ class MultiAtlas(object):
             trainData = trainObject
         elif isinstance(trainObject,dict):
             trainData = trainObject
+        elif isinstance(trainObject,list):
+            trainData = loadDataFromList(trainObject,dataDir,loadingFeatures,hemisphere)
         else:
             raise ValueError('Training object is of incorrect type.')
             
@@ -691,6 +790,8 @@ class MultiAtlas(object):
 
         datasets = []
 
+        # If the number of atlases is 1, all subject data will be aggregated
+        # into a single dictionary
         if self.atlas_size == 1:
             subjectSet = np.random.choice(subjects,size=self.atlases,
                                           replace=False)
@@ -698,14 +799,33 @@ class MultiAtlas(object):
             for s in subjectSet:
                 td = {s: trainData[s]}
                 datasets.append(td)
+        
+        # Otherwise, N = self.atlases will be created, each with 
+        # K = self.atlas_size (possibly overlapping) training subjects in it
+        # This will be N separate training dictionaries datasets.
         else:
-            for a in np.arange(self.atlases):
-                subjectSet = np.random.choice(subjects,size=self.atlas_size,
-                                              replace=False)
-                
-                td = {s: trainData[s] for s in subjectSet}
-                
-                datasets.append(td)
+            size = self.atlas_size
+            chunks = len(subjects) / size
+            np.random.shuffle(subjects)
+            
+            # Make self.atlases independent atlases
+            if chunks >= self.atlases:                
+                for j in np.arange(self.atlases):
+                    subjectSet = subjects[j*size:(j+1)*size]
+                    td = {s: trainData[s] for s in subjectSet}
+                    datasets.append(td)
+            # Make as many independent atlases as possible, then select subjects
+            # randomly until self.atlases have been created
+            else:
+                rem = self.atlases-chunks
+                for j in np.arange(chunks):
+                    subjectSet = subjects[j*size:(j+1)*size]
+                    td = {s: trainData[s] for s in subjectSet}
+                    datasets.append(td)
+                for j in np.arange(rem):
+                    subjectSet = np.random.choice(subjects,size=size,replace=False)
+                    td = {s: trainData[s] for s in subjectSet}
+                    datasets.append(td)
 
         self.datasets = datasets
         self.initialized=True
@@ -717,6 +837,12 @@ def parallelFitting(multiAtlas,maps,features,
 
     """
     Method to fit a set of Atlas objects.
+    
+    Parameters:
+    - - - - -
+        multiAtlas : object containing independent datasets
+        maps : label neighborhood map
+        features : features to include in model
     """
     
     args,_, _,_ = inspect.getargspec(classifier.__init__)
@@ -726,33 +852,30 @@ def parallelFitting(multiAtlas,maps,features,
     print 'Classifier depth: {}'.format(classifier.__dict__['max_depth'])
     print 'Classifier nEst: {}'.format(classifier.__dict__['n_estimators'])
     
-    BaseAtlas = Atlas(feats=features)
+    BaseAtlas = Atlas()
     
     args,_,_,_ = inspect.getargspec(BaseAtlas.__init__)
     atlasArgs = cu.parseKwargs(args[1:],kwargs)
     BaseAtlas.set_params(**atlasArgs)
-    
-    print 'Atlas softmax type: {}'.format(BaseAtlas.softmax_type)
 
-    # fit atlas on each component
+    # fit atlas on each componentraransarra
 
     fittedAtlases = Parallel(n_jobs=NUM_CORES)(delayed(atlasFit)(BaseAtlas,
-                            d,maps,
-                            classifier=classifier,
+                            d,maps,features,classifier=classifier,
                             **kwargs) for d in multiAtlas.datasets)
     
     return fittedAtlases
     
-def atlasFit(baseAtlas,data,maps,classifier,**kwargs):
+def atlasFit(baseAtlas,data,maps,features,classifier,**kwargs):
     
     """
     Single model fitting step.
     """
+    
+    tr,re = baseAtlas.loadTraining(data,maps,None,None,features)
 
     atl = copy.deepcopy(baseAtlas)
-
-    atl.initializeTraining(data,maps,**kwargs)
-    atl.fit(classifier = classifier,**kwargs)
+    atl.fit(tr,re,classifier = classifier)
     
     return atl
 
