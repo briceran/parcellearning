@@ -49,15 +49,8 @@ echo ${outFileExtension}
 for i in $(seq 0 $N); do
 	outFile=${outDir}${outFileExtension}.Iteration_${i}.p
 	trainingList=${dataDir}TrainingSubjects.${i}.txt
-<<<<<<< HEAD
-	logFile=${outDir}logFile.${i}.${exten}.${H}.${i}.out
+	logFile=${outDir}logFile.NeuralNetwork.${exten}.${H}.${i}.out
 	if [ ! -f ${outFile}.h5 ]; then
 		nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -ds ${downSample} -l ${layers} -n ${nodes} -e ${epochs} -b ${batchSize} -r ${rate} >& ${logFile} 2>&1&
 	fi
 done
-=======
-	logFile=${outDir}logFile.NeuralNetwork.${exten}.${H}.${i}.out
-	nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -ds ${downSample} -l ${layers} -n ${nodes} -e ${epochs} -b ${batchSize} -r ${rate} >& ${logFile} 2>&1&
-done
-
->>>>>>> d75d2074389929b8ab00e8eef817887334348cf5
