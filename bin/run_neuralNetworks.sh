@@ -18,8 +18,6 @@ fi
 
 N=9
 
-inSubj=${dataDir}SmallList.txt
-
 if [ $kind = "ptx" ]; then
 	exten="ProbTrackX2"
 	feats="pt_cort,pt_subcort,sulcal,myelin,curv,label"
@@ -52,5 +50,7 @@ for i in $(seq 0 $N); do
 	outFile=${outDir}NetworkModel.${outFileExtension}.Iteration_${i}
 	trainingList=${dataDir}TrainingSubjects.${i}.txt
 	logFile=${outDir}logFile.${i}.${exten}.${H}.${i}.out
-	nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -ds ${downSample} -l ${layers} -n ${nodes} -e ${epochs} -b ${batchSize} -r ${rate} >& ${logFile} 2>&1&done
-
+	if [ ! -f ${outFile}.h5 ]; then
+		nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -ds ${downSample} -l ${layers} -n ${nodes} -e ${epochs} -b ${batchSize} -r ${rate} >& ${logFile} 2>&1&
+	fi
+done
