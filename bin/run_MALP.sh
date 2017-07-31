@@ -10,6 +10,7 @@ dataDir=/mnt/parcellator/parcellation/parcellearning/Data/
 binDir=/mnt/parcellator/parcellation/GitHub/parcellearning/bin/
 script=${binDir}multiAtlasLabelPropagation.py
 
+nHood = ${dataDir}LabelAdjacency/HCP/Compiled.L.HCP.LabelAdjacency.p
 outDir=${dataDir}Models/
 
 if [ ! -d "$outDir" ]; then
@@ -39,6 +40,8 @@ elif [ $hemisphere = 'Right' ]; then
 	H='R'
 fi
 
+nHood = ${dataDir}LabelAdjacency/HCP/Compiled.${H}.HCP.LabelAdjacency.p
+
 outFileExtension=RandomForest.${Hemi}.AtlasSize.${atlasSize}.NumAtlases.Max.Depth.${depth}.NumEst.${nEst}.${exten}
 
 echo ${outFileExtension}
@@ -47,5 +50,5 @@ for i in $(seq 0 $N); do
 	outFile=${outDir}${outFileExtension}.Iteration_${i}.p
 	trainingList=${dataDir}TrainingSubjects.${i}.txt
 	logFile=${outDir}logFile.RandomForest.${exten}.${H}.${i}.out
-	nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -ds ${downSample} -l ${layers} -n ${nodes} -e ${epochs} -b ${batchSize} -r ${rate} >& ${logFile} 2>&1&done
+	nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -d ${depth} -nEst ${nEst} -a ${atlasSize} -nm ${nHood}
 
