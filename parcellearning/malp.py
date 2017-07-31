@@ -176,6 +176,9 @@ class Atlas(object):
         classArgs = cu.parseKwargs(classifier_params,kwargs)
         classifier.set_params(**classArgs)
         self.classifier = classifier
+        
+        print 'depth: {}'.format(classifier.max_depth)
+        print 'nEst: {}'.format(classifier.n_estimators)
             
         model_selector = {'oVo': OneVsOneClassifier(classifier),
                           'oVr': OneVsRestClassifier(classifier),
