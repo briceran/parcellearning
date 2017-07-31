@@ -42,7 +42,7 @@ elif [ $hemisphere = 'Right' ]; then
 	H='R'
 fi
 
-outFileExtension=${H}.Layers.${layers}.Nodes.${nodes}.Sampling.${downSample}.Epochs.${epochs}.Batch.${batchSize}.Rate.${rate}.${exten}
+outFileExtension=NeuralNetwork.${H}.Layers.${layers}.Nodes.${nodes}.Sampling.${downSample}.Epochs.${epochs}.Batch.${batchSize}.Rate.${rate}.${exten}
 
 echo ${outFileExtension}
 

@@ -10,7 +10,7 @@ dataDir=/mnt/parcellator/parcellation/parcellearning/Data/
 binDir=/mnt/parcellator/parcellation/GitHub/parcellearning/bin/
 script=${binDir}multiAtlasLabelPropagation.py
 
-nHood = ${dataDir}LabelAdjacency/HCP/Compiled.L.HCP.LabelAdjacency.p
+nHood=${dataDir}LabelAdjacency/HCP/Compiled.L.HCP.LabelAdjacency.p
 outDir=${dataDir}Models/
 
 if [ ! -d "$outDir" ]; then
