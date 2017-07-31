@@ -51,4 +51,5 @@ for i in $(seq 0 $N); do
 	trainingList=${dataDir}TrainingSubjects.${i}.txt
 	logFile=${outDir}logFile.RandomForest.${exten}.${H}.${i}.out
 	nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -d ${depth} -nEst ${nEst} -a ${atlasSize} -nm ${nHood}
+done
 
