@@ -312,7 +312,6 @@ def shuffleData(training,matching,responses):
 
     return (trainShuffled,matchShuffled,labelShuffled)
 
-
 class ConstrainedCallback(callbacks.Callback):
     
     """

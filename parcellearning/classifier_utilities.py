@@ -289,7 +289,7 @@ def prepareUnitaryFeatures(trainingObject):
     
     return training
 
-def vertexMemberships(labelMaps,labels):
+def vertexMemberships(matchingMatrix,R):
         
     """
     Method to partition vertices based on which labels each
@@ -302,8 +302,8 @@ def vertexMemberships(labelMaps,labels):
     
     Parameters:
     - - - - - 
-        labelMaps : vertex-to-label maps for MatchingLibraryTest object    
-        labels : set of labels in training data
+        matchingMatrix : binary matrix with 1 if 0 maps to vertex, 0 otherwise
+        R : number of regions
         
     Returns:
     - - - - 
@@ -311,14 +311,16 @@ def vertexMemberships(labelMaps,labels):
                         map to it
     """
     
+    labels = np.arange(1,R+1)
+    idMatrix = matchingMatrix * labels
+    
     labelVerts = {}.fromkeys(list(labels))
     
     for L in labels:
         
-        # find all vertices that map to label L
-        # not exclusive
-        inds = [k for k,v in labelMaps.items() if v and L in v]
-        # map indices to label-indices pair
+        tempColumn = idMatrix[:,L-1]
+        inds = np.where(tempColumn == L)[0]
+        
         labelVerts[L] = inds
         
     return labelVerts
@@ -573,25 +575,14 @@ def updatePredictions(storage,members,predictions):
     
     Parameters:
     - - - - -
-        storage : dictionary in which predictions are stored
+        storage : array of size N test vertices by K labels to predict
         members : vertices mapping to label
         predictions : predicted labels of members, for 'label' core model
     """
     
     stor = copy.copy(storage)
-    mem = copy.copy(members)
-    pre = copy.copy(predictions)
-    
-    if isinstance(mem,int):
-        vert = mem
-        pred = pre[0]
-        
-        stor[vert].append(pred)
-        
-    else:
-        for vert,pred in zip(mem,pre):
-            stor[vert].append(pred)
-    
+    stor[members,predictions] += 1
+
     return stor
 
 def updateScores(storage,label,members,scores):
