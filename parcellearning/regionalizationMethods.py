@@ -7,20 +7,19 @@ Created on Mon Jun  5 21:08:50 2017
 """
 
 import loaded as ld
-import numpy as np
+
 import networkx as nx
+import nibabel as nb
+import numpy as np
+from sklearn import cluster,metrics
 
-from sklearn import metrics
-
-from joblib import Parallel, delayed
-import multiprocessing
-
-NUM_CORES = multiprocessing.cpu_count()
+import copy
+import os
 
 #####
 """
-Methods relating to performing regionalization of a time series, using the 
-data provided in the level structures.
+Methods relating to performing regionalization of samples / time series
+using the data provided in the level structures.
 """
 #####
 
@@ -34,16 +33,11 @@ def regionalizeStructures(timeSeries,levelStructures,midlines,level,R,
     Parameters:
     - - - - -
         timeSeries : input resting state file
-        
         levelStrucutres : levelStructures created by computeLabelLayers
                             ".RegionalLayers.p" file
-                            
         level : depth to constaint layers at
-        
         midlines : path to midline indices
-
         measure : measure to apply to correlation values ['mean','median']
-
     """
     
     assert measure in ['median','mean']
@@ -91,13 +85,103 @@ def regionalizeStructures(timeSeries,levelStructures,midlines,level,R,
     regionalized[midlines,:] = 0
         
     return regionalized
-        
-        
-        
-        
-        
-        
 
+
+def trainDBSCAN(labelData, eps=0.025, mxs = 7500, mxp = 0.7):
+    
+    """
+    Method to perform DBSCAN for training data.
+    
+    Paramters:
+    - - - - -
+        labelData : (dict) training data, keys are labels, values are arrays
+        eps : DBSCAN parameter, specifiying maximum distance between two 
+                samples for them to be considered as in the same neighborhood
+        mxs : maximum number of samples per iteration of DBSCAN
+        mxp : minimum percentage of original data points required for a
+                completed round of DBSCAN
+    """
+    
+    labDat = copy.deepcopy(labelData)
+    
+    labels = labDat.keys()
+    dbscanCoords = {}.fromkeys(labels)
+
+    for lab in labels:
+        print 'Label {}'.format(lab)
+        tempData = labDat[lab]
+        dbscanCoords[lab] = findLabelDBSCoords(lab,tempData,eps,mxs,mxp)
+        
+    return dbscanCoords
+    
+def findLabelDBSCoords(label,data,eps,max_samples,max_percent):
+    
+    """
+    Method to perform DBSCAN for training data belong to a single label.
+    """
+
+    # Shuffle compiled training data for current label.  Shuffling is performed
+    # because training data is stacked 1 subject at a time -- we want DBSCAN to
+    # find central samples across all training data, not within each subject.
+    np.random.shuffle(data)
+    samples,_ = data.shape    
+
+    # if labelData has fewer samples than max_samples, convert to list
+    if samples <= max_samples:
+        subsets = list([data])
+        
+    # otherwise break into subsets of size max_samples
+    # will generally produce one smaller subset
+    else:
+        iters = samples/max_samples
+        subsets = []
+        
+        for i in np.arange(iters):
+            print 'Iteration {}'.format(i)
+            
+            bc = i*max_samples
+            uc = (i+1)*max_samples
+            subsets.append(data[bc:uc,:])
+        
+        subsets.append(data[(i+1)*max_samples:,:])
+
+    coordinates = []
+
+    # for each subset
+    baseline = 0
+    for iteration,dataSubset in enumerate(subsets):
+        
+        [xSamps,yDim] = dataSubset.shape
+
+        # compute correlation distance (1-corrcoef) and scale to 0-1
+        dMat = metrics.pairwise.pairwise_distances(dataSubset,
+                                                   metric='correlation')
+        dMat = dMat/2
+
+        perc = 0.0
+        ep = copy.copy(eps)
+
+        # while percentage of non-noise samples < max_percentage
+        while perc < max_percent:
+
+            # apply DBSCAN, update epsilon parameter (neighborhood size)
+            model = cluster.DBSCAN(eps=ep,metric='precomputed',n_jobs=-1)
+            model.fit(dMat)
+            predLabs = model.labels_            
+            clusters = np.where(predLabs != -1)[0]
+
+            perc = (1.*len(clusters))/(1.*len(predLabs))
+            ep += 0.01
+        
+        clusters += baseline
+        baseline += xSamps
+
+        coordinates.append(clusters)
+
+    coordinates = np.concatenate(coordinates)
+
+    return coordinates
+        
 #####
 """
 Methods to compute level structures on a cortical map file
@@ -203,6 +287,8 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
     
     distances = {n: [] for n in internalNodes}
     
+    
+    print 'distances'
     # here, we allow for connected components in the regions
     for subGraph in nx.connected_component_subgraphs(G):
         
@@ -212,23 +298,20 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
         # make sure subgraph has more than a single component
         if len(sg_nodes) > 1:
             
-            # get subgraph border indices
             sg_border = list(set(sg_nodes).intersection(borderIndices))
-            # get subgraph internal indices
-            sg_internal = list(set(sg_nodes).intersection(internalNodes))
+            sg_intern = list(set(sg_nodes).intersection(internalNodes))
             
-            sp = nx.all_pairs_shortest_path_length(subGraph)
+            external = [i for i,j in enumerate(sg_nodes) if j in sg_border]
             
-            for k in sg_internal:
-                
-                distances[k] = [v for j,v in sp[k].items() if j in sg_border]
-    
-    for k in distances.keys():
-        if len(distances[k]):
-            distances[k] = min(distances[k])
-        else:
-            distances[k] = None
+            sp = nx.floyd_warshall_numpy(subGraph)
+            se = sp[:,external]
+            minDist = np.min(se,axis=1)
+            
+            for k,v in enumerate(sg_nodes):
+                if v in sg_intern:
+                    distances[v] = int(np.asarray(minDist[k]))
 
+    print 'layers'
     layered = {k: [] for k in set(distances.values())}
     
     for vertex in distances.keys():
@@ -310,7 +393,7 @@ def shiftColor(rgb,mag=30):
     
     return rgb_adj
 
-def neighborhoodErrorMap(core,labelAdjacency,truthLabFile,
+def neighborhoodErrorMap(labVal,labelAdjacency,truthLabFile,
                          predLabFile,labelLookup,outputColorMap):
     
     """
@@ -341,8 +424,8 @@ def neighborhoodErrorMap(core,labelAdjacency,truthLabFile,
     color_file = open(outputColorMap,"w")
 
     trueColors = ' '.join(map(str,[255,255,255]))
-    trueName = 'Label {}'.format(core)
-    trueRGBA = '{} {} {}\n'.format(core,trueColors,255)
+    trueName = 'Label {}'.format(labVal)
+    trueRGBA = '{} {} {}\n'.format(labVal,trueColors,255)
     
     trueStr = '\n'.join([trueName,trueRGBA])
     color_file.writelines(trueStr)
@@ -351,13 +434,13 @@ def neighborhoodErrorMap(core,labelAdjacency,truthLabFile,
     
     
     # get labels that neighbor core
-    neighbors = labAdj[core]
+    neighbors = labAdj[labVal]
     # get indices of core label in true map
-    truthInds = np.where(truth == core)[0]
+    truthInds = np.where(truth == labVal)[0]
     
     # initialize new map
     visualizeMap = np.zeros((truth.shape))
-    visualizeMap[truthInds] = core
+    visualizeMap[truthInds] = labVal
     
     # get predicted label values existing at truthInds
     predLabelsTruth = pred[truthInds]
@@ -375,7 +458,7 @@ def neighborhoodErrorMap(core,labelAdjacency,truthLabFile,
         
         adjLabel = n+180
         adjName = 'Label {}'.format(adjLabel)
-        adjColors = shiftColor(oriCode,mag=20)
+        adjColors = shiftColor(oriCode,mag=30)
         adjColors = ' '.join(map(str,adjColors))
         adjRGBA = '{} {} {}\n'.format(adjLabel,adjColors,255)
         adjStr = '\n'.join([adjName,adjRGBA])
@@ -394,6 +477,74 @@ def neighborhoodErrorMap(core,labelAdjacency,truthLabFile,
     color_file.close()
 
     return visualizeMap
+
+def processNeighborhoodCM(labVal,labelAdjacency,truthLabFile,
+                         predLabFile,labelLookup,inMyl,outDir):
+    
+    ocm = outDir + '{}.ColorMap.txt'.format(labVal)
+    
+    vm = neighborhoodErrorMap(labVal,labelAdjacency,truthLabFile,
+                         predLabFile,labelLookup,ocm)
+        
+    outFunc = outDir + 'Label_{}.LabelMisMatch.func.gii'.format(labVal)
+    myl = nb.load(inMyl)
+    myl.darrays[0].data = vm.astype(np.float32)
+    nb.save(myl,outFunc)
+    
+    outLabel = outDir + 'Label_{}.LabelMisMatch.label.gii'.format(labVal)
+
+    #cmd_call = ['wb_command','-metric-label-import',outFunc,ocm,outLabel]
+    cmd_call = 'wb_command -metric-label-import {} {} {}'.format(outFunc,ocm,outLabel)
+    
+    print(os.path.isfile(outFunc))
+    print(os.path.isfile(ocm))
+    print(os.path.isfile(outLabel))
+
+    print(1)
+    os.system(cmd_call)
+    print(2)
+        
+    
+"""
+Classifier evaluation methods.
+"""
+
+def populationRegionSize(subjectList,labelDirectory,extension):
+    
+    """
+    Method to compute the sizes of each region across the training set.
+    
+    Parameters:
+    - - - - - 
+        subjectList : (list,.txt) list of subjects to include
+        labelDirectory : directory containing the label files
+        extension : label file extension
+    """
+    
+    if isinstance(subjectList,str):
+        with open(subjectList,'r') as inFile:
+            subjects = inFile.readlines()
+        subjects = [x.strip() for x in subjects]
+    elif isinstance(subjectList,list):
+        subjects = subjectList
+    else:
+        print 'Incorrect subject list type.'
+        
+    labelSizes = {k: [] for k in np.arange(1,181)}
+    
+    for subj in subjects:
+        
+        inLabel = labelDirectory + str(subj) + extension
+        
+        if os.path.isfile(inLabel):
+            
+            pred = ld.loadGii(inLabel)
+            
+            for k in labelSizes.keys():
+                if k in set(pred):
+                    labelSizes[k].append(len(np.where(pred == k)[0]))
+    
+    return labelSizes
         
         
         

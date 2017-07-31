@@ -124,7 +124,7 @@ def fixLabelSize(mids,dL,N):
     label file to match that of the proper file.
     """
 
-    coords = list(set(range(0,N))-set(mids))
+    coords = list(set(np.arange(N)).difference(set(mids)))
     
     cdata = np.zeros(shape=(N,1))
     cdata[coords,0] = dL
@@ -170,10 +170,14 @@ def loadGii(inFile,darray=0,*args):
     else:
         # if data is instance of GiftiImage
         if isinstance(data,nibabel.gifti.gifti.GiftiImage):
-            return np.squeeze(data.darrays[darray].data)
+            label = np.squeeze(data.darrays[darray].data)
         # if data is instance of Nifti2Image
         elif isinstance(data,nibabel.nifti2.Nifti2Image):
-            return np.squeeze(np.asarray(data.get_data()))
+            label = np.squeeze(np.asarray(data.get_data()))
+        elif isinstance(data,nibabel.cifti2.cifti2.Cifti2Image):
+            label = np.squeeze(np.asarray(data.get_data()));
+        
+        return label
         
 def loadH5(inFile,*keys):
     
@@ -234,10 +238,10 @@ def parseH5(h5Object,features):
     the h5 object to a dictionary.
     """
     
-    subjects = h5Object.keys()
-    parsedData = {str(s): {}.fromkeys(features) for s in subjects}
+    groups = h5Object.keys()
+    parsedData = {str(s): {}.fromkeys(features) for s in groups}
     
-    for s in subjects:
+    for s in groups:
         
         parsedData[s] = {}.fromkeys(features)
         
@@ -251,5 +255,42 @@ def parseH5(h5Object,features):
             del parsedData[s]
     
     return parsedData
-                
+
+
+def loadH5_dbscan(inFile):
+    
+    """
+    Method to load results of dbscan sample reduction.
+    """
+    
+    inData = h5py.File(inFile,mode='r')
+    labels = [np.int32(x) for x in inData['maps'].keys()]
+    dbscan_data = {}.fromkeys(labels)
+    
+    for feat in labels:
+        dbscan_data[feat] = np.asarray(inData['dbscan_data'][str(feat)])
+        
+    inData.close()
+    
+    return dbscan_data
+    
+    
+def saveH5_dbscan(outFile,inDict):
+    
+    """
+    Method to save results of dbscan sample reduction.
+    """
+    
+    outFile = h5py.File(outFile,'w')
+    labels = inDict.keys()
+    
+    outFile.create_group('maps')
+    outFile.create_group('dbscan_data')
+    
+    for lab in labels:
+        outFile['maps'].create_dataset(str(lab),data=lab)
+        outFile['dbscan_data'].create_dataset(str(lab),data=inDict[lab])
+    
+    outFile.close()
+    
                 

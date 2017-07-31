@@ -9,7 +9,7 @@ from copy import deepcopy
 
 import classifier_utilities as cu
 import featureData as fd
-import libraries as lb
+import matchingLibraries as lb
 import loaded as ld
 
 import copy
@@ -355,7 +355,7 @@ class GMM(object):
         if not features:
             raise ValueError('Feature list cannot be empty.')
         
-        if scale not in [True, False]:
+        if not isinstance(scale,bool):
             raise ValueError('Scale must be boolean.')
 
         if thresh_test < 0 or thresh_test > 1:
@@ -397,46 +397,9 @@ class GMM(object):
             for key in kwargs:
                 if key in args:
                     setattr(self,key,kwargs[key])
-    
-    def _initializeTraining(self,trainObject):
-        
-        """
-        Parameters:
-        - - - - -
-            trainObject : input training data (either '.p' file, or dictionary)
-        """
-        
-        # if trainObject is filename
-        if isinstance(trainObject,str):
-            trainData = ld.loadPick(trainObject)
-            
-            # if trainData is SubjectFeatures object (single subject)
-            if isinstance(trainData,fd.SubjectFeatures):
-                self.trainingID = trainData.ID
-                trainData = cu.prepareUnitaryFeatures(trainData)
-                
-        # otherwise, if provided with dictionary
-        elif isinstance(trainObject,dict):
-            trainData = trainObject
-        else:
-            raise ValueError('Training object is of incorrect type.')
-            
-        if not trainData:
-            raise ValueError('Training data cannot be empty.')
-            
-        if self.scale:
-            [trainData,scalers] = fd.standardize(trainData,self.features)
-            
-            self.scalers = scalers
-            self._scaled = True            
-            
-        self.labels = set(cu.getLabels(trainData)) - set([0,-1])
-        self.labelData = cu.partitionData(trainData,feats = self.features)
-        
-        self.trainData = trainData
 
     def fit(self, trainObject, 
-            model = mixture.GaussianMixture(n_components=2,covariance_type='full'),
+            model = mixture.GaussianMixture(n_components=2,covariance_type='diag'),
             **kwargs):
         
         """
@@ -474,6 +437,43 @@ class GMM(object):
 
         self.mixtures = mixtures
         self._fitted = True
+        
+    def _initializeTraining(self,trainObject):
+        
+        """
+        Parameters:
+        - - - - -
+            trainObject : input training data (either '.p' file, or dictionary)
+        """
+        
+        # if trainObject is filename
+        if isinstance(trainObject,str):
+            trainData = ld.loadPick(trainObject)
+            
+            # if trainData is SubjectFeatures object (single subject)
+            if isinstance(trainData,fd.SubjectFeatures):
+                self.trainingID = trainData.ID
+                trainData = cu.prepareUnitaryFeatures(trainData)
+                
+        # otherwise, if provided with dictionary
+        elif isinstance(trainObject,dict):
+            trainData = trainObject
+        else:
+            raise ValueError('Training object is of incorrect type.')
+            
+        if not trainData:
+            raise ValueError('Training data cannot be empty.')
+            
+        if self.scale:
+            [trainData,scalers] = cu.standardize(trainData,self.features)
+            
+            self.scalers = scalers
+            self._scaled = True            
+            
+        self.labels = set(cu.getLabels(trainData)) - set([0,-1])
+        self.labelData = cu.partitionData(trainData,feats = self.features)
+        
+        self.trainData = trainData
         
     def _loadTest(self,y,yMatch):
         
@@ -524,23 +524,13 @@ class GMM(object):
         # vertices that mapped to label via surface registration
         
         # get vertex to label mapping counts
-        vTLM = copy.deepcopy(testMatch.vertLib)
+        vTLM = copy.deepcopy(testMatch)
         
         # convert vertex to label mapping counts to frequencies
+        # threshold by mapping frequency
         freqMaps = lb.mappingFrequency(vTLM)
-        
-        # if threshold value is greater than 0, there might be labels 
-        # that will be cutoff -- otherwise, none will be
-        if threshold > 0:
-            threshed = {}.fromkeys(freqMaps.keys())
-            
-            for k in threshed.keys():
-                if freqMaps[k]:
-                    threshed[k] = lb.mappingThreshold(freqMaps[k],threshold)
-                    
-            freqMaps = threshed
-            
-        self.mappingsCutoff = freqMaps
+        threshed = lb.mappingThreshold(freqMaps,threshold,'outside')
+        self.mappingsCutoff = threshed
         
         # Computing label-vertex memberships is time consuming
         # If already precomputed for given test data at specified threshold,
@@ -577,11 +567,11 @@ class GMM(object):
                     surface vertices
         """
         
-        # load the testing data
+        # load the testing datamap
         self._loadTest(y,yMatch)
         
         # get names of test data vertices
-        verts = self.testMatch.vertLib.keys()
+        verts = self.testMatch.keys()
         # get test data
         mergedData = self.mergedTestData
         
@@ -650,7 +640,7 @@ class GMM(object):
             
         """
         
-        vertLib = self.testMatch.vertLib
+        vertLib = self.testMatch
 
         weighted = {}
         weighted = weighted.fromkeys(vertLib.keys())

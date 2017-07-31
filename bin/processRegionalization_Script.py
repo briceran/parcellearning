@@ -15,11 +15,14 @@ import h5py
 import os
 
 dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
+homeDir = '/mnt/parcellator/parcellation/HCP/Connectome_4/'
+
+hemi = 'L'
 
 R = 75
 level = 2
 
-subjectList = dataDir + 'HCP_Subjects.txt'
+subjectList = homeDir + 'SubjectList.txt'
 with open(subjectList,"rb") as inFile:
     subjects = inFile.readlines()
 subjects = [x.strip() for x in subjects]
@@ -31,12 +34,12 @@ midDir = dataDir + 'Midlines/'
 midExt = '_Midline_Indices.mat'
 
 layerDir = dataDir + 'BoundaryVertices/Destrieux/RegionalLayers/'
-layerExt = '.L.aparc.a2009s.RegionalLayers.p'
+layerExt = '.' + hemi + '.aparc.a2009s.RegionalLayers.p'
 #layerDir = dataDir + 'BoundaryVertices/HCP/RegionalLayers/'
 #layerExt = '.L.HCP.RegionalLayers.p'
 
 outDir = dataDir + 'CorticalRegionalization/FreeSurfer/CentralVertices/'
-outExt = '.L.aparc.a2009s.Central.Level_2.h5'
+outExt = '.' + hemi + '.aparc.a2009s.Central.Level_2.h5'
 #outDir = dataDir + 'CorticalRegionalization/HCP/CentralVertices/'
 #outExt = '.L.HCP.Central.Level_2.h5'
 
