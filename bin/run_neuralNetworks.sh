@@ -3,6 +3,7 @@
 PYTHON=/project_space/parcellation/Software/anaconda2/bin/python
 
 kind=$1
+hemisphere=$2
 
 # Define directories
 dataDir=/mnt/parcellator/parcellation/parcellearning/Data/
@@ -30,11 +31,10 @@ elif [ $kind = "full" ]; then
 	feats="fs_cort,fs_subcort,pt_cort,pt_subcort,sulcal,myelin,curv,label"
 fi
 
-layers=10
-nodes=10
+layers=3
+nodes=1250
 downSample='equal'
-hemisphere='Left'
-epochs=20
+epochs=60
 batchSize=256
 rate=0.001
 
@@ -46,9 +46,11 @@ fi
 
 outFileExtension=${H}.Layers.${layers}.Nodes.${nodes}.Sampling.${downSample}.Epochs.${epochs}.Batch.${batchSize}.Rate.${rate}.${exten}
 
+echo ${outFileExtension}
+
 for i in $(seq 0 $N); do
 	outFile=${outDir}NetworkModel.${outFileExtension}.Iteration_${i}
-	trainingList=${dataDir}TestingSubjects.${i}.txt
-	logFile=${outDir}logFile.${i}.out
+	trainingList=${dataDir}TrainingSubjects.${i}.txt
+	logFile=${outDir}logFile.${i}.${exten}.${H}.${i}.out
 	nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -ds ${downSample} -l ${layers} -n ${nodes} -e ${epochs} -b ${batchSize} -r ${rate} >& ${logFile} 2>&1&done
 
