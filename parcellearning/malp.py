@@ -662,7 +662,7 @@ def loadDataFromList(subjectList,dataDir,features,hemi):
             
             for f in subjData[s].keys():
                 print f
-                tempData = subject[s][f]
+                tempData = subjData[s][f]
                 if tempData.ndim == 1:
                     print 'data 1-dim,updating'
                     tempData.shape+=(1,)
