@@ -175,9 +175,13 @@ for itr in np.arange(N):
                     print 'Subjects: {}'.format(test_subj)
                     
                     testObject = '{}{}.{}.{}'.format(testDir,test_subj,hExt,testExt)
+                    print 'Test Object: {}'.format(testObject)
                     testMids = '{}{}.{}.{}'.format(midsDir,test_subj,hExt,midsExt)
+                    print 'Test Mids: {}'.format(testMids)
                     testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
+                    print 'Test Match: {}'.format(testMatch)
                     testOutput = '{}{}'.format(outputDir,outputExt)
+                    print 'Test Object: {}'.format(testOutput)
                     
                     mids = ld.loadMat(testMids)-1
     
