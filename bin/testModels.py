@@ -163,6 +163,7 @@ for itr in np.arange(N):
                 modelBase = '{}.{}.{}.{}.Iteration_{}{}'.format(classifier,
                                   hExt,classExt,d,itr,fExt)
                 modelFull = '{}{}'.format(modelDir,modelBase)
+                print 'Model Name: {}'.format(modelFull)
                 
                 currentModel = loadDict[fExt](modelFull)
                 
