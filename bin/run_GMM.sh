@@ -37,8 +37,8 @@ elif [ $kind = "full" ]; then
 	feats="fs_cort,fs_subcort,pt_cort,pt_subcort,sulcal,myelin,curv,label"
 fi
 
-covType = 'diag'
-nComp = 2
+covType='diag'
+nComp=2
 
 if [ $hemisphere = 'Left' ]; then
 	H='L'
