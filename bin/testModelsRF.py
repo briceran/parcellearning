@@ -125,16 +125,21 @@ outputDir = '{}Predictions/'.format(dataDir)
 #methods = ['GMM','RandomForest','NetworkModel']
 #exts = ['.p','.p','.h5']
 
-methods = ['GMM','NetworkModel']
-exts = ['.p','.h5']
+#methods = ['GMM','NetworkModel']
+#exts = ['.p','.h5']
+
+methods = ['RandomForest']
+exts = ['.p']
 
 #methodExtens = ['Covariance.diag.NumComponents.2',
 #              'AtlasSize.1.NumAtlases.Max.Depth.5.NumEst.50',
 #              'Layers.3.Nodes.1250.Sampling.equal.Epochs.60.Batch.256.Rate.0.001']
 
-methodExtens = ['Covariance.diag.NumComponents.2',
-                'Layers.3.Nodes.1250.Sampling.equal.Epochs.60.Batch.256.Rate.0.001']
+#methodExtens = ['Covariance.diag.NumComponents.2',
+#                'Layers.3.Nodes.1250.Sampling.equal.Epochs.60.Batch.256.Rate.0.001']
 
+methodExtens = ['AtlasSize.1.NumAtlases.Max.Depth.5.NumEst.50']
+    
 # Maping model type to file extension
 classExtsFunc = dict(zip(methods,methodExtens))
 # Mapping model type to file name type
@@ -235,24 +240,7 @@ for itr in np.arange(N):
                         # of models.  We feed this in to malp.parallelPredictiong
                         # along with the test data
                         if classifier == 'RandomForest':
-                            
-                            """
-                            modelPreds = []
-                            for model in currentModel:
-                                model.predict(testObject,testMatch,testMids)
-                                modelPreds.append(model.predicted)
-                            
-                            modelPreds = np.column_stack(modelPreds)
-                            predicted = []
-                            for i in np.arange(modelPreds.shape[0]):
-        
-                                L = list(modelPreds[i,:])
-                                maxProb = max(set(L),key=L.count)
-                                predicted.append(maxProb)
-                            
-                            predicted = np.asarray(predicted)
-                            """
-                            
+
                             predicted = parallelPredictRF(currentModel,
                                                           testObject,
                                                           testMatch,
