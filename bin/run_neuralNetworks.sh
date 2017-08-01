@@ -29,10 +29,12 @@ elif [ $kind = "full" ]; then
 	feats="fs_cort,fs_subcort,pt_cort,pt_subcort,sulcal,myelin,curv,label"
 fi
 
+ND = [10,20,30,40,50,100,500]
+
 layers=3
-nodes=1250
 downSample='equal'
-epochs=60
+#nodes=1250
+epochs=100
 batchSize=256
 rate=0.001
 
@@ -42,14 +44,14 @@ elif [ $hemisphere = 'Right' ]; then
 	H='R'
 fi
 
-outFileExtension=NeuralNetwork.${H}.Layers.${layers}.Nodes.${nodes}.Sampling.${downSample}.Epochs.${epochs}.Batch.${batchSize}.Rate.${rate}.${exten}
-
-echo ${outFileExtension}
-
 for i in $(seq 0 $N); do
-	outFile=${outDir}${outFileExtension}.Iteration_${i}.p
-	trainingList=${dataDir}TrainTestLists/TrainingSubjects.${i}.txt
-	logFile=${outDir}logFile.NeuralNetwork.${exten}.${H}.${i}.out
+	for j in "${ND[@]}"
+		nodes=${j}
+		outFileExtension=NeuralNetwork.${H}.Layers.${layers}.Nodes.${nodes}.Sampling.${downSample}.Epochs.${epochs}.Batch.${batchSize}.Rate.${rate}.${exten}
+		echo ${outFileExtension}
+		outFile=${outDir}${outFileExtension}.Iteration_${i}.p
+		trainingList=${dataDir}TrainTestLists/TrainingSubjects.${i}.txt
+		logFile=${outDir}logFile.NeuralNetwork.${exten}.${H}.${i}.out
 	if [ ! -f ${outFile}.h5 ]; then
 		nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -ds ${downSample} -l ${layers} -n ${nodes} -e ${epochs} -b ${batchSize} -r ${rate} >& ${logFile} 2>&1&
 	fi
