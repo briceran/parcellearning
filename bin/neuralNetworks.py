@@ -547,7 +547,7 @@ print 'Model built using {} optimization.  Training now.\n'.format(args.optimize
 ConstrainedTE = ConstrainedCallback(evalMatrix,evalTransformed,evalLabels,eval_OneHotLabels,['consValLoss','consValAcc'])
 ConstrainedTR = ConstrainedCallback(mTrain,xTrain,yTrain,yTrain_OneHotLabels,['consTrainLoss','consTrainAcc'])
 
-history = model.fit(train_x, train_y, epochs=epochs,
+history = model.fit(xTrain, yTrain_OneHotLabels, epochs=epochs,
           batch_size=batch,verbose=0,shuffle=True,
           callbacks=[ConstrainedTE,ConstrainedTR])
 
