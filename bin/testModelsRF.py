@@ -245,12 +245,7 @@ for itr in np.arange(N):
                                                           testObject,
                                                           testMatch,
                                                           testMids)
-
-                        elif classifier == 'GMM':
-                            currentModel.predict(testObject,testMatch,testMids)
                             
-                        predicted = currentModel.predicted
-                    
                     elif fExt == '.h5':
                         features = dataFeatureFunc[d]
 
