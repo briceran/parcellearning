@@ -365,10 +365,10 @@ class ConstrainedCallback(callbacks.Callback):
 
         # Include only those prediction probabilities for classes that the 
         # samples mapped to during surface registration
-        threshed = mm*predProb;
+        threshed = mm*predProb[:,1:];
         
         # Find the class with the greatest prediction probability
-        y_pred = np.argmax(threshed,axis=1)
+        y_pred = np.argmax(threshed,axis=1)+1
 
         # Evalute the loss and accuracy of the model
         loss,_ = self.model.evaluate(x, y_oneHot, verbose=0)
