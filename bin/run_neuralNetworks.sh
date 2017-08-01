@@ -29,7 +29,7 @@ elif [ $kind = "full" ]; then
 	feats="fs_cort,fs_subcort,pt_cort,pt_subcort,sulcal,myelin,curv,label"
 fi
 
-ND=(10,20,30,40,50,100,500)
+ND=(10 20 30 40 50 100 500)
 
 layers=3
 downSample='equal'
@@ -45,7 +45,7 @@ elif [ $hemisphere = 'Right' ]; then
 fi
 
 for i in $(seq 0 $N); do
-	for j in "${ND[@]}"; do
+	for j in ${ND[*]}; do
 		nodes=${j}
 		outFileExtension=NeuralNetwork.${H}.Layers.${layers}.Nodes.${nodes}.Sampling.${downSample}.Epochs.${epochs}.Batch.${batchSize}.Rate.${rate}.${exten}
 		echo ${outFileExtension}
