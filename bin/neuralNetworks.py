@@ -488,7 +488,7 @@ print 'Loaded in {} seconds.\n'.format(int(later-now))
 # Currently, only 'equal' works
 print 'Applying {} sample reduction.'.format(args.downSample)
 now = time.time()
-tempX,tempM,tempY = ds_funcs[args.downSample](trainingData,mapMatrix,labels)
+tempX,tempM,tempY = ds_funcs[args.downSample](trainingData,trainMatrix,trainLabels)
 later = time.time()
 print 'Reduced in {} seconds.\n'.format(int(later-now))
 
