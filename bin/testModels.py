@@ -56,10 +56,7 @@ def loadTest(yObject,yMatch,features):
         # load test subject data, save as attribtues
         tObject = ld.loadH5(yObject,*['full'])
         ID = tObject.attrs['ID']
-        
-        loadFeatures = copy.copy(features)
-        loadFeatures = list(set(features).difference('label'))
-        
+
         parsedData = ld.parseH5(tObject,loadFeatures)
         tObject.close()
 
