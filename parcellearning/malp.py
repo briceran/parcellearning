@@ -79,9 +79,9 @@ class Atlas(object):
 
     """
     
-    def __init__(self,scale=True, thresh_train = 0.05, thresh_test = 0.05, hop_size = 1, neighborhood = 'adjacency',
-                 softmax_type = 'BASE', classifier_type = 'random_forest', exclude_testing = None, random = None,
-                 load = None, save = None):
+    def __init__(self,scale=True, thresh_train = 0.05, hop_size = 1, neighborhood = 'adjacency',
+                 softmax_type = 'BASE', classifier_type = 'random_forest', 
+                 exclude_testing = None, random = None,load = None, save = None):
 
         # check scale type value
         if scale not in [True, False]:
@@ -325,12 +325,12 @@ class Atlas(object):
         # all response vectors have the same number of samples, and that all training data
         # has the same features
         cond = True
-        if not self._compareTrainingDataKeys(labelData,response):
-            print('WARNING: Pre-DBS data and pre-DBS response do not have same keys.')
+        if not compareTrainingDataKeys(labelData,response):
+            print('WARNING: Label data and label response do not have same keys.')
             cond = False
 
-        if not self._compareTrainingDataSize(labelData,response):
-            print('WARNING: Pre-DBS data and pre-DBS response are not same length.')
+        if not compareTrainingDataSize(labelData,response):
+            print('WARNING: Label data and label response are not same shape.')
             cond = False
 
         if not cond:
@@ -339,7 +339,7 @@ class Atlas(object):
         return [labelData,response]
 
 
-    def predict(self,y,yMatch, softmax_type = 'BASE'):
+    def predict(self,y,yMatch, yMids, softmax_type = 'BASE'):
         
         """
         Method to predict labels of test data.
@@ -361,8 +361,17 @@ class Atlas(object):
         labels = self.labels
         neighbors = self.neighbors
 
+        # Python is 0-indexed, while Matlab is not
+        # We adjust the Matlab coordinates by subtracting 1
+        midline = ld.loadMat(yMids)-1
+
         R = 180
+        # For now, we provide the paths to predict
+        # In the future it might make sense to provide the data arrays
         [mm,mtd,ltvm] = self.loadTest(y,yMatch)
+
+        mm[midline,:] = 0
+        mtd[midline,:] = 0
         
         [xTest,yTest] = mtd.shape
         if yTest != self.input_dim:
@@ -379,9 +388,9 @@ class Atlas(object):
                 memberData = mtd[members,:]
                 estimator = self.models[lab]
                 
-                preds = funcs[softmax_type](estimator,members,memberData,mm,R)
-
-                baseline = cu.updatePredictions(baseline,members,preds)
+                if len(members) > 0:
+                    preds = funcs[softmax_type](estimator,members,memberData,mm,R)
+                    baseline = cu.updatePredictions(baseline,members,preds)
                 
         predicted = np.argmax(baseline,axis=1)
         self.baseline = baseline
@@ -449,55 +458,40 @@ class Atlas(object):
                 
         return [threshed,mtd,ltvm]
 
-    def _compareTrainingDataSize(self,labelData,response):
-        
-        """
-        Method to ensure that the length of the response vector is the same 
-        length as the number of observations in the training feature data.
-        
-        This must be true in order to actually train the classifiers for each
-        label.
-        """
-        cond = True
-
-        for f,r in zip(set(labelData.keys()),set(response.keys())):
-            
-            sf = labelData[f].shape[0]
-            sr = response[r].shape[0]
-            
-            if sf != sr:
-                cond = False
-        
-        return cond
-            
-    def _compareTrainingDataKeys(self,labelData,response):
-        
-        """
-        Method to ensure that the keys for the training data for the response
-        vectors are the same.  These must be the same in order to properly
-        access the training data for training the classifiers.
-        """
-
-        sf = set(labelData.keys())
-        sr = set(response.keys())
-        
-        return sf == sr
+def compareTrainingDataSize(labelData,response):
     
-    def save(self,outFile):
+    """
+    Method to ensure that the length of the response vector is the same 
+    length as the number of observations in the training feature data.
+    
+    This must be true in order to actually train the classifiers for each
+    label.
+    """
+    cond = True
+
+    for f,r in zip(set(labelData.keys()),set(response.keys())):
         
-        """
-        Method to save the classification object.  This can be saved at any
-        time.  However, we can only "test" the classification object if it
-        has been trained.
-        """
+        sf = labelData[f].shape[0]
+        sr = response[r].shape[0]
         
-        if not self._fit:
-            print("Warning: Atlas has not been trained yet.")
-        try:
-            with open(outFile,"wb") as output:
-                pickle.dump(self.models,output,-1)
-        except:
-            pass
+        if sf != sr:
+            cond = False
+    
+    return cond
+        
+def compareTrainingDataKeys(labelData,response):
+    
+    """
+    Method to ensure that the keys for the training data for the response
+    vectors are the same.  These must be the same in order to properly
+    access the training data for training the classifiers.
+    """
+
+    sf = set(labelData.keys())
+    sr = set(response.keys())
+    
+    return sf == sr
+
 
 def baseSoftMax(metaEstimator,members,memberData,mm,R):
     

@@ -44,15 +44,12 @@ class GMM(object):
             
     """
     
-    def __init__(self,features,scale=True,thresh_test=0.05,exclude_testing=None,
+    def __init__(self,scale=True,exclude_testing=None,
                  random=None,load=None,save=None,power=None):
 
         if not isinstance(scale,bool):
             raise ValueError('Scale must be boolean.')
 
-        if thresh_test < 0 or thresh_test > 1:
-            raise ValueError('Threshold value must be within [0,1].')
-            
         if exclude_testing is not None and not isinstance(exclude_testing,str):
             raise ValueError('exclude_testing must by a string or None.')
             
@@ -130,8 +127,7 @@ class GMM(object):
         self._fitted = True
         
         
-    def loadTraining(self,trainObject,neighborhoodMap,dataDir,hemisphere,
-                     features):
+    def loadTraining(self,trainObject,dataDir,hemisphere,features):
         
         """
         Parameters:
@@ -220,11 +216,11 @@ class GMM(object):
         # all response vectors have the same number of samples, and that all training data
         # has the same features
         cond = True
-        if not self._compareTrainingDataKeys(labelData,response):
+        if not compareTrainingDataKeys(labelData,response):
             print('WARNING: Label data and label response do not have same keys.')
             cond = False
 
-        if not self._compareTrainingDataSize(labelData,response):
+        if not compareTrainingDataSize(labelData,response):
             print('WARNING: Label data and label response are not same shape.')
             cond = False
 
@@ -343,8 +339,8 @@ class GMM(object):
 
                 # save results in self.predict
                 baseline[members,lab] = scores
-                
-        predicted = np.argmax(baseline,axis=1)
+
+        predicted = np.argmin(baseline,axis=1)
         
         self.baseline = baseline
         self.predicted = predicted
@@ -607,6 +603,40 @@ def loadDataFromList(subjectList,dataDir,features,hemi):
             data[s] = subjData[s]
 
     return data
+
+def compareTrainingDataSize(labelData,response):
+    
+    """
+    Method to ensure that the length of the response vector is the same 
+    length as the number of observations in the training feature data.
+    
+    This must be true in order to actually train the classifiers for each
+    label.
+    """
+    cond = True
+
+    for f,r in zip(set(labelData.keys()),set(response.keys())):
+        
+        sf = labelData[f].shape[0]
+        sr = response[r].shape[0]
+        
+        if sf != sr:
+            cond = False
+    
+    return cond
+        
+def compareTrainingDataKeys(labelData,response):
+    
+    """
+    Method to ensure that the keys for the training data for the response
+    vectors are the same.  These must be the same in order to properly
+    access the training data for training the classifiers.
+    """
+
+    sf = set(labelData.keys())
+    sr = set(response.keys())
+    
+    return sf == sr
     
     
     
