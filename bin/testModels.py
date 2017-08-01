@@ -222,7 +222,7 @@ for itr in np.arange(N):
                         predicted = currentModel.predicted
                     
                     elif fExt == '.h5':
-                        features = dataFeatureFunc[classifier]
+                        features = dataFeatureFunc[d]
                         
                         [threshed,mtd,_] = loadTest(testObject,testMatch,)
                         mtd[mids,:] = 0
