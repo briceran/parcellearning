@@ -662,7 +662,12 @@ def loadDataFromList(subjectList,dataDir,features,hemi):
             
             for f in subjData[s].keys():
                 print f
-                subjData[s][f] = subjData[s][f][coords,:]
+                tempData = subject[s][f]
+                if tempData.ndim == 1:
+                    print 'data 1-dim,updating'
+                    tempData.shape+=(1,)
+
+                subjData[s][f] = np.squeeze(tempData[coords,:])
             
             data[s] = subjData[s]
 
