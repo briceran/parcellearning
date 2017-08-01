@@ -43,6 +43,7 @@ import pickle
 from keras import callbacks, optimizers
 from keras.models import Sequential
 from keras.layers import Dense,normalization
+from keras.utils import to_categorical
 
 
 ###
@@ -462,6 +463,12 @@ with open(subjectFile,'r') as inFile:
     subjects = inFile.readlines()
 subjects = [x.strip() for x in subjects]
 
+fullSize = len(subjects)
+valSize = int(np.ceil(EVAL_FACTOR*fullSize))
+
+trainingSubjects = np.random.choice(subjects,size=(fullSize-valSize),replace=False)
+validationSubjects = list(set(subjects.difference(set(trainingSubjects))))
+
 #ns = np.min([len(subjects),args.ns])
 #print 'Number of training subjects: {}'.format(ns)
 #subjects = np.random.choice(subjects,size=ns,replace=False)
@@ -469,7 +476,10 @@ subjects = [x.strip() for x in subjects]
 # Load training data
 print 'Loading subject data.'
 now = time.time()
-trainingData,labels,mapMatrix = loadData(subjects,dataDir,features,hemi)
+
+trainingData,trainLabels,trainMatrix = loadData(trainingSubjects,dataDir,features,hemi)
+evalData,evalLabels,evalMatrix = loadData(validationSubjects,dataDir,features,hemi)
+
 later = time.time()
 print 'Loaded in {} seconds.\n'.format(int(later-now))
 
@@ -487,44 +497,25 @@ print 'Reduced in {} seconds.\n'.format(int(later-now))
 print 'Standardizing.\n'
 S = sklearn.preprocessing.StandardScaler()
 trainTransformed = S.fit_transform(tempX)
+evalTransformed = S.transform(evalData)
 
 # Shuffle features and responses
 print 'Shuffling.\n'
 xTrain,mTrain,yTrain = shuffleData(trainTransformed,tempM,tempY)
 
+yTrain = np.squeeze(yTrain.astype(np.int32))
+yTrain_OneHotLabels = to_categorical(yTrain,num_classes=181)
 
-yTrain = yTrain.astype(np.int32)
-yTrain.shape+=(1,)
-
-O = sklearn.preprocessing.OneHotEncoder(sparse=False)
-O.fit(yTrain.reshape(-1,1))
-OneHotLabels = O.transform(yTrain.reshape(-1,1))
 
 # Dimensions of training data
 nSamples = xTrain.shape[0]
 input_dim = xTrain.shape[1]
 
-
-# Generate validation data set
-print 'Generating validation set.\n'
-N = np.arange(nSamples);
-dSamples = int(np.floor(nSamples*EVAL_FACTOR))
-evals_coords = np.random.choice(N, size=(dSamples,), replace=False)
-train_coords = np.asarray(list(set(N).difference(set(evals_coords))))
-
-eval_x = xTrain[evals_coords,:]
-eval_y = OneHotLabels[evals_coords,:]
-flat_eval_y = np.argmax(eval_y,axis=1)
-eval_m = mTrain[evals_coords,:]
-
-train_x = xTrain[train_coords,:]
-train_y = OneHotLabels[train_coords,:]
-flat_train_y = np.argmax(train_y,axis=1)
-train_m = mTrain[train_coords,:]
+eval_OneHotLabels = to_categorical(evalLabels,num_classes=181)
 
 # final dimensionf of data
-nSamples = train_x.shape[0]
-output_dim = train_y.shape[1]
+nSamples = xTrain.shape[0]
+output_dim = yTrain_OneHotLabels.shape[1]
 
 print 'Training data has {} samples, and {} features.'.format(nSamples,input_dim)
 print 'Building a network with {} hidden layers, each with {} nodes.\n'.format(levels,nodes)
@@ -553,11 +544,11 @@ model.compile(loss='categorical_crossentropy',optimizer= opt,metrics=['accuracy'
 print 'Model built using {} optimization.  Training now.\n'.format(args.optimizer)
 
 
-ConstrainedTE = ConstrainedCallback(eval_m,eval_x,flat_eval_y,eval_y,['consValLoss','consValAcc'])
-ConstrainedTR = ConstrainedCallback(train_m,train_x,flat_train_y,train_y,['consTrainLoss','consTrainAcc'])
+ConstrainedTE = ConstrainedCallback(evalMatrix,evalTransformed,evalLabels,eval_OneHotLabels,['consValLoss','consValAcc'])
+ConstrainedTR = ConstrainedCallback(mTrain,xTrain,yTrain,yTrain_OneHotLabels,['consTrainLoss','consTrainAcc'])
 
 history = model.fit(train_x, train_y, epochs=epochs,
-          batch_size=batch,verbose=2,shuffle=True,
+          batch_size=batch,verbose=0,shuffle=True,
           callbacks=[ConstrainedTE,ConstrainedTR])
 
 outTrained = args.output
