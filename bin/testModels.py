@@ -70,7 +70,7 @@ matchExt = 'MatchingMatrix.0.05.mat'
 
 # Directory and file extension of midline vertices
 midsDir = '{}Midlines/'.format(dataDir)
-midsExt = '.Midline_Indices.mat'
+midsExt = 'Midline_Indices.mat'
 
 # Directory and file extension of training objects
 testDir = '{}TrainingObjects/FreeSurfer/'.format(dataDir)
@@ -176,10 +176,13 @@ for itr in np.arange(N):
                     
                     testObject = '{}{}.{}.{}'.format(testDir,test_subj,hExt,testExt)
                     print 'Test Object: {}'.format(testObject)
+                    
                     testMids = '{}{}.{}.{}'.format(midsDir,test_subj,hExt,midsExt)
                     print 'Test Mids: {}'.format(testMids)
+                    
                     testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
                     print 'Test Match: {}'.format(testMatch)
+                    
                     testOutput = '{}{}'.format(outputDir,outputExt)
                     print 'Test Object: {}'.format(testOutput)
                     
