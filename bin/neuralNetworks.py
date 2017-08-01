@@ -467,7 +467,7 @@ fullSize = len(subjects)
 valSize = int(np.ceil(EVAL_FACTOR*fullSize))
 
 trainingSubjects = np.random.choice(subjects,size=(fullSize-valSize),replace=False)
-validationSubjects = list(set(subjects.difference(set(trainingSubjects))))
+validationSubjects = list(set(subjects).difference(set(trainingSubjects)))
 
 #ns = np.min([len(subjects),args.ns])
 #print 'Number of training subjects: {}'.format(ns)
