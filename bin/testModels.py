@@ -128,7 +128,7 @@ for itr in np.arange(N):
     
     print 'Iteration: {}'.format(itr)
     
-    outDirIter = '{}Model_{}'.format(outputDir,itr)
+    outDirIter = '{}Model_{}/'.format(outputDir,itr)
     
     # Load test subject file, get list of subjects
     testSubjectFile = '{}TestingSubjects.{}.txt'.format(testListDir,itr)
