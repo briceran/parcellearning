@@ -115,6 +115,9 @@ class GMM(object):
         
         modelArgs = cu.parseKwargs(args,kwargs)
         model.set_params(**modelArgs)
+        
+        print 'covariance type: {}'.format(model.covariance_type)
+        print 'n components type: {}'.format(model.n_components)
 
         mixtures = {}.fromkeys(self.labels)
 
