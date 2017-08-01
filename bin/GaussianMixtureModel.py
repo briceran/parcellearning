@@ -46,13 +46,10 @@ subjectList = args.subjectList
 hemi = args.hemisphere
 outFile = args.output
 
+
 covariance = args.covariance
 components = args.components
 
-if args.numAtlases is None:
-    numAtlases = args.numAtlases
-else:
-    numAtlases = int(args.numAtlases)
 
 with open(subjectList,'r') as inSubjects:
     subjects = inSubjects.readlines()
