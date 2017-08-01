@@ -888,8 +888,7 @@ def parallelPredicting(models,testObject,testMatch,testMids,**kwargs):
     """
     
     predictedLabels = Parallel(n_jobs=NUM_CORES)(delayed(atlasPredict)(models[i],
-                               testObject,testMatch,testMids,
-                               softmax_type='FORESTS') for i,m in enumerate(models))
+                               testObject,testMatch,testMids,**kwargs) for i,m in enumerate(models))
 
     predictedLabels = np.column_stack(predictedLabels)
 
@@ -905,7 +904,7 @@ def parallelPredicting(models,testObject,testMatch,testMids,**kwargs):
     
     return predictedLabels
 
-def atlasPredict(model,testObject,testMappings,**kwargs):
+def atlasPredict(model,yObject,yMatch,yMids,**kwargs):
     
     """
     Single model prediction step.
@@ -915,7 +914,7 @@ def atlasPredict(model,testObject,testMappings,**kwargs):
     modelArgs = cu.parseKwargs(args,kwargs)
     model.set_params(**modelArgs)
     
-    model.predict(testObject,testMappings)
+    model.predict(yObject,yMatch,yMids,softmax_type='FORESTS')
     
     return model.predicted
 
