@@ -28,7 +28,7 @@ def pickleLoad(inFile):
     
     return data
 
-def loadTest(y,yMatch,features):
+def loadTest(yObject,yMatch,features):
         
         """
         Method to load the test data into the object.  We might be interested
@@ -45,7 +45,7 @@ def loadTest(y,yMatch,features):
         features = list(features.split(','))
         
         # load test subject data, save as attribtues
-        tObject = ld.loadH5(y,*['full'])
+        tObject = ld.loadH5(yObject,*['full'])
         ID = tObject.attrs['ID']
         
         parsedData = ld.parseH5(tObject,features)
@@ -223,8 +223,9 @@ for itr in np.arange(N):
                     
                     elif fExt == '.h5':
                         features = dataFeatureFunc[d]
+                        print 'Features: {}'.format(features)
                         
-                        [threshed,mtd,_] = loadTest(testObject,testMatch,)
+                        [threshed,mtd,_] = loadTest(testObject,testMatch,features)
                         mtd[mids,:] = 0
                         threshed[mids,:] = 0
                         
