@@ -29,7 +29,7 @@ elif [ $kind = "full" ]; then
 	feats="fs_cort,fs_subcort,pt_cort,pt_subcort,sulcal,myelin,curv,label"
 fi
 
-ND = [10,20,30,40,50,100,500]
+ND=[10,20,30,40,50,100,500]
 
 layers=3
 downSample='equal'
