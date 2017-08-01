@@ -1,11 +1,3 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Aug  1 11:01:24 2017
-
-@author: kristianeschenburg
-"""
-
 #!/bin/bash
 
 PYTHON=/project_space/parcellation/Software/anaconda2/bin/python
