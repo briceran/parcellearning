@@ -87,12 +87,18 @@ outputDir = '{}Predictions/'.format(dataDir)
 
 #### MAPS
 # Mapping model type to file name type and file name extension
-methods = ['GMM','RandomForest','NetworkModel']
-exts = ['.p','.p','.h5']
+#methods = ['GMM','RandomForest','NetworkModel']
+#exts = ['.p','.p','.h5']
+
+methods = ['GMM','NetworkModel']
+exts = ['.p','.h5']
+
+#methodExtens = ['Covariance.diag.NumComponents.2',
+#              'AtlasSize.1.NumAtlases.Max.Depth.5.NumEst.50',
+#              'Layers.3.Nodes.1250.Sampling.equal.Epochs.60.Batch.256.Rate.0.001']
 
 methodExtens = ['Covariance.diag.NumComponents.2',
-              'AtlasSize.1.NumAtlases.Max.Depth.5.NumEst.50',
-              'Layers.3.Nodes.1250.Sampling.equal.Epochs.60.Batch.256.Rate.0.001']
+                'Layers.3.Nodes.1250.Sampling.equal.Epochs.60.Batch.256.Rate.0.001']
 
 # Maping model type to file extension
 classExtsFunc = dict(zip(methods,methodExtens))
@@ -107,7 +113,7 @@ loadDict = dict(zip(loadExt,loadFuncs))
 
 
 
-# Map full hemisphere to abbreviation
+# Map full hemisphere to abbreviationc
 hemispheres = ['Left','Right']
 hAbb = ['L','R']
 hemiFunc = dict(zip(hemispheres,hAbb))
@@ -191,9 +197,25 @@ for itr in np.arange(N):
                     mids = ld.loadMat(testMids)-1
     
                     if fExt == '.p':
+                        # If model was a random forest,current model is a LIST
+                        # of models.  We feed this in to malp.parallelPredictiong
+                        # along with the test data
                         if classifier == 'RandomForest':
-                            currentModel.predict(testObject,testMatch,
-                                                 testMids,softmax_type='FORESTS')
+                            modelPreds = []
+                            for model in currentModel:
+                                model.predict(testObject,testMatch,testMids)
+                                modelPreds.append(model.predicted)
+                            
+                            modelPreds = np.column_stack(modelPreds)
+                            predicted = []
+                            for i in np.arange(modelPreds.shape[0]):
+        
+                                L = list(modelPreds[i,:])
+                                maxProb = max(set(L),key=L.count)
+                                predicted.append(maxProb)
+                            
+                            predicted = np.asarray(predicted)
+
                         elif classifier == 'GMM':
                             currentModel.predict(testObject,testMatch,testMids)
                             
