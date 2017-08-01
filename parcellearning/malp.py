@@ -497,6 +497,8 @@ def baseSoftMax(metaEstimator,members,memberData,mm,R):
     
     """
     """
+
+    print 'Base Prediction'
     
     predicted = np.squeeze(metaEstimator.predict(memberData))
 
@@ -521,6 +523,8 @@ def forestSoftMax(metaEstimator,members,memberData,mm,R):
         
         R : number of labels in training set
     """
+
+    print 'Forest Prediction'
     
     memberMatrix = mm[members,:]
     predProbs = metaEstimator.predict_proba(memberData)
@@ -562,6 +566,8 @@ def treeSoftMax(metaEstimator,members,memberData,mm,R):
     where the index corresponds to the position in the metaEstimator 
     class list.
     """
+
+    print 'Tree Prediction'
 
     memberMatrix = mm[members,:]
 
@@ -878,15 +884,27 @@ def atlasFit(baseAtlas,data,maps,features,classifier,**kwargs):
     return atl
 
 
-def parallelPredicting(models,testObject,testMappings,*args,**kwargs):
+def parallelPredicting(models,testObject,testMatch,testMids,**kwargs):
     
     """
     Method to predicted test labels in parallel
     """
     
     predictedLabels = Parallel(n_jobs=NUM_CORES)(delayed(atlasPredict)(models[i],
-                               testObject,testMappings,
-                                *args,**kwargs) for i,m in enumerate(models))
+                               testObject,testMatch,testMids,
+                               softmax_type='FORESTS') for i,m in enumerate(models))
+
+    predictedLabels = np.column_stack(predictedLabels)
+
+    classification = []
+        
+    for i in np.arange(predictedLabels.shape[0]):
+        
+        L = list(predictedLabels[i,:])
+        maxProb = max(set(L),key=L.count)
+        classification.append(maxProb)
+    
+    classification = np.asarray(classification)
     
     return predictedLabels
 
