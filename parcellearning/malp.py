@@ -904,7 +904,7 @@ def parallelPredicting(models,testObject,testMatch,testMids,**kwargs):
     
     return predictedLabels
 
-def atlasPredict(model,yObject,yMatch,yMids,**kwargs):
+def atlasPredict(mod,yObject,yMatch,yMids,**kwargs):
     
     """
     Single model prediction step.
@@ -912,9 +912,9 @@ def atlasPredict(model,yObject,yMatch,yMids,**kwargs):
     
     args,_,_,_ = inspect.getargspec(model.__init__)
     modelArgs = cu.parseKwargs(args,kwargs)
-    model.set_params(**modelArgs)
+    mod.set_params(**modelArgs)
     
-    model.predict(yObject,yMatch,yMids,softmax_type='FORESTS')
+    mod.predict(yObject,yMatch,yMids,softmax_type='FORESTS')
     
-    return model.predicted
+    return mod.predicted
 
