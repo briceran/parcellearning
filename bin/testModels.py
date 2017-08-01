@@ -9,6 +9,8 @@ Created on Tue Aug  1 11:34:08 2017
 import sys
 sys.path.append('..')
 
+import copy
+
 import parcellearning.classifier_utilities as cu
 import parcellearning.loaded as ld
 import parcellearning.malp as malp
@@ -48,7 +50,10 @@ def loadTest(yObject,yMatch,features):
         tObject = ld.loadH5(yObject,*['full'])
         ID = tObject.attrs['ID']
         
-        parsedData = ld.parseH5(tObject,features)
+        loadFeatures = copy.copy(features)
+        loadFeatures = list(set(features).difference('label'))
+        
+        parsedData = ld.parseH5(tObject,loadFeatures)
         tObject.close()
 
         data = parsedData[ID]
