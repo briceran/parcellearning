@@ -126,6 +126,8 @@ N = 10
 # Iterate over test sets
 for itr in np.arange(N):
     
+    print 'Iteration: {}'.format(itr)
+    
     # Load test subject file, get list of subjects
     testSubjectFile = '{}TestingSubjects.{}.txt'.format(testListDir,itr)
     
@@ -135,6 +137,8 @@ for itr in np.arange(N):
 
     # Iterate over hemispheres
     for hemi in hemispheres:
+        
+        print 'Hemisphere: {}'.format(hemi)
         hExt = hemiFunc[hemi]
         
         inMyl = '{}MyelinDensity/285345.{}.MyelinMap.32k_fs_LR.func.gii'.format(dataDir,hExt)
@@ -144,11 +148,15 @@ for itr in np.arange(N):
         # Iterate over model types (GMM,RandomForest,NetworkModel)
         for classifier in methods:
             
+            print 'Classifier: {}'.format(classifier)
+            
             # Get classifier file name extension (w.o. data)
             classExt = classExtsFunc[classifier]
             fExt = classTypeFunc[classifier]
             
             for d in data:
+                
+                print 'Data: {}'.format(d)
                 
                 data_features = dataFeatureFunc[d]
                 
@@ -162,6 +170,8 @@ for itr in np.arange(N):
                              hExt,d,itr)                
                 
                 for test_subj in subjects:
+                    
+                    print 'Subjects: {}'.format(test_subj)
                     
                     testObject = '{}{}.{}.{}'.format(testDir,test_subj,hExt,testExt)
                     testMids = '{}{}.{}.{}'.format(midsDir,test_subj,hExt,midsExt)
