@@ -42,7 +42,7 @@ fi
 
 nHood=${dataDir}LabelAdjacency/Compiled.${H}.HCP.Label.DijkstraDistances.p
 
-outFileExtension=RandomForest.${Hemi}.AtlasSize.${atlasSize}.NumAtlases.Max.Depth.${depth}.NumEst.${nEst}.${exten}
+outFileExtension=RandomForest.${H}.AtlasSize.${atlasSize}.NumAtlases.Max.Depth.${depth}.NumEst.${nEst}.${exten}
 
 echo ${outFileExtension}
 
