@@ -161,7 +161,7 @@ for itr in np.arange(N):
                 data_features = dataFeatureFunc[d]
                 
                 modelBase = '{}.{}.{}.{}.Iteration_{}{}'.format(classifier,
-                                  hExt,classExt,itr,d,fExt)
+                                  hExt,classExt,d,itr,fExt)
                 modelFull = '{}{}'.format(modelDir,modelBase)
                 
                 currentModel = loadDict[fExt](modelFull)
