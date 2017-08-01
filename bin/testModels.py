@@ -128,6 +128,8 @@ for itr in np.arange(N):
     
     print 'Iteration: {}'.format(itr)
     
+    outDirIter = '{}Model_{}'.format(outputDir,itr)
+    
     # Load test subject file, get list of subjects
     testSubjectFile = '{}TestingSubjects.{}.txt'.format(testListDir,itr)
     
@@ -168,7 +170,7 @@ for itr in np.arange(N):
                 currentModel = loadDict[fExt](modelFull)
                 
                 outputExt = '{}.{}.{}.Iteration_{}.func.gii'.format(classifier,
-                             hExt,d,itr)                
+                             hExt,d,itr)    
                 
                 for test_subj in subjects:
                     
@@ -183,8 +185,8 @@ for itr in np.arange(N):
                     testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
                     print 'Test Match: {}'.format(testMatch)
                     
-                    testOutput = '{}{}'.format(outputDir,outputExt)
-                    print 'Test Object: {}'.format(testOutput)
+                    testOutput = '{}{}.{}'.format(outDirIter,test_subj,outputExt)
+                    print 'Test Output: {}'.format(testOutput)
                     
                     mids = ld.loadMat(testMids)-1
     
