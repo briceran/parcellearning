@@ -40,7 +40,7 @@ elif [ $hemisphere = 'Right' ]; then
 	H='R'
 fi
 
-nHood=${dataDir}LabelAdjacency/Compiled.${H}.HCP.LabelAdjacency.p
+nHood=${dataDir}LabelAdjacency/Compiled.${H}.HCP.Label.DijkstraDistances.p
 
 outFileExtension=RandomForest.${Hemi}.AtlasSize.${atlasSize}.NumAtlases.Max.Depth.${depth}.NumEst.${nEst}.${exten}
 
