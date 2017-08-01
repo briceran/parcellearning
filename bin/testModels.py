@@ -234,9 +234,7 @@ for itr in np.arange(N):
                         predicted = np.argmax(threshProbs,axis=1)+1
                     
                     predicted[mids] = 0
-                    
-                    print 'Predicted shape: {}'.format(predicted.shape)
-                    
+
                     myl.darrays[0].data = np.array(predicted).astype(np.float32)
                     nb.save(myl,testOutput)
                     
