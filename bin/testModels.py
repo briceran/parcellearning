@@ -211,6 +211,8 @@ for itr in np.arange(N):
                     
                     predicted[mids] = 0
                     
+                    print 'Predicted shape: {}'.format(predicted.shape)
+                    
                     myl.darrays[0].data = np.array(predicted).astype(np.float32)
                     nb.save(myl,testOutput)
                     
