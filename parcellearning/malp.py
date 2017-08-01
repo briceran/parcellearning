@@ -81,7 +81,7 @@ class Atlas(object):
     
     def __init__(self,scale=True, thresh_train = 0.05, hop_size = 1, neighborhood = 'adjacency',
                  softmax_type = 'BASE', classifier_type = 'random_forest', 
-                 exclude_testing = None, random = None,load = None, save = None):
+                 exclude_testing = None, random = None,):
 
         # check scale type value
         if scale not in [True, False]:
@@ -110,14 +110,6 @@ class Atlas(object):
         if random is not None and random < 0:
             raise ValueError('Random must be a positive integer or None.')
 
-        # check load value
-        if not load is None and not isinstance(load,str):
-            raise ValueError('load must be a string or None.')
-
-        # check save value
-        if save is not None and not isinstance(save,str):
-            raise ValueError('save must be a string or None.')
-
         # training-related attributes
         self.scale = scale
         self.thresh_train = thresh_train
@@ -127,9 +119,7 @@ class Atlas(object):
 
         # testing-related attributes
         self.random = random
-        self.load = load
-        self.save = save
-        
+
     def set_params(self,**kwargs):
         
         """
@@ -412,11 +402,7 @@ class Atlas(object):
                     detailing which labels each vertex in surface y maps to 
                     in the training data
         """
-        
-        # get Atlas attributes
-        load = self.load
-        save = self.save
-        
+
         features = self.features
  
         # load test subject data, save as attribtues
@@ -436,26 +422,8 @@ class Atlas(object):
             
         threshed = ld.loadMat(yMatch)
 
-        # Computing label-vertex memberships is time consuming
-        # If already precomputed for given test data at specified threshold,
-        # can supply path to load file.
-        if load:
-            if os.path.isfile(load):
-                ltvm = ld.loadPick(load)
-        # Otherwise, compute label-vertex memberships.
-        else:
-            ltvm = cu.vertexMemberships(threshed,180)
-        
-        self.ltvm = ltvm
+        ltvm = cu.vertexMemberships(threshed,180)
 
-        # if save is provided, save label-vertex memberships to file
-        if save:
-            try:
-                with open(save,"wb") as outFile:
-                    pickle.dump(self.labelToVertexMaps,outFile,-1)
-            except IOError:
-                print('Cannot save label-vertex memberships to file.')
-                
         return [threshed,mtd,ltvm]
 
 def compareTrainingDataSize(labelData,response):
