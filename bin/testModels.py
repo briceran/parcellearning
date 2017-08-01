@@ -152,7 +152,7 @@ for itr in np.arange(N):
                 
                 data_features = dataFeatureFunc[d]
                 
-                modelBase = '{}.{}.{}.Iteration_{}.{}.{}'.format(classifier,
+                modelBase = '{}.{}.{}.{}.Iteration_{}{}'.format(classifier,
                                   hExt,classExt,itr,d,fExt)
                 modelFull = '{}{}'.format(modelDir,modelBase)
                 
