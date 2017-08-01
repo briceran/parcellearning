@@ -40,7 +40,7 @@ elif [ $hemisphere = 'Right' ]; then
 	H='R'
 fi
 
-nHood = ${dataDir}LabelAdjacency/HCP/Compiled.${H}.HCP.LabelAdjacency.p
+nHood=${dataDir}LabelAdjacency/Compiled.${H}.HCP.LabelAdjacency.p
 
 outFileExtension=RandomForest.${Hemi}.AtlasSize.${atlasSize}.NumAtlases.Max.Depth.${depth}.NumEst.${nEst}.${exten}
 
@@ -48,7 +48,7 @@ echo ${outFileExtension}
 
 for i in $(seq 0 $N); do
 	outFile=${outDir}${outFileExtension}.Iteration_${i}.p
-	trainingList=${dataDir}TrainingSubjects.${i}.txt
+	trainingList=${dataDir}TrainTestLists/TrainingSubjects.${i}.txt
 	logFile=${outDir}logFile.RandomForest.${exten}.${H}.${i}.out
 	if [ ! -f ${outFile}.p ]; then
 		nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -d ${depth} -nEst ${nEst} -a ${atlasSize} -nm ${nHood} >& ${logFile} 2>&1&
