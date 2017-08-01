@@ -524,13 +524,10 @@ def forestSoftMax(metaEstimator,members,memberData,mm,R):
         R : number of labels in training set
     """
 
-    print 'Forest Prediction'
-    
     memberMatrix = mm[members,:]
     predProbs = metaEstimator.predict_proba(memberData)
     
     classes = metaEstimator.classes_
-    print classes
     forestMatrix = np.zeros((len(members),mm.shape[1]+1))
     forestMatrix[:,classes] = predProbs
     forestMatrix = forestMatrix[:,1:]
