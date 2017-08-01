@@ -661,10 +661,8 @@ def loadDataFromList(subjectList,dataDir,features,hemi):
             coords = np.asarray(list(nSamples.difference(mids)))
             
             for f in subjData[s].keys():
-                print f
                 tempData = subjData[s][f]
                 if tempData.ndim == 1:
-                    print 'data 1-dim,updating'
                     tempData.shape+=(1,)
 
                 subjData[s][f] = np.squeeze(tempData[coords,:])
