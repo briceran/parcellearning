@@ -272,26 +272,8 @@ class GMM(object):
             
         threshed = ld.loadMat(yMatch)
 
-        # Computing label-vertex memberships is time consuming
-        # If already precomputed for given test data at specified threshold,
-        # can supply path to load file.
-        if load:
-            if os.path.isfile(load):
-                ltvm = ld.loadPick(load)
-        # Otherwise, compute label-vertex memberships.
-        else:
-            ltvm = cu.vertexMemberships(threshed,180)
-        
-        self.ltvm = ltvm
+        ltvm = cu.vertexMemberships(threshed,180)
 
-        # if save is provided, save label-vertex memberships to file
-        if save:
-            try:
-                with open(save,"wb") as outFile:
-                    pickle.dump(self.labelToVertexMaps,outFile,-1)
-            except IOError:
-                print('Cannot save label-vertex memberships to file.')
-                
         return [threshed,mtd,ltvm]
 
 

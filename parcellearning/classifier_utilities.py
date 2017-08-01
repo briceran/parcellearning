@@ -117,8 +117,6 @@ def mergeFeatures(yData,feats,**kwargs):
                 featData = scalers[f].transform(featData)
             finally:
                 data.append(featData)
-        else:
-            print('Object does not have feature {}.'.format(f))
         
     data = np.column_stack(data)
     

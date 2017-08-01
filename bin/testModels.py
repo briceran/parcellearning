@@ -45,14 +45,10 @@ def loadTest(yObject,yMatch,features):
                     in the training data
         """
         features = list(features.split(','))
-        
-        print features
-        
+
         loadFeatures = copy.copy(features)
         loadFeatures = list(set(features).difference({'label'}))
-        
-        print loadFeatures
-        
+
         # load test subject data, save as attribtues
         tObject = ld.loadH5(yObject,*['full'])
         ID = tObject.attrs['ID']
