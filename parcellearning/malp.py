@@ -661,6 +661,7 @@ def loadDataFromList(subjectList,dataDir,features,hemi):
             coords = np.asarray(list(nSamples.difference(mids)))
             
             for f in subjData[s].keys():
+                print f
                 subjData[s][f] = subjData[s][f][coords,:]
             
             data[s] = subjData[s]
