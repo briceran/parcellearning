@@ -50,7 +50,7 @@ from keras.utils import to_categorical
 # Hard coded factors:
     
 # default validation set size (fraction of training set)
-EVAL_FACTOR = 0.2
+EVAL_FACTOR = 0.1
 
 # Default DBSCAN fraction of kept points
 DBSCAN_PERC = 0.7
