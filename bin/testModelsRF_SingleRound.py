@@ -6,6 +6,7 @@ Created on Tue Aug  1 11:34:08 2017
 @author: kristianeschenburg
 """
 
+import argparse
 import sys
 sys.path.append('..')
 
@@ -98,6 +99,13 @@ def atlasPredictRF(mod,yObject,yMatch,yMids):
     
     return mod.predicted
 
+parser = argparse.ArgumentParser(description='Compute random forest predictions.')
+# Parameters for input data
+parser.add_argument('-r','--round',help='Group of subjects to process.',type=int,required=True)
+args = parser.parse_args()
+
+r = args.round
+
 
 # Directories where data and models exist
 dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
@@ -152,11 +160,11 @@ dataFeatures = ['fs_cort,fs_subcort,sulcal,myelin,curv,label',
 
 dataFeatureFunc = dict(zip(data,dataFeatures))
 
-# Number of testing sets
-N = 10
+# List of rounds to process
+N = [r]
 
 # Iterate over test sets
-for itr in np.arange(N):
+for itr in N:
     
     print 'Iteration: {}'.format(itr)
     
