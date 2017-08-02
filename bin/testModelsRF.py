@@ -204,7 +204,7 @@ for itr in np.arange(N):
                 G = glob.glob('{}*{}'.format(outDirIter,outputExt))
                 
                 # check to make sure the given model has not been completed yet
-                if len(G) < subjects:
+                if len(G) < len(subjects):
                 
                     currentModel = loadDict[fExt](modelFull)
 
