@@ -69,32 +69,6 @@ def loadTest(yObject,yMatch,features):
         ltvm = cu.vertexMemberships(threshed,180)
 
         return [threshed,mtd,ltvm]
-    
-def parallelPredictRF(models,yObject,yMatch,yMids):
-    
-    predictedLabels = Parallel(n_jobs=NUM_CORES)(delayed(atlasPredictRF)(models[i],
-                               testObject,testMatch,testMids) for i,m in enumerate(models))
-
-    predictedLabels = np.column_stack(predictedLabels)
-
-    classification = []
-        
-    for i in np.arange(predictedLabels.shape[0]):
-        
-        L = list(predictedLabels[i,:])
-        maxProb = max(set(L),key=L.count)
-        classification.append(maxProb)
-    
-    classification = np.asarray(classification)
-    
-    return predictedLabels
-
-def atlasPredictRF(mod,yObject,yMatch,yMids):
-    
-    mod.predict(yObject,yMatch,yMids,softmax_type='FORESTS')
-    
-    return mod.predicted
-
 
 # Directories where data and models exist
 dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
@@ -124,10 +98,6 @@ outputDir = '{}Predictions/'.format(dataDir)
 # Mapping model type to file name type and file name extension
 methods = ['GMM',]
 exts = ['.p']
-
-#methodExtens = ['Covariance.diag.NumComponents.2',
-#              'AtlasSize.1.NumAtlases.Max.Depth.5.NumEst.50',
-#              'Layers.3.Nodes.1250.Sampling.equal.Epochs.60.Batch.256.Rate.0.001']
 
 methodExtens = ['Covariance.diag.NumComponents.2']
 
@@ -230,51 +200,16 @@ for itr in np.arange(N):
                         # If model was a random forest,current model is a LIST
                         # of models.  We feed this in to malp.parallelPredictiong
                         # along with the test data
-                        if classifier == 'RandomForest':
-                            
-                            """
-                            modelPreds = []
-                            for model in currentModel:
-                                model.predict(testObject,testMatch,testMids)
-                                modelPreds.append(model.predicted)
-                            
-                            modelPreds = np.column_stack(modelPreds)
-                            predicted = []
-                            for i in np.arange(modelPreds.shape[0]):
-        
-                                L = list(modelPreds[i,:])
-                                maxProb = max(set(L),key=L.count)
-                                predicted.append(maxProb)
-                            
-                            predicted = np.asarray(predicted)
-                            """
-                            
-                            predicted = parallelPredictRF(currentModel,
-                                                          testObject,
-                                                          testMatch,
-                                                          testMids)
 
-                        elif classifier == 'GMM':
+                        if classifier == 'GMM':
                             currentModel.predict(testObject,testMatch,testMids)
                             
-                        predicted = currentModel.predicted
-                    
-                    elif fExt == '.h5':
-                        features = dataFeatureFunc[d]
+                        P = currentModel.predicted
 
-                        [threshed,mtd,_] = loadTest(testObject,testMatch,features)
-                        mtd[mids,:] = 0
-                        threshed[mids,:] = 0
-                        
-                        predProbs = currentModel.predict(mtd)
-                        threshProbs = threshed*predProbs
-                        
-                        predicted = np.argmax(threshProbs,axis=1)+1
-                    
-                    predicted[mids] = 0
-
-                    myl.darrays[0].data = np.array(predicted).astype(np.float32)
-                    nb.save(myl,testOutput)
+                        P[mids] = 0
+    
+                        myl.darrays[0].data = np.array(P).astype(np.float32)
+                        nb.save(myl,testOutput)
                     
                 
                 

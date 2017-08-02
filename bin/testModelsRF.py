@@ -225,31 +225,14 @@ for itr in np.arange(N):
                         # along with the test data
                         if classifier == 'RandomForest':
 
-                            predicted = parallelPredictRF(currentModel,
+                            P = parallelPredictRF(currentModel,
                                                           testObject,
                                                           testMatch,
                                                           testMids)
-                            
-                    elif fExt == '.h5':
-                        features = dataFeatureFunc[d]
 
-                        [threshed,mtd,_] = loadTest(testObject,testMatch,features)
-                        mtd[mids,:] = 0
-                        threshed[mids,:] = 0
-                        
-                        predProbs = currentModel.predict(mtd)
-                        threshProbs = threshed*predProbs
-                        
-                        predicted = np.argmax(threshProbs,axis=1)+1
+                            P[mids] = 0
+        
+                            myl.darrays[0].data = np.array(P).astype(np.float32)
+                            nb.save(myl,testOutput)
                     
-                    predicted[mids] = 0
 
-                    myl.darrays[0].data = np.array(predicted).astype(np.float32)
-                    nb.save(myl,testOutput)
-                    
-                
-                
-                
-                
-        
-        
