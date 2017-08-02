@@ -368,7 +368,7 @@ class ConstrainedCallback(callbacks.Callback):
 
         # Include only those prediction probabilities for classes that the 
         # samples mapped to during surface registration
-        threshed = mm*predProb[:,1:];
+        threshed = mm*(predProb[:,1:]);
         
         # Find the class with the greatest prediction probability
         y_pred = np.argmax(threshed,axis=1)
@@ -486,11 +486,8 @@ validationSubjects = list(set(subjects).difference(set(trainingSubjects)))
 print 'Loading subject data.'
 now = time.time()
 
-trainingData,trainLabels,trainMatrix = loadData(trainingSubjects,dataDir,features,hemi)
-evalData,evalLabels,evalMatrix = loadData(validationSubjects,dataDir,features,hemi)
-
-print 'train labels: {}'.format(set(list(np.squeeze(trainLabels))))
-print 'val lables: {}'.format(set(list(np.squeeze(evalLabels))))
+trData,trLabels,trMatrix = loadData(trainingSubjects,dataDir,features,hemi)
+evData,evLabels,evMatrix = loadData(validationSubjects,dataDir,features,hemi)
 
 later = time.time()
 print 'Loaded in {} seconds.\n'.format(int(later-now))
@@ -500,7 +497,7 @@ print 'Loaded in {} seconds.\n'.format(int(later-now))
 # Currently, only 'equal' works
 print 'Applying {} sample reduction.'.format(args.downSample)
 now = time.time()
-tempX,tempM,tempY = ds_funcs[args.downSample](trainingData,trainMatrix,trainLabels)
+tempX,tempM,tempY = ds_funcs[args.downSample](trData,trMatrix,trLabels)
 later = time.time()
 print 'Reduced in {} seconds.\n'.format(int(later-now))
 
@@ -508,12 +505,12 @@ print 'Reduced in {} seconds.\n'.format(int(later-now))
 # Standardize subject features
 print 'Standardizing.\n'
 S = sklearn.preprocessing.StandardScaler()
-trainTransformed = S.fit_transform(tempX)
-evalTransformed = S.transform(evalData)
+trTransformed = S.fit_transform(tempX)
+evTransformed = S.transform(evData)
 
 # Shuffle features and responses
 print 'Shuffling.\n'
-xTrain,mTrain,yTrain = shuffleData(trainTransformed,tempM,tempY)
+xTrain,mTrain,yTrain = shuffleData(trTransformed,tempM,tempY)
 
 yTrain = np.squeeze(yTrain.astype(np.int32))
 yTrain_OneHotLabels = to_categorical(yTrain,num_classes=181)
