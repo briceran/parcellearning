@@ -489,8 +489,8 @@ now = time.time()
 trainingData,trainLabels,trainMatrix = loadData(trainingSubjects,dataDir,features,hemi)
 evalData,evalLabels,evalMatrix = loadData(validationSubjects,dataDir,features,hemi)
 
-print 'train labels: {}'.format(set(trainLabels))
-print 'val lables: {}'.format(set(evalLabels))
+print 'train labels: {}'.format(set(list(np.squeeze(trainLabels))))
+print 'val lables: {}'.format(set(list(np.squeeze(evalLabels))))
 
 later = time.time()
 print 'Loaded in {} seconds.\n'.format(int(later-now))
