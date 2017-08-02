@@ -70,10 +70,11 @@ def loadTest(yObject,yMatch,features):
 
         return [threshed,mtd,ltvm]
     
+    
 def parallelPredictRF(models,yObject,yMatch,yMids):
     
     predictedLabels = Parallel(n_jobs=NUM_CORES)(delayed(atlasPredictRF)(models[i],
-                               testObject,testMatch,testMids) for i,m in enumerate(models))
+                               yObject,yMatch,yMids) for i,m in enumerate(models))
 
     predictedLabels = np.column_stack(predictedLabels)
 
@@ -86,8 +87,8 @@ def parallelPredictRF(models,yObject,yMatch,yMids):
         classification.append(maxProb)
     
     classification = np.asarray(classification)
-    
-    return predictedLabels
+
+    return classification
 
 def atlasPredictRF(mod,yObject,yMatch,yMids):
     

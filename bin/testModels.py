@@ -125,15 +125,14 @@ outputDir = '{}Predictions/'.format(dataDir)
 #methods = ['GMM','RandomForest','NetworkModel']
 #exts = ['.p','.p','.h5']
 
-methods = ['GMM','NetworkModel']
-exts = ['.p','.h5']
+methods = ['NetworkModel']
+exts = ['.h5']
 
 #methodExtens = ['Covariance.diag.NumComponents.2',
 #              'AtlasSize.1.NumAtlases.Max.Depth.5.NumEst.50',
 #              'Layers.3.Nodes.1250.Sampling.equal.Epochs.60.Batch.256.Rate.0.001']
 
-methodExtens = ['Covariance.diag.NumComponents.2',
-                'Layers.3.Nodes.1250.Sampling.equal.Epochs.60.Batch.256.Rate.0.001']
+methodExtens = ['Layers.3.Nodes.1250.Sampling.equal.Epochs.60.Batch.256.Rate.0.001']
 
 # Maping model type to file extension
 classExtsFunc = dict(zip(methods,methodExtens))
