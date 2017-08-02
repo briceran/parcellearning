@@ -40,7 +40,7 @@ ND=(10 50 100 500)
 layers=3
 downSample='equal'
 #nodes=1250
-epochs=60
+epochs=50
 batchSize=256
 rate=0.001
 
