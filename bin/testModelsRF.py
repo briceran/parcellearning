@@ -121,22 +121,8 @@ outputDir = '{}Predictions/'.format(dataDir)
 
 
 #### MAPS
-# Mapping model type to file name type and file name extension
-#methods = ['GMM','RandomForest','NetworkModel']
-#exts = ['.p','.p','.h5']
-
-#methods = ['GMM','NetworkModel']
-#exts = ['.p','.h5']
-
 methods = ['RandomForest']
 exts = ['.p']
-
-#methodExtens = ['Covariance.diag.NumComponents.2',
-#              'AtlasSize.1.NumAtlases.Max.Depth.5.NumEst.50',
-#              'Layers.3.Nodes.1250.Sampling.equal.Epochs.60.Batch.256.Rate.0.001']
-
-#methodExtens = ['Covariance.diag.NumComponents.2',
-#                'Layers.3.Nodes.1250.Sampling.equal.Epochs.60.Batch.256.Rate.0.001']
 
 methodExtens = ['AtlasSize.1.NumAtlases.Max.Depth.5.NumEst.50']
     
@@ -145,13 +131,10 @@ classExtsFunc = dict(zip(methods,methodExtens))
 # Mapping model type to file name type
 classTypeFunc = dict(zip(methods,exts))
 
-
 # Map file extension to loading functions
 loadExt = ['.p','.h5']
 loadFuncs = [pickleLoad,load_model]
 loadDict = dict(zip(loadExt,loadFuncs))
-
-
 
 # Map full hemisphere to abbreviationc
 hemispheres = ['Left','Right']
