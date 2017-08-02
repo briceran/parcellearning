@@ -363,12 +363,21 @@ class ConstrainedCallback(callbacks.Callback):
         # N x K matrix
         predProb = self.model.predict_proba(x)
 
+        print 'predProb shape: {}'.format(predProb.shape)
+        print 'mm shape: {}'.format(mm.shape)
+
         # Include only those prediction probabilities for classes that the 
         # samples mapped to during surface registration
         threshed = mm*predProb[:,1:];
         
         # Find the class with the greatest prediction probability
-        y_pred = np.argmax(threshed,axis=1)+1
+        y_pred = np.argmax(threshed,axis=1)
+
+        print y_pred
+        y_pred = y_pred + 1
+        print y_pred
+
+
 
         # Evalute the loss and accuracy of the model
         loss,_ = self.model.evaluate(x, y_oneHot, verbose=0)
@@ -464,7 +473,7 @@ with open(subjectFile,'r') as inFile:
 subjects = [x.strip() for x in subjects]
 
 fullSize = len(subjects)
-valSize = int(np.ceil(EVAL_FACTOR*fullSize))
+valSize = int(np.floor(EVAL_FACTOR*fullSize))
 
 trainingSubjects = np.random.choice(subjects,size=(fullSize-valSize),replace=False)
 validationSubjects = list(set(subjects).difference(set(trainingSubjects)))
@@ -479,6 +488,9 @@ now = time.time()
 
 trainingData,trainLabels,trainMatrix = loadData(trainingSubjects,dataDir,features,hemi)
 evalData,evalLabels,evalMatrix = loadData(validationSubjects,dataDir,features,hemi)
+
+print 'train labels: {}'.format(set(trainlabels))
+print 'val lables: {}'.format(set(evalLabels))
 
 later = time.time()
 print 'Loaded in {} seconds.\n'.format(int(later-now))
