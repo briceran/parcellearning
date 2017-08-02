@@ -205,7 +205,7 @@ for itr in np.arange(N):
                 
                 # check to make sure the given model has not been completed yet
                 if len(G) < len(subjects):
-                
+
                     currentModel = loadDict[fExt](modelFull)
 
                     for test_subj in subjects:
@@ -247,5 +247,10 @@ for itr in np.arange(N):
                 
                                     myl.darrays[0].data = np.array(P).astype(np.float32)
                                     nb.save(myl,testOutput)
+                        else:
+                            
+                            print '{} already generated.'.format(testOutput)
+                else:
+                    print '{} for {} already processed.'.format(len(G),outputExt)
                             
         
