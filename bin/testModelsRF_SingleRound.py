@@ -255,5 +255,9 @@ for itr in N:
                 
                                     myl.darrays[0].data = np.array(P).astype(np.float32)
                                     nb.save(myl,testOutput)
+                        else:
+                            print '{} already generated.'.format(testOutput)
+                else:
+                    print '{} for {} already processed.'.format(len(G),outputExt)
                             
         
