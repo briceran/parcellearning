@@ -355,7 +355,7 @@ class ConstrainedCallback(callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         
         x = self.x_test
-        y_true = self.y_true
+        y_true = np.squeeze(self.y_true)
         y_oneHot = self.y_oneHot
         mm = self.mm
 
@@ -363,21 +363,14 @@ class ConstrainedCallback(callbacks.Callback):
         # N x K matrix
         predProb = self.model.predict_proba(x)
 
-        print 'predProb shape: {}'.format(predProb.shape)
-        print 'mm shape: {}'.format(mm.shape)
-
         # Include only those prediction probabilities for classes that the 
         # samples mapped to during surface registration
         threshed = mm*(predProb[:,1:]);
         
         # Find the class with the greatest prediction probability
-        y_pred = np.argmax(threshed,axis=1)
+        y_pred = np.squeeze(np.argmax(threshed,axis=1))
 
-        print y_pred
-        y_pred = y_pred + 1
-        print y_pred
-
-
+        y_pred = np.squeeze(y_pred + 1)
 
         # Evalute the loss and accuracy of the model
         loss,_ = self.model.evaluate(x, y_oneHot, verbose=0)
@@ -460,11 +453,12 @@ else:
 dataDir = args.dataDirectory
 features = list(args.features.split(','))
 
-print 'Levels: {}'.format(levels)
-print 'Nodes: {}'.format(nodes)
-print 'Epochs: {}'.format(epochs)
-print 'Batch Size: {}'.format(batch)
-print 'Learning rate: {}'.format(rate)
+print 'Parameters:\n'
+print '\tLevels: {}'.format(levels)
+print '\tNodes: {}'.format(nodes)
+print '\tEpochs: {}'.format(epochs)
+print '\tBatch Size: {}'.format(batch)
+print '\tLearning rate: {}\n'.format(rate)
 
 # Load subject data
 subjectFile = args.subjectList
@@ -475,8 +469,13 @@ subjects = [x.strip() for x in subjects]
 fullSize = len(subjects)
 valSize = int(np.floor(EVAL_FACTOR*fullSize))
 
-trainingSubjects = np.random.choice(subjects,size=(fullSize-valSize),replace=False)
+trainingSubjects = list(np.random.choice(subjects,size=(fullSize-valSize),replace=False))
 validationSubjects = list(set(subjects).difference(set(trainingSubjects)))
+intersection = list(set(trainingSubjects).intersection(set(validationSubjects)))
+
+print 'Length training: {}'.format(len(trainingSubjects))
+print 'Length evaluation: {}'.format(len(validationSubjects))
+print 'Number of overlapping subjects (should be zero): {}\n'.format(len(intersection))
 
 #ns = np.min([len(subjects),args.ns])
 #print 'Number of training subjects: {}'.format(ns)
@@ -520,7 +519,7 @@ yTrain_OneHotLabels = to_categorical(yTrain,num_classes=181)
 nSamples = xTrain.shape[0]
 input_dim = xTrain.shape[1]
 
-eval_OneHotLabels = to_categorical(evalLabels,num_classes=181)
+ev_OneHotLabels = to_categorical(evLabels,num_classes=181)
 
 # final dimensionf of data
 nSamples = xTrain.shape[0]
@@ -550,10 +549,13 @@ model.add(Dense(output_dim, activation='softmax'))
 
 model.compile(loss='categorical_crossentropy',optimizer= opt,metrics=['accuracy'])
 
+print 'Training data size: {}'.format(xTrain.shape)
+print 'Evaluation data size: {}\n'.format(evTransformed.shape)
+
 print 'Model built using {} optimization.  Training now.\n'.format(args.optimizer)
 
 
-ConstrainedTE = ConstrainedCallback(evalMatrix,evalTransformed,evalLabels,eval_OneHotLabels,['consValLoss','consValAcc'])
+ConstrainedTE = ConstrainedCallback(evMatrix,evTransformed,evLabels,ev_OneHotLabels,['consValLoss','consValAcc'])
 ConstrainedTR = ConstrainedCallback(mTrain,xTrain,yTrain,yTrain_OneHotLabels,['consTrainLoss','consTrainAcc'])
 
 history = model.fit(xTrain, yTrain_OneHotLabels, epochs=epochs,

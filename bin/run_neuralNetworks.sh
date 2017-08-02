@@ -1,6 +1,7 @@
 #!/bin/bash
 
 PYTHON=/project_space/parcellation/Software/anaconda2/bin/python
+#PYTHON=/Users/kristianeschenburg/anaconda/bin/python
 
 kind=$1
 hemisphere=$2
@@ -9,6 +10,10 @@ hemisphere=$2
 dataDir=/mnt/parcellator/parcellation/parcellearning/Data/
 binDir=/mnt/parcellator/parcellation/GitHub/parcellearning/bin/
 script=${binDir}neuralNetworks.py
+
+#dataDir=/Users/kristianeschenburg/Desktop/Programming/Data/
+#binDir=/Users/kristianeschenburg/Documents/GitHub/parcellearning/bin/
+#script=${binDir}neuralNetworks.py
 
 outDir=${dataDir}Models/
 
@@ -29,13 +34,13 @@ elif [ $kind = "full" ]; then
 	feats="fs_cort,fs_subcort,pt_cort,pt_subcort,sulcal,myelin,curv,label"
 fi
 
-#ND=(10 20 30 40 50 100 500)
-ND=(10)
+ND=(10 50 100 500)
+#ND=(10)
 
 layers=3
 downSample='equal'
 #nodes=1250
-epochs=100
+epochs=60
 batchSize=256
 rate=0.001
 
