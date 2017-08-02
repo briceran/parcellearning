@@ -489,7 +489,7 @@ now = time.time()
 trainingData,trainLabels,trainMatrix = loadData(trainingSubjects,dataDir,features,hemi)
 evalData,evalLabels,evalMatrix = loadData(validationSubjects,dataDir,features,hemi)
 
-print 'train labels: {}'.format(set(trainlabels))
+print 'train labels: {}'.format(set(trainLabels))
 print 'val lables: {}'.format(set(evalLabels))
 
 later = time.time()
