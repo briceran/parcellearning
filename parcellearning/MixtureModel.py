@@ -274,7 +274,7 @@ class GMM(object):
         return [threshed,mtd,ltvm]
 
 
-    def predict(self,mtd,testLTVM,testMids):
+    def predict(self,mtd,testLTVM):
         
         """
         Method to compute Mahalanobis distance of test data from the
@@ -287,10 +287,7 @@ class GMM(object):
                     base classification and weighted classification of the
                     surface vertices
         """
-        
-        mids = ld.loadMat(testMids)-1
-        
-        mtd[mids,:] = 0
+
         ltvm = testLTVM
         
         R = 180
@@ -319,7 +316,6 @@ class GMM(object):
                 baseline[members,lab] = scores
                 
         predicted = np.argmin(baseline,axis=1)
-        predicted[mids] = 0
         
         self.baseline = baseline
         self.predicted = predicted
