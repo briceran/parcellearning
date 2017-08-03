@@ -94,7 +94,7 @@ outputDir = '{}Predictions/'.format(dataDir)
 methods = ['NeuralNetwork']
 exts = ['.h5']
 
-methodExtens = ['Layers.3.Nodes.100.Sampling.equal.Epochs.30.Batch.256.Rate.0.001.']
+methodExtens = ['Layers.3.Nodes.100.Sampling.equal.Epochs.30.Batch.256.Rate.0.001']
 
 # Maping model type to file extension
 classExtsFunc = dict(zip(methods,methodExtens))
