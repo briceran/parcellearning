@@ -109,12 +109,15 @@ for subj in s:
     
     if not os.path.isfile(outLib):
 
+        # label file
         sLabDir = '{}Labels/HCP/'.format(homeDir)
         sLab = '{}{}.{}.CorticalAreas.fixed.32k_fs_LR.label.gii'.format(sLabDir,subj,H)
 
+        # midline file
         sMidDir = '{}Midlines/'.format(homeDir)
         sMid = '{}{}.{}.Midline_Indices.mat'.format(sMidDir,subj,H)
         
+        # surface file
         sSurfDir = '{}Surfaces/'.format(homeDir)
         sSurf = '{}{}.{}.inflated.32k_fs_LR.surf.gii'.format(sSurfDir,subj,H)
 
@@ -130,35 +133,38 @@ for subj in s:
         if not os.path.isfile(sSurf):
             print '23'
             cond = False
-
-        if cond:
-
-            N = lb.MatchingLibraryTest(s,sLab,sMid,sSurf)
-
-            remaining = list(set(s).difference({subj}))
-
-            for train in remaining:
-                
-                trainMatchDir = '{}MatchingLibraries/Train/{}/'.format(homeDir,hemi)
-                trainMatch = '{}{}.{}.MatchingLibrary.Train.p'.format(trainMatchDir,train,H)
-                
-                cond2 = True
-                
-                if not os.path.isfile(trainMatch):
-                    cond2 = False
-                
-                matchDir = '{}Matches/{}/'.format(homeDir,hemi)
-                matchExt = '_corr*_200_50_1_50_doPCA.8.mat'
-                matchString = '{}oM_{}_{}_to_{}{}'.format(matchDir,H,subj,train,matchExt)
-                match = glob.glob('{}'.format(matchString))
-                
-                if len(match) > 0 and cond2:
-                    print 'has match'
-                    N.addToLibraries(train,trainMatch,match[0])
-
-            vertexLibrary = N.vertLib
-
-            N.saveLibraries(outLib)
-
-            with open(outVertLib,"wb") as output:
-                pickle.dump(N.vertLib,output,-1)
+            
+        if not os.path.isfile(outVertLib):
+    
+            if cond:
+    
+                N = lb.MatchingLibraryTest(s,sLab,sMid,sSurf)
+    
+                remaining = list(set(s).difference({subj}))
+                print 'Remaining subjects: {}'.format(len(remaining))
+    
+                for train in remaining:
+                    
+                    trainMatchDir = '{}MatchingLibraries/Train/{}/'.format(homeDir,hemi)
+                    trainMatch = '{}{}.{}.MatchingLibrary.Train.p'.format(trainMatchDir,train,H)
+                    
+                    cond2 = True
+                    
+                    if not os.path.isfile(trainMatch):
+                        cond2 = False
+                    
+                    matchDir = '{}Matches/{}/'.format(homeDir,hemi)
+                    matchExt = '_corr*_200_50_1_50_doPCA.8.mat'
+                    matchString = '{}oM_{}_{}_to_{}{}'.format(matchDir,H,subj,train,matchExt)
+                    match = glob.glob('{}'.format(matchString))
+    
+                    if len(match) > 0 and cond2:
+                        print 'has match'
+                        N.addToLibraries(train,trainMatch,match[0])
+    
+                vertexLibrary = N.vertLib
+    
+                N.saveLibraries(outLib)
+    
+                with open(outVertLib,"wb") as output:
+                    pickle.dump(N.vertLib,output,-1)
