@@ -18,7 +18,7 @@ import parcellearning.loaded as ld
 
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
 # Parameters for input data
-parser.add_argument('-h','--hemi',help='hemisphere to process.',type=int,required=True)
+parser.add_argument('-h','--hemi',help='hemisphere to process.',type=str,required=True)
 args = parser.parse_args()
 
 hemiFunc = {}.fromkeys(['Left','Right'])
@@ -27,7 +27,6 @@ hemiFunc['Right'] = 'R'
 
 hemi = args.hemi
 hstr = hemiFunc[hemi]
-
 
 
 baseDir = '/mnt/parcellator/parcellation/'
