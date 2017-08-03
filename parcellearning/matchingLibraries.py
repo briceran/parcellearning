@@ -296,7 +296,7 @@ class MatchingLibraryTest(object):
         print gCoords.shape
         print cCoords.shape
 
-        fixed = np.zeros((self.N,1))
+        fixed = np.squeeze(np.zeros((self.N,1)))
         
         print fixed.shape
         for m in list(match):
