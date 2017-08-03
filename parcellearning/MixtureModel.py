@@ -249,6 +249,10 @@ class GMM(object):
                     in the training data
 
         """
+        
+        print y
+        print yMatch
+        print loadFeatures
 
         # load test subject data, save as attribtues
         tObject = ld.loadH5(y,*['full'])
