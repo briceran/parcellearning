@@ -190,7 +190,7 @@ for itr in np.arange(N):
                                 testMids = '{}{}.{}.{}'.format(midsDir,test_subj,hExt,midsExt)
                                 testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
                                 
-                                #mids = ld.loadMat(testMids)
+                                mids = ld.loadMat(testMids)-1
                                 #mids = ld.loadMat(testMids)
                 
                                 if fExt == '.h5':
@@ -207,7 +207,7 @@ for itr in np.arange(N):
                                     
                                     predicted = np.argmax(threshProbs,axis=1)+1
                                 
-                                #predicted[mids] = 0
+                                predicted[mids] = 0
             
                                 myl.darrays[0].data = np.array(predicted).astype(np.float32)
                                 nb.save(myl,testOutput)
