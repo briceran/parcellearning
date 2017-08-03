@@ -301,7 +301,7 @@ class GMM(object):
         labels = self.labels
 
         xTest,yTest = mtd.shape
-        if yTest != self.input_dim-1:
+        if yTest != self.input_dim:
             raise Warning('Test data does not have the same number \
                           features as the training data.')
 
