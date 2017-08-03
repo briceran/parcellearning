@@ -99,6 +99,8 @@ for train in s:
 
 """
 
+s = ['285345']
+
 s = s[::-1]
 
 for subj in s:
