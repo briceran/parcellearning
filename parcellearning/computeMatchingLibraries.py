@@ -29,6 +29,7 @@ hemiFunc['Left'] = 'L'
 hemi = 'Right'
 H = hemiFunc[hemi]
 
+"""
 for train in s:
     print(train)
     
@@ -94,6 +95,8 @@ for train in s:
                         M.buildLibraries(source,sourceLab,sourceMids,sourceSurf,matching)
 
             M.saveLibraries(True,tLab)
+
+"""
 
 for subj in s:
     

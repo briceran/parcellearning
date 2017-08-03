@@ -291,12 +291,7 @@ class MatchingLibraryTest(object):
         
         gCoords = np.asarray(list(set(np.arange(train.N)).difference(set(train.mids))))
         cCoords = np.asarray(list(set(np.arange(self.N)).difference(set(self.mids))))
-        
-        if gCoords.ndim == 1:
-            gCoords.shape+=(1,)
-        if cCoords.ndim == 1:
-            cCoords.shape+=(1,)
-        
+
         fixed = np.zeros((self.N,1))
         for m in list(match):
             fixed[cCoords] = gCoords[match];
