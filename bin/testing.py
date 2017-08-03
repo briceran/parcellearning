@@ -6,6 +6,15 @@ Created on Thu Aug  3 09:58:44 2017
 @author: kristianeschenburg
 """
 
+import argparse
+import sys
+sys.path.append('..')
+
+
+import parcellearning.matchingLibraries as lb
+import glob
+import os
+
 subjectList = '/mnt/parcellator/parcellation/HCP/Connectome_4/SubjectList.txt'
 homeDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
 
@@ -13,9 +22,6 @@ with open(subjectList,'r') as inFile:
     s = inFile.readlines()
 s = [x.strip() for x in s]
 
-import parcellearning.matchingLibraries as lb
-import glob
-import os
 
 S = '285345'
 
