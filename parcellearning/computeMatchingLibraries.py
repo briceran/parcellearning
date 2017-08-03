@@ -115,7 +115,7 @@ hemiFunc['Left'] = 'L'
 hemi = 'Right'
 H = hemiFunc[hemi]
 
-s = s[::-1]
+np.random.shuffle(s)
 
 for subj in s:
 
