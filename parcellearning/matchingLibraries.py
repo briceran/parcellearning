@@ -157,7 +157,7 @@ class MatchingLibraryTrain(object):
                     # get target vertex to which source vertex is mapped
                     vertex = fixed[node]
                     # get label of source vertex
-                    sl = sLab[node]g
+                    sl = sLab[node]
                     
                     # if target vertex and source label not midline
                     if vertex != -1 and sl > 0:
