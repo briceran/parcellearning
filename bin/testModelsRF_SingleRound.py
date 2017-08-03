@@ -215,7 +215,7 @@ for itr in N:
                 G = glob.glob('{}*{}'.format(outDirIter,outputExt))
                 
                 # check to make sure the given model has not been completed yet
-                if len(G) < len(subjects):
+                if len(G) < len(subjects) and os.path.isfile(modelFull):
                 
                     currentModel = loadDict[fExt](modelFull)
 
