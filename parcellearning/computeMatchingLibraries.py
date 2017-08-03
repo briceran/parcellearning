@@ -101,95 +101,98 @@ for train in s:
 
 #s = ['285345']
 
+subjectList = '/mnt/parcellator/parcellation/HCP/Connectome_4/SubjectList.txt'
+homeDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
+
+with open(subjectList,'r') as inFile:
+    s = inFile.readlines()
+s = [x.strip() for x in s]
+
+hemiFunc = {}.fromkeys(['Right','Left'])
+hemiFunc['Right'] = 'R'
+hemiFunc['Left'] = 'L'
+
+hemi = 'Right'
+H = hemiFunc[hemi]
+
 s = s[::-1]
 
 for subj in s:
-    
-    print(subj)
-    
+
+    # get output directory
     outLibDir = '{}MatchingLibraries/Test/'.format(homeDir)
+    # output library
     outLib = '{}{}.{}.MatchingLibrary.Test.p'.format(outLibDir,subj,H)
-    
+    # output vertex library
     outVertLib = '{}{}.{}.VertexLibrary.Test.p'.format(outLibDir,subj,H)
-    
-    print outLibDir
-    print outLib
-    print outVertLib
-    
+
     if not os.path.isfile(outLib):
-
-        # label file
-        sLabDir = '{}Labels/HCP/'.format(homeDir)
-        sLab = '{}{}.{}.CorticalAreas.fixed.32k_fs_LR.label.gii'.format(sLabDir,subj,H)
-
-        # midline file
-        sMidDir = '{}Midlines/'.format(homeDir)
-        sMid = '{}{}.{}.Midline_Indices.mat'.format(sMidDir,subj,H)
-        
-        # surface file
-        sSurfDir = '{}Surfaces/'.format(homeDir)
-        sSurf = '{}{}.{}.inflated.32k_fs_LR.surf.gii'.format(sSurfDir,subj,H)
-
-
-        cond = True
-        
-        if not os.path.isfile(sLab):
-            print '21'
-            cond = False
-        if not os.path.isfile(sMid):
-            print '22'
-            cond = False
-        if not os.path.isfile(sSurf):
-            print '23'
-            cond = False
-            
         if not os.path.isfile(outVertLib):
+
+            # label file
+            sLabDir = '{}Labels/HCP/'.format(homeDir)
+            sLab = '{}{}.{}.CorticalAreas.fixed.32k_fs_LR.label.gii'.format(sLabDir,subj,H)
     
+            # midline file
+            sMidDir = '{}Midlines/'.format(homeDir)
+            sMid = '{}{}.{}.Midline_Indices.mat'.format(sMidDir,subj,H)
+            
+            # surface file
+            sSurfDir = '{}Surfaces/'.format(homeDir)
+            sSurf = '{}{}.{}.inflated.32k_fs_LR.surf.gii'.format(sSurfDir,subj,H)
+
+            cond = True
+            
+            if not os.path.isfile(sLab):
+                print 'no source label'
+                cond = False
+            if not os.path.isfile(sMid):
+                print 'no source mids'
+                cond = False
+            if not os.path.isfile(sSurf):
+                print 'no source surf'
+                cond = False
+
             if cond:
     
+                # Initialize test library
                 N = lb.MatchingLibraryTest(subj,sLab,sMid,sSurf)
-                print 'ID: ' + N.ID
-    
                 remaining = list(set(s).difference({subj}))
-                print len(remaining)
     
                 for train in remaining:
-                    
-                    print train
-                    
+
+                    # get 
                     trainMatchDir = '{}MatchingLibraries/Train/{}/'.format(homeDir,hemi)
                     trainMatch = '{}{}.{}.MatchingLibrary.Train.p'.format(trainMatchDir,train,H)
                     
+                    matchDir = '{}Matches/{}/'.format(homeDir,hemi)
+                    matchExt = '_corr*_200_50_1_50_doPCA_8.mat'
+                    matchString = '{}oM_{}_{}_to_{}{}'.format(matchDir,H,subj,train,matchExt)
+                    matches = glob.glob(matchString)
+
                     cond2 = True
                     
                     if not os.path.isfile(trainMatch):
+                        print 'no trainging object'
                         cond2 = False
                     
-                    matchDir = '/mnt/parcellator/parcellation/parcellearning/Data/Matches/Right/'
-                    matchExt = '_corr*_200_50_1_50_doPCA_8.mat'
-                    matchString = '{}oM_{}_{}_to_{}{}'.format(matchDir,'R',subj,train,matchExt)
-                    match = glob.glob(matchString)
+                    if len(matches < 1):
+                        print 'no matches'
+                        cond2 = False
 
-                    if len(match) > 0 and cond2:
-                        print 'Matching'
-                        N.addToLibraries(train,trainMatch,match[0])
+                    if cond2:
+                        N.addToLibraries(train,trainMatch,matches[0])
     
                 vertexLibrary = N.vertLib
+                matchingMatrix = lb.buildMapptingMatrix(vertexLibrary,180)
+                M = {}
+                M['mm'] = matchingMatrix
+                
+                mmDir = '{}MatchingMatrices/'.format(outLibDir)
+                mmOut = '{}{}.{}.MatchingMatrix.0.05.mat'.format(mmDir,subj,H)
+                sio.savemat(mmOut,M)
     
                 N.saveLibraries(outLib)
     
                 with open(outVertLib,"wb") as output:
                     pickle.dump(N.vertLib,output,-1)
-                    
-for subj in s:
-    
-    outFile = '{}MatchingMatrices/{}.R.MatchingMatrix.0.05.mat'.format(outLibDir,subj)
-    print outFile
-    if os.path.isfile(outVertLib):
-            with open(outVertLib,'r') as inv:
-                V = pickle.load(inv)
-            M = {}
-            mm = lb.buildMappingMatrix(V,180)
-            M['mm'] = mm
-            sio.savemat(outFile,M)
-                    
