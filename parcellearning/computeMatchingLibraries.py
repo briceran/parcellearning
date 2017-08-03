@@ -166,10 +166,10 @@ for subj in s:
                         cond2 = False
                     
                     matchDir = '{}Matches/{}/'.format(homeDir,hemi)
-                    matchExt = '_corr*_200_50_1_50_doPCA.8.mat'
-                    matchString = '{}oM_{}_{}_to_{}{}'.format(matchDir,H,subj,train,matchExt)
-                    match = glob.glob('{}'.format(matchString))
-    
+                    matchExt = '_corr*_200_50_1_50_doPCA_8.mat'
+                    matchString = '{}oM_{}_{}_to_{}{}'.format(matchDir,'R',subj,train,matchExt)
+                    match = glob.glob(matchString)
+
                     if len(match) > 0 and cond2:
                         print 'Matching'
                         N.addToLibraries(train,trainMatch,match[0])

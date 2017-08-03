@@ -14,6 +14,7 @@ sys.path.append('..')
 import parcellearning.matchingLibraries as lb
 import glob
 import os
+import pickle
 
 subjectList = '/mnt/parcellator/parcellation/HCP/Connectome_4/SubjectList.txt'
 homeDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
@@ -65,3 +66,8 @@ if not os.path.isfile(outLib):
             
             if len(match) > 0:
                 N.addToLibraries(tr,trainMatch,match[0])
+    
+    vertexLibrary = N.vertLib
+    N.saveLibraries(outLib)
+    with open(outVertLib,"wb") as output:
+                    pickle.dump(N.vertLib,output,-1)
