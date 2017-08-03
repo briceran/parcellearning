@@ -208,12 +208,11 @@ for itr in np.arange(N):
         
                                 if classifier == 'GMM':
                                     
-                                    [threshed,mtd,ltvm] = currentModel.loadTest(testObject,testMatch)
+                                    [mm,mtd,ltvm] = currentModel.loadTest(testObject,testMatch)
                                     print 'Input dim: {}'.format(currentModel.input_dim)
-                                    print 'MatchingMatrix size: {}'.format(threshed.shape)
                                     print 'MTD size: {}'.format(mtd.shape)
                                     
-                                    currentModel.predict(threshed,tm,ltvm,testMids)
+                                    currentModel.predict(mtd,ltvm,testMids)
                                     
                                 P = currentModel.predicted
         

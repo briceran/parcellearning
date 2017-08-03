@@ -317,8 +317,9 @@ class GMM(object):
 
                 # save results in self.predict
                 baseline[members,lab] = scores
-
+                
         predicted = np.argmin(baseline,axis=1)
+        predicted[mids] = 0
         
         self.baseline = baseline
         self.predicted = predicted
