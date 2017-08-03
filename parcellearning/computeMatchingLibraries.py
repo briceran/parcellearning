@@ -171,7 +171,7 @@ for subj in s:
                     
                     matchDir = '{}Matches/{}/'.format(homeDir,hemi)
                     matchExt = '_corr*_200_50_1_50_doPCA_8.mat'
-                    matches = glob.glob('{}oM_{}_{}_to_{}{}*'.format(matchDir,H,subj,train,matchExt))
+                    matches = glob.glob('{}oM_{}_{}_to_{}{}'.format(matchDir,H,subj,train,matchExt))
 
                     cond2 = True
                     
