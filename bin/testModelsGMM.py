@@ -210,6 +210,8 @@ for itr in np.arange(N):
                                     
                                     [threshed,mtd,ltvm] = currentModel.loadTest(testObject,testMatch)
                                     print 'Input dim: {}'.format(currentModel.input_dim)
+                                    print 'MatchingMatrix size: {}'.format(threshed.shape)
+                                    print 'MTD size: {}'.format(mtd.shape)
                                     
                                     currentModel.predict(threshed,tm,ltvm,testMids)
                                     
