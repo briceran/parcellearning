@@ -197,6 +197,7 @@ for itr in np.arange(N):
                             #print 'Test Mids: {}'.format(testMids)
                             
                             testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
+                            tm = ld.loadMat(testMatch)
                             #print 'Test Match: {}'.format(testMatch)
                             
                             mids = ld.loadMat(testMids)-1
@@ -210,7 +211,7 @@ for itr in np.arange(N):
                                     
                                     [threshed,mtd,ltvm] = loadTest(testObject,testMatch)
                                     
-                                    currentModel.predict(threshed,testMatch,ltvm,testMids)
+                                    currentModel.predict(threshed,tm,ltvm,testMids)
                                     
                                 P = currentModel.predicted
         
