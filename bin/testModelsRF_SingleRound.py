@@ -242,13 +242,12 @@ for itr in N:
                                 # If model was a random forest,current model is a LIST
                                 # of models.  We feed this in to malp.parallelPredictiong
                                 # along with the test data
+
                                 if classifier == 'RandomForest':
-        
-                                    P = parallelPredictRF(currentModel,
-                                                                  testObject,
-                                                                  testMatch,
-                                                                  testMids)
-        
+                                    
+                                    P = parallelPredictRF(curremtModel,testObject,
+                                                          testMatch,testMids)
+                                    
                                     P[mids] = 0
                 
                                     myl.darrays[0].data = np.array(P).astype(np.float32)

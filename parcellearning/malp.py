@@ -329,7 +329,7 @@ class Atlas(object):
         return [labelData,response]
 
 
-    def predict(self,testData,testMatch, testLTVM, yMids, softmax_type = 'BASE'):
+    def predict(self,testObject,testMatch,testMids,softmax_type = 'BASE'):
         
         """
         Method to predict labels of test data.
@@ -344,14 +344,12 @@ class Atlas(object):
                     
         """
         
-        mids = ld.loadMat(yMids)-1
+        [mm,mtd,ltvm] = self.loadTest(testObject,testMatch)
         
-        testData[mids,:] = 0
-        testMatch[mids,:] = 0
+        mids = ld.loadMat(testMids)-1
+        mm[mids,:] = 0;
+        mtd[mids,:] = 0
 
-        mtd = testData
-        mm = testMatch
-        ltvm = testLTVM
 
         funcs = {'BASE': baseSoftMax,
                  'TREES': treeSoftMax,
@@ -384,9 +382,7 @@ class Atlas(object):
         self.baseline = baseline
         self.predicted = predicted
 
-        return (baseline,predicted)
-
-    def loadTest(self,y,yMatch):
+    def loadTest(self,testObject,testMatch):
         
         """
         Method to load the test data into the object.  We might be interested
@@ -404,7 +400,7 @@ class Atlas(object):
         features = self.features
  
         # load test subject data, save as attribtues
-        tObject = ld.loadH5(y,*['full'])
+        tObject = ld.loadH5(testObject,*['full'])
         ID = tObject.attrs['ID']
         
         parsedData = ld.parseH5(tObject,features)
@@ -417,7 +413,7 @@ class Atlas(object):
             scaler = self.scaler
             mtd = scaler.transform(mtd)
             
-        threshed = ld.loadMat(yMatch)
+        threshed = ld.loadMat(testMatch)
 
         ltvm = cu.vertexMemberships(threshed,180)
 

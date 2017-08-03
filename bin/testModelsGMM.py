@@ -209,7 +209,7 @@ for itr in np.arange(N):
         
                                 if classifier == 'GMM':
                                     
-                                    [threshed,mtd,ltvm] = loadTest(testObject,testMatch)
+                                    [threshed,mtd,ltvm] = currentModel.loadTest(testObject,testMatch)
                                     
                                     currentModel.predict(threshed,tm,ltvm,testMids)
                                     
