@@ -165,7 +165,7 @@ for subj in s:
                     if not os.path.isfile(trainMatch):
                         cond2 = False
                     
-                    matchDir = '{}Matches/{}/'.format(homeDir,hemi)
+                    matchDir = '/mnt/parcellator/parcellation/parcellearning/Data/Matches/Right/'
                     matchExt = '_corr*_200_50_1_50_doPCA_8.mat'
                     matchString = '{}oM_{}_{}_to_{}{}'.format(matchDir,'R',subj,train,matchExt)
                     match = glob.glob(matchString)
