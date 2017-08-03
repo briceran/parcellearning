@@ -31,7 +31,7 @@ for s in subjects:
             if tempData.ndim == 1:
                 tempData.shape+=(1,)
                 del(dset[feature])
-                dset.create_dataset(feature,tempData)
+                dset.create_dataset(feature,data=tempData)
         print data[data.keys()[0]].keys()
         data.close()
     
