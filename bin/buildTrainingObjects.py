@@ -141,6 +141,7 @@ for s in subjects:
             data = h5py.File(trainingObject,mode='r+')
             
         data.create_group(s)
+        data.attrs['ID'] = s
         
         data[s].create_dataset('curv',data=curv)
         data[s].create_dataset('myelin',data=myl)

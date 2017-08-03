@@ -16,19 +16,11 @@ import parcellearning.loaded as ld
 import parcellearning.malp as malp
 import parcellearning.MixtureModel as MM
 
-from keras.models import load_model
-
 import glob
 import os
 import pickle
 import nibabel as nb
 import numpy as np
-
-
-from joblib import Parallel, delayed
-import multiprocessing
-NUM_CORES = multiprocessing.cpu_count()
-
 
 def pickleLoad(inFile):
     
@@ -210,6 +202,7 @@ for itr in np.arange(N):
                                 if classifier == 'GMM':
                                     
                                     [threshed,mtd,ltvm] = currentModel.loadTest(testObject,testMatch)
+                                    print 'Input dim: {}'.format(currentModel.input_dim)
                                     
                                     currentModel.predict(threshed,tm,ltvm,testMids)
                                     
