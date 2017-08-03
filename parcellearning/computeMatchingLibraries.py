@@ -88,6 +88,7 @@ for train in s:
                     cond2 = False
 
                 if cond2:
+                    print "Building Libraries"
                     if len(match):
                         matching = match[0]
                         M.buildLibraries(source,sourceLab,sourceMids,sourceSurf,matching)
