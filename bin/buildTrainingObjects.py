@@ -154,7 +154,7 @@ for s in subjects:
         ptxSubCort = np.log(ld.loadMat(ptxSubCortObject))
         ptxSubCort[mid,:] = 0;
 
-        data = h5py.File(trainingObject,mode='r+')
+        data = h5py.File(trainingObject,mode='w')
             
         data.create_group(s)
         data.attrs['ID'] = s
