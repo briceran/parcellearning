@@ -191,7 +191,7 @@ class GMM(object):
         training = []
         labels = []
         
-        trainFeatures = list(set(self.features).difference('label'))
+        trainFeatures = list(set(self.features).difference({'label'}))
         for subj in trainData.keys():
             training.append(cu.mergeFeatures(trainData[subj],trainFeatures))
             labels.append(cu.mergeFeatures(trainData[subj],['label']))
@@ -233,7 +233,7 @@ class GMM(object):
         return [labelData,response]
 
 
-    def loadTest(self,y,yMatch,loadFeatures):
+    def loadTest(self,y,yMatch):
         
         """
         Method to load the test data into the object.  We might be interested
@@ -250,19 +250,17 @@ class GMM(object):
 
         """
         
-        print y
-        print yMatch
-        print loadFeatures
+        testFeatures = list(set(self.features).difference({'label'}))
 
         # load test subject data, save as attribtues
         tObject = ld.loadH5(y,*['full'])
         ID = tObject.attrs['ID']
         
-        parsedData = ld.parseH5(tObject,loadFeatures)
+        parsedData = ld.parseH5(tObject,testFeatures)
         tObject.close()
 
         data = parsedData[ID]
-        mtd = cu.mergeFeatures(data,loadFeatures)
+        mtd = cu.mergeFeatures(data,testFeatures)
         print 'Testing shape: {}'.format(mtd.shape)
 
         if self.scaled:
@@ -276,7 +274,7 @@ class GMM(object):
         return [threshed,mtd,ltvm]
 
 
-    def predict(self,testData,testMatch,testLTVM, testMids):
+    def predict(self,testData,testMatch,testLTVM,testMids):
         
         """
         Method to compute Mahalanobis distance of test data from the
