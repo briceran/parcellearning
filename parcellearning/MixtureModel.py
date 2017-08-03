@@ -274,7 +274,7 @@ class GMM(object):
         return [threshed,mtd,ltvm]
 
 
-    def predict(self,testData,testMatch,testLTVM,testMids):
+    def predict(self,mtd,testLTVM,testMids):
         
         """
         Method to compute Mahalanobis distance of test data from the
@@ -290,11 +290,7 @@ class GMM(object):
         
         mids = ld.loadMat(testMids)-1
         
-        testData[mids,:] = 0
-        testMatch[mids,:] = 0
-        
-        mtd = testData
-        mm = testMatch
+        mtd[mids,:] = 0
         ltvm = testLTVM
         
         R = 180

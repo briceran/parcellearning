@@ -208,7 +208,7 @@ for itr in np.arange(N):
         
                                 if classifier == 'GMM':
                                     
-                                    [threshed,mtd,ltvm] = currentModel.loadTest(testObject,testMatch,data_features)
+                                    [threshed,mtd,ltvm] = currentModel.loadTest(testObject,testMatch)
                                     print 'Input dim: {}'.format(currentModel.input_dim)
                                     print 'MatchingMatrix size: {}'.format(threshed.shape)
                                     print 'MTD size: {}'.format(mtd.shape)
