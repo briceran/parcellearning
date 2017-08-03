@@ -29,13 +29,6 @@ hemiFunc['Left'] = 'L'
 hemi = 'Right'
 H = hemiFunc[hemi]
 
-hemiFunc = {}.fromkeys(['Right','Left'])
-hemiFunc['Right'] = 'R'
-hemiFunc['Left'] = 'L'
-
-hemi = 'Right'
-H = hemiFunc[hemi]
-
 for train in s:
     print(train)
     
