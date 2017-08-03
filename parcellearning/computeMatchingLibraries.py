@@ -188,7 +188,7 @@ for subj in s:
                         N.addToLibraries(train,trainMatch,matches[0])
     
                 vertexLibrary = N.vertLib
-                matchingMatrix = lb.buildMapptingMatrix(vertexLibrary,180)
+                matchingMatrix = lb.buildMappingMatrix(vertexLibrary,180)
                 print 'MatchingMatrix shape: {}'.format(matchingMatrix.shape)
                 M = {}
                 M['mm'] = matchingMatrix
