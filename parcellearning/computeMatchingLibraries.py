@@ -148,6 +148,7 @@ for subj in s:
             if cond:
     
                 N = lb.MatchingLibraryTest(subj,sLab,sMid,sSurf)
+                print 'ID: ' + N.ID
     
                 remaining = list(set(s).difference({subj}))
     
