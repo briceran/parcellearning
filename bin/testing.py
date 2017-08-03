@@ -55,8 +55,8 @@ if not os.path.isfile(outLib):
     
         if os.path.isfile(trainMatch):
             print trainMatch
-            matchDir = '{}Matches/{}/'.format(homeDir,'Right')
-            matchExt = '_corr*_200_50_1_50_doPCA.8.mat'
+            matchDir = '/mnt/parcellator/parcellation/parcellearning/Data/Matches/Right/'
+            matchExt = '_corr*_200_50_1_50_doPCA_8.mat'
             matchString = '{}oM_{}_{}_to_{}{}'.format(matchDir,'R',S,tr,matchExt)
             
             print matchString
