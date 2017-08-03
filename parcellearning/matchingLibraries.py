@@ -297,6 +297,8 @@ class MatchingLibraryTest(object):
         print cCoords.shape
 
         fixed = np.zeros((self.N,1))
+        
+        print fixed.shape
         for m in list(match):
             fixed[cCoords] = gCoords[match];
         fixed = fixed.astype(np.int32)
