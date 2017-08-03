@@ -16,6 +16,9 @@ import parcellearning.loaded as ld
 import parcellearning.malp as malp
 import parcellearning.MixtureModel as MM
 
+import keras
+from keras.models import load_model
+
 import glob
 import os
 import pickle
