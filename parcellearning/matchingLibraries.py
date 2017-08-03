@@ -282,16 +282,26 @@ class MatchingLibraryTest(object):
             
             self.vertLib = {}
             self.vertLib = self.vertLib.fromkeys(list(r))
+            
+        # load SubjectFeatures training data object
+        train = ld.loadPick(trainML)
         
         # load test to train matching
         match = np.squeeze(ld.loadMat(match) - 1).astype(int)
         
-        # load SubjectFeatures training data object
-        train = ld.loadPick(trainML)
+        gCoords = list(set(np.arange(train.N)).difference(set(train.mids)))
+        cCoords = list(set(np.arange(self.N)).difference(set(self.mids)))
+        
+        fixed = np.zeros((self.N,1))
+        for m in list(match):
+            fixed[cCoords] = gCoords[match];
+        fixed = fixed.astype(np.int32)
+        
+        
 
         # fixed matching
-        fixed = ld.fixMatching(match,self.N,self.mids,train.N,train.mids)
-        fixed = fixed.astype(int)
+        # fixed = ld.fixMatching(match,self.N,self.mids,train.N,train.mids)
+        # fixed = fixed.astype(int)
         
         # make sure matching is same length as source label
         if len(fixed) == self.N:
