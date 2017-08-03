@@ -119,9 +119,9 @@ hemiFunc = dict(zip(hemispheres,hAbb))
 
 # Mapping training data type to features included in model
 data = ['RestingState','ProbTrackX2','Full']
-dataFeatures = ['fs_cort,fs_subcort,sulcal,myelin,curv,label',
-                'pt_cort,pt_subcort,sulcal,myelin,curv,label',
-                'fs_cort,fs_subcort,pt_cort,pt_subcort,sulcal,myelin,curv,label']
+dataFeatures = ['fs_cort,fs_subcort,sulcal,myelin,curv',
+                'pt_cort,pt_subcort,sulcal,myelin,curv',
+                'fs_cort,fs_subcort,pt_cort,pt_subcort,sulcal,myelin,curv']
 
 dataFeatureFunc = dict(zip(data,dataFeatures))
 

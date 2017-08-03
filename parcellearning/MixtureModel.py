@@ -251,6 +251,7 @@ class GMM(object):
         """
 
         features = self.features
+        loadFeatures = 
  
         # load test subject data, save as attribtues
         tObject = ld.loadH5(y,*['full'])
@@ -301,7 +302,7 @@ class GMM(object):
         labels = self.labels
 
         xTest,yTest = mtd.shape
-        if yTest != self.input_dim:
+        if yTest != self.input_dim-1:
             raise Warning('Test data does not have the same number \
                           features as the training data.')
 
