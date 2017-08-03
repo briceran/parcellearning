@@ -6,6 +6,7 @@ Created on Sat Jul 29 01:40:23 2017
 @author: kristianeschenburg
 """
 
+import argparse
 import sys
 sys.path.append('..')
 
@@ -15,11 +16,16 @@ import os
 
 import parcellearning.loaded as ld
 
+parser = argparse.ArgumentParser(description='Compute random forest predictions.')
+# Parameters for input data
+parser.add_argument('-h','--hemi',help='hemisphere to process.',type=int,required=True)
+args = parser.parse_args()
+
 hemiFunc = {}.fromkeys(['Left','Right'])
 hemiFunc['Left'] = 'L'
 hemiFunc['Right'] = 'R'
 
-hemi = 'Left'
+hemi = args.hemi
 hstr = hemiFunc[hemi]
 
 
@@ -125,6 +131,11 @@ for s in subjects:
         if curv.ndim == 1:
             curv.shape+=(1,)
         curv[mid] = 0;
+        infInd = np.isinf(curv)
+        nanInd = np.isnan(curv)
+        curv[infInd] = 0
+        curv[nanInd] = 0
+        
             
         myl = ld.loadGii(mylObject)
         if myl.ndim == 1:
@@ -136,23 +147,48 @@ for s in subjects:
         if sul.ndim == 1:
             sul.shape+=(1,)
         sul[mid] = 0
+        infInd = np.isinf(sul)
+        nanInd = np.isnan(sul)
+        sul[infInd] = 0
+        sul[nanInd] = 0
         
         lab = ld.loadGii(labObject)
         if lab.ndim == 1:
             lab.shape+=(1,)
         lab[mid] = 0
+        infInd = np.isinf(lab)
+        nanInd = np.isnan(lab)
+        lab[infInd] = 0
+        lab[nanInd] = 0
         
         
         fsCort = ld.loadMat(fsCortObject)
         fsCort[mid,:] = 0
+        infInd = np.isinf(fsCort)
+        nanInd = np.isnan(fsCort)
+        fsCort[infInd] = 0
+        fsCort[nanInd] = 0
+        
         fsSubCort = ld.loadMat(fsSubCortObject)
         fsSubCort[mid,:] = 0
+        infInd = np.isinf(fsSubCort)
+        nanInd = np.isnan(fsSubCort)
+        fsSubCort[infInd] = 0
+        fsSubCort[nanInd] = 0
         
         ptxCort = np.log(ld.loadMat(ptxCortObject))
         ptxCort[mid,:] = 0
+        infInd = np.isinf(ptxCort)
+        nanInd = np.isnan(ptxCort)
+        ptxCort[infInd] = 0
+        ptxCort[nanInd] = 0
 
         ptxSubCort = np.log(ld.loadMat(ptxSubCortObject))
         ptxSubCort[mid,:] = 0;
+        infInd = np.isinf(ptxSubCort)
+        nanInd = np.isnan(ptxSubCort)
+        ptxSubCort[infInd] = 0
+        ptxSubCort[nanInd] = 0
 
         data = h5py.File(trainingObject,mode='w')
             
