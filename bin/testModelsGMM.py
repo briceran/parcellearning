@@ -64,9 +64,6 @@ def loadTest(yObject,yMatch,features):
         threshed = ld.loadMat(yMatch)
 
         ltvm = cu.vertexMemberships(threshed,180)
-        
-        print threshed.shape
-        print mtd.shep
 
         return [threshed,mtd,ltvm]
 
@@ -170,7 +167,6 @@ for itr in np.arange(N):
                 modelBase = '{}.{}.{}.{}.Iteration_{}{}'.format(classifier,
                                   hExt,classExt,d,itr,fExt)
                 modelFull = '{}{}'.format(modelDir,modelBase)
-                print modelFull
                 
                 currentModel = loadDict[fExt](modelFull)
                 
@@ -190,7 +186,6 @@ for itr in np.arange(N):
                         if not os.path.isfile(testOutput):
                         
                             testObject = '{}{}.{}.{}'.format(testDir,test_subj,hExt,testExt)
-                            print 'Test Object: {}'.format(testObject)
                             
                             testMids = '{}{}.{}.{}'.format(midsDir,test_subj,hExt,midsExt)
                             #print 'Test Mids: {}'.format(testMids)
@@ -209,8 +204,6 @@ for itr in np.arange(N):
                                 if classifier == 'GMM':
                                     
                                     [mm,mtd,ltvm] = currentModel.loadTest(testObject,testMatch)
-                                    print 'Input dim: {}'.format(currentModel.input_dim)
-                                    print 'MTD size: {}'.format(mtd.shape)
                                     
                                     currentModel.predict(mtd,ltvm,testMids)
                                     
