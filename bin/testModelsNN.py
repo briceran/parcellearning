@@ -189,14 +189,14 @@ for itr in np.arange(N):
                             testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
                             
                             #mids = ld.loadMat(testMids)
-                            mids = ld.loadMat(testMids)
+                            #mids = ld.loadMat(testMids)
             
                             if fExt == '.h5':
         
                                 [threshed,mtd,_] = loadTest(testObject,testMatch,data_features)
-                                mtd[mids,:] = 0
+                                #mtd[mids,:] = 0
                                 print 'mtd shape: {}'.format(mtd.shape)
-                                threshed[mids,:] = 0
+                                #threshed[mids,:] = 0
                                 print 'threshed shape: {}'.format(threshed.shape)
                                 
                                 predProbs = currentModel.predict(mtd)
@@ -205,7 +205,7 @@ for itr in np.arange(N):
                                 
                                 predicted = np.argmax(threshProbs,axis=1)+1
                             
-                            predicted[mids] = 0
+                            #predicted[mids] = 0
         
                             myl.darrays[0].data = np.array(predicted).astype(np.float32)
                             nb.save(myl,testOutput)
