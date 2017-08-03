@@ -112,6 +112,10 @@ for subj in s:
     
     outVertLib = '{}{}.{}.VertexLibrary.Test.p'.format(outLibDir,subj,H)
     
+    print outLibDir
+    print outLib
+    print outVertLib
+    
     if not os.path.isfile(outLib):
 
         # label file
@@ -143,7 +147,7 @@ for subj in s:
     
             if cond:
     
-                N = lb.MatchingLibraryTest(s,sLab,sMid,sSurf)
+                N = lb.MatchingLibraryTest(subj,sLab,sMid,sSurf)
     
                 remaining = list(set(s).difference({subj}))
     
