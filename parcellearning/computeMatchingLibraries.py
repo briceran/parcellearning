@@ -147,6 +147,8 @@ for subj in s:
     
                 for train in remaining:
                     
+                    print train
+                    
                     trainMatchDir = '{}MatchingLibraries/Train/{}/'.format(homeDir,hemi)
                     trainMatch = '{}{}.{}.MatchingLibrary.Train.p'.format(trainMatchDir,train,H)
                     
@@ -161,6 +163,7 @@ for subj in s:
                     match = glob.glob('{}'.format(matchString))
     
                     if len(match) > 0 and cond2:
+                        print 'Matching'
                         N.addToLibraries(train,trainMatch,match[0])
     
                 vertexLibrary = N.vertLib
