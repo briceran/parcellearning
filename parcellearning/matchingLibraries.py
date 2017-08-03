@@ -285,6 +285,7 @@ class MatchingLibraryTest(object):
             
         # load SubjectFeatures training data object
         train = ld.loadPick(trainML)
+        print train.__dict__.keys()
         
         # load test to train matching
         match = np.asarray(np.squeeze(ld.loadMat(match) - 1).astype(int))
@@ -297,10 +298,8 @@ class MatchingLibraryTest(object):
         print cCoords.shape
 
         fixed = np.squeeze(np.zeros((self.N,1)))
-        
         print fixed.shape
-        for m in list(match):
-            fixed[cCoords] = gCoords[match];
+        fixed[cCoords] = gCoords[match]
         fixed = fixed.astype(np.int32)
         
         
