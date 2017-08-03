@@ -59,11 +59,14 @@ def loadTest(yObject,yMatch,features):
         tObject.close()
 
         data = parsedData[ID]
-        mtd = cu.mergeFeatures(data,features)
+        mtd = cu.mergeFeatures(data,loadFeatures)
 
         threshed = ld.loadMat(yMatch)
 
         ltvm = cu.vertexMemberships(threshed,180)
+        
+        print threshed.shape
+        print mtd.shep
 
         return [threshed,mtd,ltvm]
 
