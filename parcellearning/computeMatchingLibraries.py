@@ -98,7 +98,7 @@ for train in s:
 
 """
 
-subjects = s[::-1]
+s = s[::-1]
 
 for subj in s:
     
