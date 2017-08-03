@@ -157,7 +157,7 @@ class MatchingLibraryTrain(object):
                     # get target vertex to which source vertex is mapped
                     vertex = fixed[node]
                     # get label of source vertex
-                    sl = sLab[node]
+                    sl = sLab[node]g
                     
                     # if target vertex and source label not midline
                     if vertex != -1 and sl > 0:
@@ -293,12 +293,7 @@ class MatchingLibraryTest(object):
         gCoords = np.asarray(list(set(np.arange(train.N)).difference(set(train.mids))))
         cCoords = np.asarray(list(set(np.arange(self.N)).difference(set(self.mids))))
 
-        print match.shape
-        print gCoords.shape
-        print cCoords.shape
-
         fixed = np.squeeze(np.zeros((self.N,1)))
-        print fixed.shape
         fixed[cCoords] = gCoords[match]
         fixed = fixed.astype(np.int32)
         
