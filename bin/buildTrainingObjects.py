@@ -112,9 +112,17 @@ for s in subjects:
     if cond:
         
         curv = ld.loadGii(curvObject)
+        if curv.ndim == 1:
+                curv.shape+=(1,)
         myl = ld.loadGii(mylObject)
+        if myl.ndim == 1:
+                myl.shape+=(1,)
         sul = ld.loadGii(sulObject)
+        if sul.ndim == 1:
+                sul.shape+=(1,)
         lab = ld.loadGii(labObject)
+        if lab.ndim == 1:
+                lab.shape+=(1,)
         
         fsCort = ld.loadMat(fsCortObject)
         fsSubCort = ld.loadMat(fsSubCortObject)
