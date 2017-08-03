@@ -91,7 +91,7 @@ outputDir = '{}Predictions/'.format(dataDir)
 #### MAPS
 # Mapping model type to file name type and file name extension
 
-methods = ['NetworkModel']
+methods = ['NeuralNetwork']
 exts = ['.h5']
 
 methodExtens = ['Layers.3.Nodes.100.Sampling.equal.Epochs.30.Batch.256.Rate.0.001.']
