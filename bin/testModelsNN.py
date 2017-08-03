@@ -195,7 +195,7 @@ for itr in np.arange(N):
         
                                 [threshed,mtd,_] = loadTest(testObject,testMatch,data_features)
                                 mtd[mids,:] = 0
-                                print 'mtd shape: {}'.forma(mtd.shape)
+                                print 'mtd shape: {}'.format(mtd.shape)
                                 threshed[mids,:] = 0
                                 print 'threshed shape: {}'.format(threshed.shape)
                                 
