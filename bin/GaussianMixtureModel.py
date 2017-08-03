@@ -55,6 +55,8 @@ with open(subjectList,'r') as inSubjects:
     subjects = inSubjects.readlines()
 subjects = [x.strip() for x in subjects]
 
+print 'Number of training subjects: {}'.format(len(subjects))
+
 # Generate parameter dictionary to update base atlases
 parameters = ['covariance_type','n_components']
 kars = {}.fromkeys(parameters)
