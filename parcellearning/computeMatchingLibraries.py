@@ -170,7 +170,7 @@ for subj in s:
                     trainMatch = '{}{}.{}.MatchingLibrary.Train.p'.format(trainMatchDir,train,H)
                     
                     matchDir = '{}Matches/{}/'.format(homeDir,hemi)
-                    matchExt = '_corr*_200_50_1_50_doPCA_8.mat'
+                    matchExt = '_corr*'
                     matches = glob.glob('{}oM_{}_{}_to_{}{}'.format(matchDir,H,subj,train,matchExt))
 
                     cond2 = True
