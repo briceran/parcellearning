@@ -82,10 +82,13 @@ for train in s:
 
                 cond2 = True
                 if not os.path.isfile(sourceLab):
+                    print '11'
                     cond2 = False
                 if not os.path.isfile(sourceMids):
+                    print '12'
                     cond2 = False
                 if not os.path.isfile(sourceSurf):
+                    print '13'
                     cond2 = False
 
                 if cond2:
@@ -119,10 +122,13 @@ for subj in s:
         cond = True
         
         if not os.path.isfile(sLab):
+            print '21'
             cond = False
         if not os.path.isfile(sMid):
+            print '22'
             cond = False
         if not os.path.isfile(sSurf):
+            print '23'
             cond = False
             
         print cond
