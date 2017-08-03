@@ -123,7 +123,7 @@ dataFeatures = ['fs_cort,fs_subcort,sulcal,myelin,curv',
 dataFeatureFunc = dict(zip(data,dataFeatures))
 
 # Number of testing sets
-N = 10
+N = 0
 
 # Iterate over test sets
 for itr in np.arange(N):
@@ -188,7 +188,8 @@ for itr in np.arange(N):
                             testMids = '{}{}.{}.{}'.format(midsDir,test_subj,hExt,midsExt)
                             testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
                             
-                            mids = ld.loadMat(testMids)-1
+                            #mids = ld.loadMat(testMids)
+                            mids = ld.loadMat(testMids)
             
                             if fExt == '.h5':
         
