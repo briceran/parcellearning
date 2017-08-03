@@ -168,50 +168,52 @@ for itr in np.arange(N):
                                   hExt,classExt,d,itr,fExt)
                 modelFull = '{}{}'.format(modelDir,modelBase)
                 
-                currentModel = loadDict[fExt](modelFull)
+                if os.path.isfile(modelFull):
                 
-                outputExt = '{}.{}.{}.Iteration_{}.func.gii'.format(classifier,
-                             hExt,d,itr)
-                
-                G = glob.glob('{}*{}'.format(outDirIter,outputExt)) 
-                if len(G) < len(subjects):
-                
-                    for test_subj in subjects:
-                        
-                        print 'Subject: {}'.format(test_subj)
-                        
-                        testOutput = '{}{}.{}'.format(outDirIter,test_subj,outputExt)
-                        
-                        if not os.path.isfile(testOutput):
-                        
-                            testObject = '{}{}.{}.{}'.format(testDir,test_subj,hExt,testExt)
-                            testMids = '{}{}.{}.{}'.format(midsDir,test_subj,hExt,midsExt)
-                            testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
+                    currentModel = loadDict[fExt](modelFull)
+                    
+                    outputExt = '{}.{}.{}.Iteration_{}.func.gii'.format(classifier,
+                                 hExt,d,itr)
+                    
+                    G = glob.glob('{}*{}'.format(outDirIter,outputExt)) 
+                    if len(G) < len(subjects):
+                    
+                        for test_subj in subjects:
                             
-                            #mids = ld.loadMat(testMids)
-                            #mids = ld.loadMat(testMids)
+                            print 'Subject: {}'.format(test_subj)
+                            
+                            testOutput = '{}{}.{}'.format(outDirIter,test_subj,outputExt)
+                            
+                            if not os.path.isfile(testOutput):
+                            
+                                testObject = '{}{}.{}.{}'.format(testDir,test_subj,hExt,testExt)
+                                testMids = '{}{}.{}.{}'.format(midsDir,test_subj,hExt,midsExt)
+                                testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
+                                
+                                #mids = ld.loadMat(testMids)
+                                #mids = ld.loadMat(testMids)
+                
+                                if fExt == '.h5':
             
-                            if fExt == '.h5':
-        
-                                [threshed,mtd,_] = loadTest(testObject,testMatch,data_features)
-                                #mtd[mids,:] = 0
-                                print 'mtd shape: {}'.format(mtd.shape)
-                                #threshed[mids,:] = 0
-                                print 'threshed shape: {}'.format(threshed.shape)
+                                    [threshed,mtd,_] = loadTest(testObject,testMatch,data_features)
+                                    #mtd[mids,:] = 0
+                                    print 'mtd shape: {}'.format(mtd.shape)
+                                    #threshed[mids,:] = 0
+                                    print 'threshed shape: {}'.format(threshed.shape)
+                                    
+                                    predProbs = currentModel.predict(mtd)
+                                    print 'pp shape: {}'.format(predProbs.shape)
+                                    threshProbs = threshed*predProbs[:,1:]
+                                    
+                                    predicted = np.argmax(threshProbs,axis=1)+1
                                 
-                                predProbs = currentModel.predict(mtd)
-                                print 'pp shape: {}'.format(predProbs.shape)
-                                threshProbs = threshed*predProbs[:,1:]
-                                
-                                predicted = np.argmax(threshProbs,axis=1)+1
-                            
-                            #predicted[mids] = 0
+                                #predicted[mids] = 0
+            
+                                myl.darrays[0].data = np.array(predicted).astype(np.float32)
+                                nb.save(myl,testOutput)
+                                                
+                            else:
+                                print '{} already generated.'.format(testOutput)
+                    else:
+                        print '{} for {} already processed.'.format(len(G),outputExt)
         
-                            myl.darrays[0].data = np.array(predicted).astype(np.float32)
-                            nb.save(myl,testOutput)
-                                            
-                        else:
-                            print '{} already generated.'.format(testOutput)
-                else:
-                    print '{} for {} already processed.'.format(len(G),outputExt)
-    
