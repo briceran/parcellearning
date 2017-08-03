@@ -233,7 +233,7 @@ class GMM(object):
         return [labelData,response]
 
 
-    def loadTest(self,y,yMatch):
+    def loadTest(self,y,yMatch,loadFeatures):
         
         """
         Method to load the test data into the object.  We might be interested
@@ -250,17 +250,15 @@ class GMM(object):
 
         """
 
-        features = self.features
-
         # load test subject data, save as attribtues
         tObject = ld.loadH5(y,*['full'])
         ID = tObject.attrs['ID']
         
-        parsedData = ld.parseH5(tObject,features)
+        parsedData = ld.parseH5(tObject,loadFeatures)
         tObject.close()
 
         data = parsedData[ID]
-        mtd = cu.mergeFeatures(data,features)
+        mtd = cu.mergeFeatures(data,loadFeatures)
         print 'Testing shape: {}'.format(mtd.shape)
 
         if self.scaled:
