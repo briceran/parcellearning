@@ -141,7 +141,6 @@ for subj in s:
                 N = lb.MatchingLibraryTest(s,sLab,sMid,sSurf)
     
                 remaining = list(set(s).difference({subj}))
-                print 'Remaining subjects: {}'.format(len(remaining))
     
                 for train in remaining:
                     
@@ -159,7 +158,6 @@ for subj in s:
                     match = glob.glob('{}'.format(matchString))
     
                     if len(match) > 0 and cond2:
-                        print 'has match'
                         N.addToLibraries(train,trainMatch,match[0])
     
                 vertexLibrary = N.vertLib
