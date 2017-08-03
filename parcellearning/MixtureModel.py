@@ -251,8 +251,7 @@ class GMM(object):
         """
 
         features = self.features
-        loadFeatures = 
- 
+
         # load test subject data, save as attribtues
         tObject = ld.loadH5(y,*['full'])
         ID = tObject.attrs['ID']
