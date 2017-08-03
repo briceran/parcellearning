@@ -151,6 +151,7 @@ for subj in s:
                 print 'ID: ' + N.ID
     
                 remaining = list(set(s).difference({subj}))
+                print len(remaining)
     
                 for train in remaining:
                     
