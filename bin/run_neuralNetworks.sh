@@ -52,7 +52,7 @@ for i in $(seq 0 $N); do
 		echo ${outFileExtension}
 		outFile=${outDir}${outFileExtension}.Iteration_${i}
 		trainingList=${dataDir}TrainTestLists/TrainingSubjects.${i}.txt
-		logFile=${outDir}logFile.NeuralNetwork.${exten}.${H}.${i}.Nodes.out
+		logFile=${outDir}logFile.NeuralNetwork.${exten}.${H}.${i}.Nodes.${nodes}.out
     	# Check if model already exists
 		if [ ! -f ${outFile}.h5 ]; then
     		echo "Model does not exist yet."
