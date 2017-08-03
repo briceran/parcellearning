@@ -205,7 +205,7 @@ for itr in np.arange(N):
                                     
                                     [mm,mtd,ltvm] = currentModel.loadTest(testObject,testMatch)
                                     
-                                    currentModel.predict(mtd,ltvm,testMids)
+                                    currentModel.predict(mtd,ltvm)
                                     
                                 P = currentModel.predicted
         
