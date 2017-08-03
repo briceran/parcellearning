@@ -176,7 +176,7 @@ for subj in s:
                         print 'no trainging object'
                         cond2 = False
                     
-                    if len(matches < 1):
+                    if len(matches) < 1:
                         print 'no matches'
                         cond2 = False
 
