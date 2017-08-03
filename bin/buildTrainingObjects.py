@@ -19,7 +19,7 @@ hemiFunc = {}.fromkeys(['Left','Right'])
 hemiFunc['Left'] = 'L'
 hemiFunc['Right'] = 'R'
 
-hemi = 'Right'
+hemi = 'Left'
 hstr = hemiFunc[hemi]
 
 
