@@ -118,6 +118,8 @@ H = hemiFunc[hemi]
 np.random.shuffle(s)
 
 for subj in s:
+    
+    print 'Current subjects: {}'.format(subj)
 
     # get output directory
     outLibDir = '{}MatchingLibraries/Test/'.format(homeDir)
@@ -160,6 +162,8 @@ for subj in s:
                 remaining = list(set(s).difference({subj}))
     
                 for train in remaining:
+                    
+                    print 'Current train: {}'.format(train)
 
                     # get 
                     trainMatchDir = '{}MatchingLibraries/Train/{}/'.format(homeDir,hemi)
