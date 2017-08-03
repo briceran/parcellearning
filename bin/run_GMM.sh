@@ -47,6 +47,7 @@ for i in $(seq 0 $N); do
 	trainingList=${dataDir}TrainTestLists/TrainingSubjects.${i}.txt
 	logFile=${outDir}logFile.GMM.${exten}.${H}.${i}.out
 	if [ ! -f ${outFile}.p ]; then
+	echo "Model does not exist yet."
     	nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -cov ${covType} -nc ${nComp} >& ${logFile} 2>&1&
 	fi
 done

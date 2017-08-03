@@ -329,7 +329,7 @@ class Atlas(object):
         return [labelData,response]
 
 
-    def predict(self,y,yMatch, yMids, softmax_type = 'BASE'):
+    def predict(self,testData,testMatch, testLTVM, yMids, softmax_type = 'BASE'):
         
         """
         Method to predict labels of test data.
@@ -343,6 +343,15 @@ class Atlas(object):
                     in the training data
                     
         """
+        
+        mids = ld.loadMat(yMids)-1
+        
+        testData[mids,:] = 0
+        testMatch[mids,:] = 0
+
+        mtd = testData
+        mm = testMatch
+        ltvm = testLTVM
 
         funcs = {'BASE': baseSoftMax,
                  'TREES': treeSoftMax,
@@ -350,19 +359,8 @@ class Atlas(object):
         
         labels = self.labels
         neighbors = self.neighbors
-
-        # Python is 0-indexed, while Matlab is not
-        # We adjust the Matlab coordinates by subtracting 1
-        midline = ld.loadMat(yMids)-1
-
-        R = 180
-        # For now, we provide the paths to predict
-        # In the future it might make sense to provide the data arrays
-        [mm,mtd,ltvm] = self.loadTest(y,yMatch)
-
-        mm[midline,:] = 0
-        mtd[midline,:] = 0
         
+        R = 180
         [xTest,yTest] = mtd.shape
         if yTest != self.input_dim:
             raise Warning('Test data does not have the same number \
@@ -414,7 +412,6 @@ class Atlas(object):
 
         data = parsedData[ID]
         mtd = cu.mergeFeatures(data,features)
-        print 'Testing shape: {}'.format(mtd.shape)
 
         if self.scaled:
             scaler = self.scaler

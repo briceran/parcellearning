@@ -34,12 +34,9 @@ elif [ $kind = "full" ]; then
 	feats="fs_cort,fs_subcort,pt_cort,pt_subcort,sulcal,myelin,curv,label"
 fi
 
-ND=(10 50 100 500)
-#ND=(10)
-
 layers=3
 downSample='equal'
-#nodes=1250
+nodes=100
 epochs=50
 batchSize=256
 rate=0.001
@@ -50,17 +47,15 @@ elif [ $hemisphere = 'Right' ]; then
 	H='R'
 fi
 
-for j in ${ND[*]}; do
-    for i in $(seq 0 $N); do
-    		nodes=${j}
-    		outFileExtension=NeuralNetwork.${H}.Layers.${layers}.Nodes.${nodes}.Sampling.${downSample}.Epochs.${epochs}.Batch.${batchSize}.Rate.${rate}.${exten}
-    		echo ${outFileExtension}
-    		outFile=${outDir}${outFileExtension}.Iteration_${i}.p
-    		trainingList=${dataDir}TrainTestLists/TrainingSubjects.${i}.txt
-    		logFile=${outDir}logFile.NeuralNetwork.${exten}.${H}.${i}.Nodes.${j}.out
-    		if [ ! -f ${outFile}.h5 ]; then
-    			nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -ds ${downSample} -l ${layers} -n ${nodes} -e ${epochs} -b ${batchSize} -r ${rate} >& ${logFile} 2>&1&
-    		fi
-	done
-	wait
+for i in $(seq 0 $N); do
+		outFileExtension=NeuralNetwork.${H}.Layers.${layers}.Nodes.${nodes}.Sampling.${downSample}.Epochs.${epochs}.Batch.${batchSize}.Rate.${rate}.${exten}
+		echo ${outFileExtension}
+		outFile=${outDir}${outFileExtension}.Iteration_${i}
+		trainingList=${dataDir}TrainTestLists/TrainingSubjects.${i}.txt
+		logFile=${outDir}logFile.NeuralNetwork.${exten}.${H}.${i}.Nodes.${j}.out
+    	# Check if model already exists
+		if [ ! -f ${outFile}.h5 ]; then
+    		echo "Model does not exist yet."
+			nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -ds ${downSample} -l ${layers} -n ${nodes} -e ${epochs} -b ${batchSize} -r ${rate} >& ${logFile} 2>&1&
+		fi
 done

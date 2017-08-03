@@ -249,10 +249,7 @@ class GMM(object):
                     in the training data
 
         """
-        
-        load = self.load
-        save = self.save
-        
+
         features = self.features
  
         # load test subject data, save as attribtues
@@ -277,7 +274,7 @@ class GMM(object):
         return [threshed,mtd,ltvm]
 
 
-    def predict(self,y,yMatch,yMids):
+    def predict(self,testData,testMatch,testLTVM, testMids):
         
         """
         Method to compute Mahalanobis distance of test data from the
@@ -291,18 +288,18 @@ class GMM(object):
                     surface vertices
         """
         
+        mids = ld.loadMat(testMids)-1
+        
+        testData[mids,:] = 0
+        testMatch[mids,:] = 0
+        
+        mtd = testData
+        mm = testMatch
+        ltvm = testLTVM
+        
         R = 180
         labels = self.labels
-        # load the testing datamap
-        [mm,mtd,ltvm] = self.loadTest(y,yMatch)
-        
-        # Python is 0-indexed, while Matlab is not
-        # We adjust the Matlab coordinates by subtracting 1
-        midline = ld.loadMat(yMids)-1
-        
-        mm[midline,:] = 0
-        mtd[midline,:] = 0
-        
+
         xTest,yTest = mtd.shape
         if yTest != self.input_dim:
             raise Warning('Test data does not have the same number \
