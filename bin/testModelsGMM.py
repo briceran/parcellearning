@@ -18,6 +18,8 @@ import parcellearning.MixtureModel as MM
 
 from keras.models import load_model
 
+import glob
+import os
 import pickle
 import nibabel as nb
 import numpy as np
@@ -91,8 +93,6 @@ testListDir = '{}TrainTestLists/'.format(dataDir)
 
 # Output directory
 outputDir = '{}Predictions/'.format(dataDir)
-
-
 
 #### MAPS
 # Mapping model type to file name type and file name extension
@@ -176,44 +176,50 @@ for itr in np.arange(N):
                 currentModel = loadDict[fExt](modelFull)
                 
                 outputExt = '{}.{}.{}.Iteration_{}.func.gii'.format(classifier,
-                             hExt,d,itr)    
+                             hExt,d,itr)
                 
-                for test_subj in subjects:
-                    
-                    print 'Subject: {}'.format(test_subj)
-                    
-                    testObject = '{}{}.{}.{}'.format(testDir,test_subj,hExt,testExt)
-                    #print 'Test Object: {}'.format(testObject)
-                    
-                    testMids = '{}{}.{}.{}'.format(midsDir,test_subj,hExt,midsExt)
-                    #print 'Test Mids: {}'.format(testMids)
-                    
-                    testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
-                    #print 'Test Match: {}'.format(testMatch)
-                    
-                    testOutput = '{}{}.{}'.format(outDirIter,test_subj,outputExt)
-                    #print 'Test Output: {}'.format(testOutput)
-                    
-                    mids = ld.loadMat(testMids)-1
-    
-                    if fExt == '.p':
-                        # If model was a random forest,current model is a LIST
-                        # of models.  We feed this in to malp.parallelPredictiong
-                        # along with the test data
-
-                        if classifier == 'GMM':
-                            currentModel.predict(testObject,testMatch,testMids)
+                G = glob.glob('{}*{}'.format(outDirIter,outputExt)) 
+                if len(G) < len(subjects):
+                
+                    for test_subj in subjects:
+                        
+                        print 'Subject: {}'.format(test_subj)
+                        
+                        testOutput = '{}{}.{}'.format(outDirIter,test_subj,outputExt)
+                        #print 'Test Output: {}'.format(testOutput)
+                        
+                        if not os.path.isfile(testOutput):
+                        
+                            testObject = '{}{}.{}.{}'.format(testDir,test_subj,hExt,testExt)
+                            #print 'Test Object: {}'.format(testObject)
                             
-                        P = currentModel.predicted
+                            testMids = '{}{}.{}.{}'.format(midsDir,test_subj,hExt,midsExt)
+                            #print 'Test Mids: {}'.format(testMids)
+                            
+                            testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
+                            #print 'Test Match: {}'.format(testMatch)
+                            
+                            mids = ld.loadMat(testMids)-1
 
-                        P[mids] = 0
-    
-                        myl.darrays[0].data = np.array(P).astype(np.float32)
-                        nb.save(myl,testOutput)
-                    
-                
-                
-                
-                
+                            if fExt == '.p':
+                                # If model was a random forest,current model is a LIST
+                                # of models.  We feed this in to malp.parallelPredictiong
+                                # along with the test data
         
+                                if classifier == 'GMM':
+                                    
+                                    [threshed,mtd,ltvm] = loadTest(testObject,testMatch)
+                                    
+                                    currentModel.predict(threshed,testMatch,ltvm,testMids)
+                                    
+                                P = currentModel.predicted
         
+                                P[mids] = 0
+            
+                                myl.darrays[0].data = np.array(P).astype(np.float32)
+                                nb.save(myl,testOutput)
+                        
+                        else:
+                            print '{} already generated.'.format(testOutput)
+                else:
+                    print '{} for {} already processed.'.format(len(G),outputExt)
