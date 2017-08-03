@@ -76,11 +76,14 @@ for train in s:
                 cond2 = True
                 if not os.path.isfile(sourceLab):
                     print '11'
+                    print sourceLab
                     cond2 = False
                 if not os.path.isfile(sourceMids):
+                    print sourceMids
                     print '12'
                     cond2 = False
                 if not os.path.isfile(sourceSurf):
+                    print sourceSurf
                     print '13'
                     cond2 = False
 
