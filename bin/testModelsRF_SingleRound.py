@@ -95,9 +95,13 @@ def parallelPredictRF(models,yObject,yMatch,yMids):
 
 def atlasPredictRF(mod,yObject,yMatch,yMids):
     
-    mod.predict(yObject,yMatch,yMids,softmax_type='FORESTS')
+    [mm,mtd,ltvm] = mod.loadTest(yObject,yMatch)
     
-    return mod.predicted
+    mod.predict(mtd,mm,ltvm,yMids,softmax_type='FORESTS')
+    
+    P = mod.predicted
+    
+    return P
 
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
 # Parameters for input data
@@ -105,7 +109,6 @@ parser.add_argument('-r','--round',help='Group of subjects to process.',type=int
 args = parser.parse_args()
 
 r = args.round
-
 
 # Directories where data and models exist
 dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
@@ -245,7 +248,7 @@ for itr in N:
 
                                 if classifier == 'RandomForest':
                                     
-                                    P = parallelPredictRF(curremtModel,testObject,
+                                    P = parallelPredictRF(currentModel,testObject,
                                                           testMatch,testMids)
                                     
                                     P[mids] = 0

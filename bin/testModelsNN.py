@@ -188,7 +188,6 @@ for itr in np.arange(N):
                             testMids = '{}{}.{}.{}'.format(midsDir,test_subj,hExt,midsExt)
                             testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
                             
-                            
                             mids = ld.loadMat(testMids)-1
             
                             if fExt == '.h5':

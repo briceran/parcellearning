@@ -94,7 +94,9 @@ def parallelPredictRF(models,yObject,yMatch,yMids):
 
 def atlasPredictRF(mod,yObject,yMatch,yMids):
     
-    mod.predict(yObject,yMatch,yMids,softmax_type='FORESTS')
+    [mm,mtd,ltvm] = mod.loadTest(yObject,yMatch)
+    
+    mod.predict(mtd,mm,ltvm,yMids,softmax_type='FORESTS')
     
     return mod.predicted
 
@@ -146,9 +148,9 @@ hemiFunc = dict(zip(hemispheres,hAbb))
 
 # Mapping training data type to features included in model
 data = ['RestingState','ProbTrackX2','Full']
-dataFeatures = ['fs_cort,fs_subcort,sulcal,myelin,curv,label',
-                'pt_cort,pt_subcort,sulcal,myelin,curv,label',
-                'fs_cort,fs_subcort,pt_cort,pt_subcort,sulcal,myelin,curv,label']
+dataFeatures = ['fs_cort,fs_subcort,sulcal,myelin,curv',
+                'pt_cort,pt_subcort,sulcal,myelin,curv',
+                'fs_cort,fs_subcort,pt_cort,pt_subcort,sulcal,myelin,curv']
 
 dataFeatureFunc = dict(zip(data,dataFeatures))
 
@@ -229,9 +231,7 @@ for itr in np.arange(N):
                             #print 'Test Match: {}'.format(testMatch)
     
                             mids = ld.loadMat(testMids)-1
-                            
-                    
-            
+
                             if fExt == '.p':
                                 # If model was a random forest,current model is a LIST
                                 # of models.  We feed this in to malp.parallelPredictiong

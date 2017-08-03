@@ -14,7 +14,6 @@ sys.path.append('..')
 
 import parcellearning.malp as malp
 
-
 import h5py
 import numpy as np
 import os

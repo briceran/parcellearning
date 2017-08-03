@@ -264,13 +264,11 @@ class Atlas(object):
 
         sample = np.random.choice(subjects,size=randomSample,replace=False)
         trainData = {s: trainData[s] for s in sample}
-        
-        
-        
+
         training = []
         labels = []
         
-        trainFeatures = list(set(self.features).difference('label'))
+        trainFeatures = list(set(self.features).difference({'label'}))
         for subj in trainData.keys():
             training.append(cu.mergeFeatures(trainData[subj],trainFeatures))
             labels.append(cu.mergeFeatures(trainData[subj],['label']))
@@ -327,9 +325,47 @@ class Atlas(object):
             raise ValueError('Training data is flawed.')
             
         return [labelData,response]
+    
+    
+    def loadTest(self,testObject,testMatch):
+        
+        """
+        Method to load the test data into the object.  We might be interested
+        in loading new test data into, so we have explicitly defined this is
+        as a method.
+        
+        Parameters:
+        - - - - -
+            y : SubjectFeatures object for a test brain      
+            yMatch : MatchingFeaturesTest object containing vertLib attribute 
+                    detailing which labels each vertex in surface y maps to 
+                    in the training data
+        """
+
+        testFeatures = list(set(self.features).difference({'label'}))
+ 
+        # load test subject data, save as attribtues
+        tObject = ld.loadH5(testObject,*['full'])
+        ID = tObject.attrs['ID']
+        
+        parsedData = ld.parseH5(tObject,testFeatures)
+        tObject.close()
+
+        data = parsedData[ID]
+        mtd = cu.mergeFeatures(data,testFeatures)
+
+        if self.scaled:
+            scaler = self.scaler
+            mtd = scaler.transform(mtd)
+            
+        threshed = ld.loadMat(testMatch)
+
+        ltvm = cu.vertexMemberships(threshed,180)
+
+        return [threshed,mtd,ltvm]
 
 
-    def predict(self,testObject,testMatch,testMids,softmax_type = 'BASE'):
+    def predict(self,mtd,mm,testLTVM,testMids,softmax_type = 'BASE'):
         
         """
         Method to predict labels of test data.
@@ -344,11 +380,11 @@ class Atlas(object):
                     
         """
         
-        [mm,mtd,ltvm] = self.loadTest(testObject,testMatch)
-        
         mids = ld.loadMat(testMids)-1
+        
         mm[mids,:] = 0;
         mtd[mids,:] = 0
+        ltvm = testLTVM
 
 
         funcs = {'BASE': baseSoftMax,
@@ -379,45 +415,10 @@ class Atlas(object):
                     baseline = cu.updatePredictions(baseline,members,preds)
                 
         predicted = np.argmax(baseline,axis=1)
+        predicted[mids] = 0
+        
         self.baseline = baseline
         self.predicted = predicted
-
-    def loadTest(self,testObject,testMatch):
-        
-        """
-        Method to load the test data into the object.  We might be interested
-        in loading new test data into, so we have explicitly defined this is
-        as a method.
-        
-        Parameters:
-        - - - - -
-            y : SubjectFeatures object for a test brain      
-            yMatch : MatchingFeaturesTest object containing vertLib attribute 
-                    detailing which labels each vertex in surface y maps to 
-                    in the training data
-        """
-
-        features = self.features
- 
-        # load test subject data, save as attribtues
-        tObject = ld.loadH5(testObject,*['full'])
-        ID = tObject.attrs['ID']
-        
-        parsedData = ld.parseH5(tObject,features)
-        tObject.close()
-
-        data = parsedData[ID]
-        mtd = cu.mergeFeatures(data,features)
-
-        if self.scaled:
-            scaler = self.scaler
-            mtd = scaler.transform(mtd)
-            
-        threshed = ld.loadMat(testMatch)
-
-        ltvm = cu.vertexMemberships(threshed,180)
-
-        return [threshed,mtd,ltvm]
 
 def compareTrainingDataSize(labelData,response):
     
