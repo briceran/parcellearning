@@ -123,7 +123,7 @@ dataFeatures = ['fs_cort,fs_subcort,sulcal,myelin,curv',
 dataFeatureFunc = dict(zip(data,dataFeatures))
 
 # Number of testing sets
-N = 0
+N = 1
 
 # Iterate over test sets
 for itr in np.arange(N):
