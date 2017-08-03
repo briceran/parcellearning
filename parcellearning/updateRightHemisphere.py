@@ -8,6 +8,7 @@ Created on Wed Aug  2 19:50:05 2017
 
 import os
 import h5py
+import numpy as np
 
 dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/TrainingObjects/FreeSurfer/'
 subjectList = '/mnt/parcellator/parcellation/HCP/Connectome_4/SubjectList.txt'
@@ -25,7 +26,7 @@ for s in subjects:
         dset = data[data.keys()[0]]
         
         for feature in dset.keys():
-            tempData = dset[feature]
+            tempData = np.asarray(dset[feature])
             
             if tempData.ndim == 1:
                 tempData.shape+=(1,)
