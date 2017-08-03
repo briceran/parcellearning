@@ -237,9 +237,7 @@ for itr in N:
                             #print 'Test Match: {}'.format(testMatch)
     
                             mids = ld.loadMat(testMids)-1
-                            
-                    
-            
+
                             if fExt == '.p':
                                 # If model was a random forest,current model is a LIST
                                 # of models.  We feed this in to malp.parallelPredictiong

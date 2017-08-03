@@ -50,16 +50,17 @@ elif [ $hemisphere = 'Right' ]; then
 	H='R'
 fi
 
-for i in $(seq 0 $N); do
-	for j in ${ND[*]}; do
-		nodes=${j}
-		outFileExtension=NeuralNetwork.${H}.Layers.${layers}.Nodes.${nodes}.Sampling.${downSample}.Epochs.${epochs}.Batch.${batchSize}.Rate.${rate}.${exten}
-		echo ${outFileExtension}
-		outFile=${outDir}${outFileExtension}.Iteration_${i}.p
-		trainingList=${dataDir}TrainTestLists/TrainingSubjects.${i}.txt
-		logFile=${outDir}logFile.NeuralNetwork.${exten}.${H}.${i}.Nodes.${j}.out
-		if [ ! -f ${outFile}.h5 ]; then
-			${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -ds ${downSample} -l ${layers} -n ${nodes} -e ${epochs} -b ${batchSize} -r ${rate} >& ${logFile}
-		fi
+for j in ${ND[*]}; do
+    for i in $(seq 0 $N); do
+    		nodes=${j}
+    		outFileExtension=NeuralNetwork.${H}.Layers.${layers}.Nodes.${nodes}.Sampling.${downSample}.Epochs.${epochs}.Batch.${batchSize}.Rate.${rate}.${exten}
+    		echo ${outFileExtension}
+    		outFile=${outDir}${outFileExtension}.Iteration_${i}.p
+    		trainingList=${dataDir}TrainTestLists/TrainingSubjects.${i}.txt
+    		logFile=${outDir}logFile.NeuralNetwork.${exten}.${H}.${i}.Nodes.${j}.out
+    		if [ ! -f ${outFile}.h5 ]; then
+    			nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -ds ${downSample} -l ${layers} -n ${nodes} -e ${epochs} -b ${batchSize} -r ${rate} >& ${logFile} 2>&1&
+    		fi
 	done
+	wait
 done
