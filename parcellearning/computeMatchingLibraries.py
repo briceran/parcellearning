@@ -14,6 +14,7 @@ import glob
 import os
 import numpy as np
 import pickle
+import scipy.io as sio
 
 subjectList = '/mnt/parcellator/parcellation/HCP/Connectome_4/SubjectList.txt'
 homeDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
@@ -168,3 +169,16 @@ for subj in s:
     
                 with open(outVertLib,"wb") as output:
                     pickle.dump(N.vertLib,output,-1)
+                    
+for subj in s:
+    
+    outFile = '{}MatchingMatrices/{}.R.MatchingMatrix.0.05.mat'.format(outLibDir,subj)
+    print outFile
+    if os.path.isfile(outVertLib):
+            with open(outVertLib,'r') as inv:
+                V = pickle.load(inv)
+            M = {}
+            mm = lb.buildMappingMatrix(V,180)
+            M['mm'] = mm
+            sio.savemat(outFile,M)
+                    
