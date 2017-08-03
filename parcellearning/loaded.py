@@ -93,10 +93,10 @@ def fixMatching(matching,sN,sMids,tN,tMids):
     """
     
     # get coordinates of vertices in target surface not in the midline
-    full_coords = list(set(range(0,tN))-set(tMids))
+    full_coords = list(set(np.arange(tN)).difference(set(tMids)))
     
     # get list of coordinates of length matching
-    match_coords = list(range(0,len(matching)))
+    match_coords = list(np.arange(len(matching)))
 
     # create dictionary mapping matching numbers to non-midline coords
     convert = dict((m,f) for m,f in zip(match_coords,full_coords))
@@ -107,7 +107,7 @@ def fixMatching(matching,sN,sMids,tN,tMids):
     if len(adjusted) < sN:
     
         cdata = np.zeros(shape=(sN,1))
-        coords = list(set(range(0,sN)) - set(sMids))
+        coords =list(set(np.arange(sN)).difference(set(sMids)))
         cdata[coords,0] = adjusted
         cdata[list(sMids),0] = -1
              

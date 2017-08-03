@@ -81,7 +81,7 @@ class MatchingLibraryTrain(object):
         self.N = verts.shape[0]
         self.label = ld.loadGii(target_label,0)
         
-        self.mids = ld.loadMat(target_mids)
+        self.mids = ld.loadMat(target_mids)-1
         
         if self.N != len(self.label):
             
@@ -126,7 +126,7 @@ class MatchingLibraryTrain(object):
         
         # load source label and midline vertices
         sLab = ld.loadGii(source_label,0)
-        sMids = ld.loadMat(source_mids)
+        sMids = ld.loadMat(source_mids)-1
         
         # check to make sure label file has same number of vertices as 
         # surface
@@ -248,7 +248,7 @@ class MatchingLibraryTest(object):
         self.N = verts.shape[0]
         self.label = ld.loadGii(source_label,0)
         
-        self.mids = ld.loadMat(source_mids)
+        self.mids = ld.loadMat(source_mids)-1
         
         if self.N != len(self.label):
             
