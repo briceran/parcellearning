@@ -16,9 +16,8 @@ import os
 
 import parcellearning.loaded as ld
 
-parser = argparse.ArgumentParser(description='Compute random forest predictions.')
-# Parameters for input data
-parser.add_argument('-h','--hemi',help='hemisphere to process.',required=True)
+parser = argparse.ArgumentParser(description='Build training objects.')
+parser.add_argument('-h','--hemi',help='hemisphere to process.',drequired=True)
 args = parser.parse_args()
 
 hemiFunc = {}.fromkeys(['Left','Right'])
