@@ -289,8 +289,8 @@ class MatchingLibraryTest(object):
         # load test to train matching
         match = np.squeeze(ld.loadMat(match) - 1).astype(int)
         
-        gCoords = list(set(np.arange(train.N)).difference(set(train.mids)))
-        cCoords = list(set(np.arange(self.N)).difference(set(self.mids)))
+        gCoords = np.asarray(list(set(np.arange(train.N)).difference(set(train.mids))))
+        cCoords = np.asarray(list(set(np.arange(self.N)).difference(set(self.mids))))
         
         fixed = np.zeros((self.N,1))
         for m in list(match):
