@@ -54,7 +54,7 @@ for train in s:
         
         M = lb.MatchingLibraryTrain(train,trainLab,trainMids,trainSurf)
         remSubj = set(s) - set([train])
-        tLab = homeDir + 'MatchingLibraries/' + train + '.{}.MatchingLibrary.Train.p'.format(H)
+        tLab = homeDir + 'MatchingLibraries/Train/{}/'.format(hemi) + train + '.{}.MatchingLibrary.Train.p'.format(H)
         
         if not os.path.isfile(tLab) :        
             for source in remSubj:
@@ -127,9 +127,7 @@ for subj in s:
         if not os.path.isfile(sSurf):
             print '23'
             cond = False
-            
-        print cond
-            
+
         if cond:
 
             N = lb.MatchingLibraryTest(s,sLab,sMid,sSurf)
@@ -152,6 +150,7 @@ for subj in s:
                 match = glob.glob('{}'.format(matchString))
                 
                 if len(match) > 0 and cond2:
+                    print 'has match'
                     N.addToLibraries(train,trainMatch,match[0])
 
             vertexLibrary = N.vertLib
