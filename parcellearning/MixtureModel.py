@@ -249,18 +249,16 @@ class GMM(object):
                     in the training data
 
         """
-        
-        testFeatures = list(set(self.features).difference({'label'}))
 
         # load test subject data, save as attribtues
         tObject = ld.loadH5(y,*['full'])
         ID = tObject.attrs['ID']
         
-        parsedData = ld.parseH5(tObject,testFeatures)
+        parsedData = ld.parseH5(tObject,self.features)
         tObject.close()
 
         data = parsedData[ID]
-        mtd = cu.mergeFeatures(data,testFeatures)
+        mtd = cu.mergeFeatures(data,self.features)
         print 'Testing shape: {}'.format(mtd.shape)
 
         if self.scaled:

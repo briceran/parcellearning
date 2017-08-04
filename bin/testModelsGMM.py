@@ -32,7 +32,7 @@ def pickleLoad(inFile):
     
     return data
 
-def loadTest(yObject,yMatch,features):
+def loadTest(model,yObject,yMatch):
         
         """
         Method to load the test data into the object.  We might be interested
@@ -46,20 +46,22 @@ def loadTest(yObject,yMatch,features):
                     detailing which labels each vertex in surface y maps to 
                     in the training data
         """
-        features = list(features.split(','))
-
-        loadFeatures = copy.copy(features)
-        loadFeatures = list(set(features).difference({'label'}))
-
+        
+        features = model.features
+        nf = []
+        for f in features:
+            if f != 'label':
+                nf.append(f)
+        
         # load test subject data, save as attribtues
         tObject = ld.loadH5(yObject,*['full'])
         ID = tObject.attrs['ID']
 
-        parsedData = ld.parseH5(tObject,loadFeatures)
+        parsedData = ld.parseH5(tObject,nf)
         tObject.close()
 
         data = parsedData[ID]
-        mtd = cu.mergeFeatures(data,loadFeatures)
+        mtd = cu.mergeFeatures(data,nf)
 
         threshed = ld.loadMat(yMatch)
 
@@ -168,6 +170,7 @@ for itr in np.arange(N):
                                   hExt,classExt,d,itr,fExt)
                 modelFull = '{}{}'.format(modelDir,modelBase)
                 
+                # load the model here
                 currentModel = loadDict[fExt](modelFull)
                 
                 outputExt = '{}.{}.{}.Iteration_{}.func.gii'.format(classifier,
@@ -203,7 +206,7 @@ for itr in np.arange(N):
         
                                 if classifier == 'GMM':
                                     
-                                    [mm,mtd,ltvm] = currentModel.loadTest(testObject,testMatch)
+                                    [mm,mtd,ltvm] = loadTest(currentModel,testObject,testMatch)
                                     
                                     currentModel.predict(mtd,ltvm)
                                     
