@@ -29,7 +29,7 @@ def pickleLoad(inFile):
     
     return data
 
-def loadTest(model,yObject,yMatch):
+def loadTest(yObject,yMatch,features):
         
         """
         Method to load the test data into the object.  We might be interested
@@ -44,7 +44,6 @@ def loadTest(model,yObject,yMatch):
                     in the training data
         """
         
-        features = model.features
         nf = []
         for f in features:
             if f != 'label':
