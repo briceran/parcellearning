@@ -341,18 +341,18 @@ class Atlas(object):
                     detailing which labels each vertex in surface y maps to 
                     in the training data
         """
+        
+        features = self.features
 
-        testFeatures = list(set(self.features).difference({'label'}))
- 
         # load test subject data, save as attribtues
         tObject = ld.loadH5(testObject,*['full'])
         ID = tObject.attrs['ID']
         
-        parsedData = ld.parseH5(tObject,testFeatures)
+        parsedData = ld.parseH5(tObject,features)
         tObject.close()
 
         data = parsedData[ID]
-        mtd = cu.mergeFeatures(data,testFeatures)
+        mtd = cu.mergeFeatures(data,features)
 
         if self.scaled:
             scaler = self.scaler
