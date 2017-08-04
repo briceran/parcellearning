@@ -168,6 +168,7 @@ for itr in np.arange(N):
                 print 'Data: {}'.format(d)
                 
                 data_features = dataFeatureFunc[d]
+                data_features = list(data_features.split(','))
                 
                 modelBase = '{}.{}.{}.{}.Iteration_{}{}'.format(classifier,
                                   hExt,classExt,d,itr,fExt)
