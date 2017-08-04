@@ -128,7 +128,7 @@ dataFeatures = ['fs_cort,fs_subcort,sulcal,myelin,curv',
 dataFeatureFunc = dict(zip(data,dataFeatures))
 
 # Number of testing sets
-N = 1
+N = 10
 
 # Iterate over test sets
 for itr in np.arange(N):
@@ -203,12 +203,9 @@ for itr in np.arange(N):
             
                                     [threshed,mtd,_] = loadTest(testObject,testMatch,data_features)
                                     #mtd[mids,:] = 0
-                                    print 'mtd shape: {}'.format(mtd.shape)
                                     #threshed[mids,:] = 0
-                                    print 'threshed shape: {}'.format(threshed.shape)
                                     
                                     predProbs = currentModel.predict(mtd)
-                                    print 'pp shape: {}'.format(predProbs.shape)
                                     threshProbs = threshed*predProbs[:,1:]
                                     
                                     predicted = np.argmax(threshProbs,axis=1)+1
