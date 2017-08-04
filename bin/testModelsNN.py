@@ -44,10 +44,14 @@ def loadTest(yObject,yMatch,features):
                     in the training data
         """
         
+        print 'Model features: {}'.format(features)
+        
         nf = []
         for f in features:
             if f != 'label':
                 nf.append(f)
+        
+        print 'Load test features: {}'.format(nf)
         
         # load test subject data, save as attribtues
         tObject = ld.loadH5(yObject,*['full'])
