@@ -38,7 +38,7 @@ def pickleLoad(inFile):
     
     return data
 
-def loadTest(yObject,yMatch,features):
+def loadTest(model,yObject,yMatch):
         
         """
         Method to load the test data into the object.  We might be interested
@@ -52,20 +52,24 @@ def loadTest(yObject,yMatch,features):
                     detailing which labels each vertex in surface y maps to 
                     in the training data
         """
-        features = list(features.split(','))
-
-        loadFeatures = copy.copy(features)
-        loadFeatures = list(set(features).difference({'label'}))
+        print 'Model features: {}'.format(model.features)
+        
+        nf = []
+        for f in model.features:
+            if f != 'label':
+                nf.append(f)
+        
+        print 'Load test features: {}'.format(nf)
 
         # load test subject data, save as attribtues
         tObject = ld.loadH5(yObject,*['full'])
         ID = tObject.attrs['ID']
 
-        parsedData = ld.parseH5(tObject,loadFeatures)
+        parsedData = ld.parseH5(tObject,nf)
         tObject.close()
 
         data = parsedData[ID]
-        mtd = cu.mergeFeatures(data,features)
+        mtd = cu.mergeFeatures(data,nf)
 
         threshed = ld.loadMat(yMatch)
 
@@ -74,10 +78,10 @@ def loadTest(yObject,yMatch,features):
         return [threshed,mtd,ltvm]
     
     
-def parallelPredictRF(models,yObject,yMatch,yMids):
+def parallelPredictRF(models,yTestObject,yTestMatch,yTestMids):
     
     predictedLabels = Parallel(n_jobs=NUM_CORES)(delayed(atlasPredictRF)(models[i],
-                               yObject,yMatch,yMids) for i,m in enumerate(models))
+                               yTestObject,yTestMatch,yTestMids) for i,m in enumerate(models))
 
     predictedLabels = np.column_stack(predictedLabels)
 
@@ -95,9 +99,9 @@ def parallelPredictRF(models,yObject,yMatch,yMids):
 
 def atlasPredictRF(mod,yObject,yMatch,yMids):
     
-    [mm,mtd,ltvm] = mod.loadTest(yObject,yMatch)
+    [mm,mtd,ltvm] = loadTest(mod,yObject,yMatch)
     
-    mod.predict(mtd,mm,ltvm,yMids,softmax_type='FORESTS')
+    mod.predict(mtd,mm,ltvm,yMids,softmax_type = 'FORESTS')
     
     P = mod.predicted
     
