@@ -118,6 +118,7 @@ for itr in np.arange(N):
 
                     ndt = []
                     for nDT in dataTypes:
+                        print nDT
                         
                         pairDTMap = '{}{}.{}.{}.{}.{}.label.gii'.format(predItrDir,subj,mt,hExt,nDT,itrExt)
                         ndtBaseMap = ld.loadGii(pairDTMap)
