@@ -118,14 +118,14 @@ for itr in np.arange(N):
 
                     ndt = []
                     for nDT in dataTypes:
-                        print nDT
                         
                         pairDTMap = '{}{}.{}.{}.{}.{}.label.gii'.format(predItrDir,subj,mt,hExt,nDT,itrExt)
                         ndtBaseMap = ld.loadGii(pairDTMap)
                         J2 = metrics.jaccard_similarity_score(dtBaseMap,ndtBaseMap)
                         D2 = (2.*J2)/(1+J2)
-                        print D2
                         ndt.append(D2)
+                    ndt = ndt.asarray(ndt)
+                    print ndt
                     
                     diceMatrix_Whole[k,0:3] = np.asarray(ndt)
                     diceMatrix_Whole[0:3,k] = np.asarray(ndt)
