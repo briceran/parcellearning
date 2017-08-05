@@ -107,7 +107,7 @@ for itr in np.arange(N):
                     sio.savemat(diceWholeFile,dcmw)
                     sio.savemat(diceRegionFile,dcmr)
                     
-                    errorMap = trueMap == dtBaseMap
+                    errorMap = trueMap != dtBaseMap
                     funcObject.darrays[0].data = errorMap.astype(np.float32)
                     nb.save(funcObject,errorFile)
                     
