@@ -86,6 +86,8 @@ for itr in np.arange(N):
     
         for s,subj in enumerate(subjects):
             for mt in methodTypes:
+                
+                print 'Method Type: {}'.format(mt)
             
                 trueMapFile = '{}{}.{}.{}'.format(lablDir,subj,hExt,lablExt)
                 trueMap = ld.loadGii(trueMapFile)
@@ -126,9 +128,10 @@ for itr in np.arange(N):
                         ndt.append(D2)
                     ndt = np.asarray(ndt)
                     print ndt
+                    print '{},{}'.format(k,len(ndt))
                     
-                    diceMatrix_Whole[k,0:3] = np.asarray(ndt)
-                    diceMatrix_Whole[0:3,k] = np.asarray(ndt)
+                    diceMatrix_Whole[k,0:len(ndt)] = ndt
+                    diceMatrix_Whole[0:len(ndt),k] = ndt
                     diceMatrix_Region[k,:] = singleLayerDice(dtBaseMap,trueMap)
                     
                     dcmw = {'wb': diceMatrix_Whole}
