@@ -84,12 +84,16 @@ for itr in np.arange(N):
     for hemi in hemiTypes:
         hExt = hemiMaps[hemi]
     
-        for s,subj in enumerate(subjects):
-            print subj
-            for mt in methodTypes:
-                
-                print 'Method Type: {}'.format(mt)
+        for mt in methodTypes:
             
+            outmmDW = '{}MeanDice.WB.{}.{}.{}.mat'.format(diceDir,mt,hExt,itrExt)
+            outmmDR = '{}MeanDice.Reg.{}.{}.{}.mat'.format(diceDir,mt,hExt,itrExt)
+            
+            meanMethodDiceWB = np.zeros((4,4))
+            meanMethodDiceRG = np.zeros((3,181))
+            
+            for s,subj in enumerate(subjects):
+
                 trueMapFile = '{}{}.{}.{}'.format(lablDir,subj,hExt,lablExt)
                 trueMap = ld.loadGii(trueMapFile)
 
@@ -110,8 +114,6 @@ for itr in np.arange(N):
         
                 ### Jaccard Computations ###
                 for k,DT in enumerate(dataTypes):
-                    
-                    "Row Data Type: {}".format(DT)
 
                     inDTMap = '{}{}.{}.{}.{}.{}.label.gii'.format(predItrDir,subj,mt,hExt,DT,itrExt)
                     dtBaseMap = ld.loadGii(inDTMap)
@@ -123,8 +125,7 @@ for itr in np.arange(N):
 
                     ndt = []
                     for j,nDT in enumerate(dataTypes):
-                        print "Data Tpe: {}".format(nDT)
-                        
+
                         pairDTMap = '{}{}.{}.{}.{}.{}.label.gii'.format(predItrDir,subj,mt,hExt,nDT,itrExt)
                         ndtBaseMap = ld.loadGii(pairDTMap)
                         J2 = metrics.jaccard_similarity_score(dtBaseMap,ndtBaseMap)
@@ -136,6 +137,9 @@ for itr in np.arange(N):
                     diceMatrix_Whole[k,0:len(ndt)] = ndt
                     diceMatrix_Whole[0:len(ndt),k] = ndt
                     diceMatrix_Region[k,:] = singleLayerDice(dtBaseMap,trueMap)
+                    
+                    meanMethodDiceWB+=diceMatrix_Whole
+                    meanMethodDiceRG+=diceMatrix_Region
                     
                     errorReg = regionalMisclassification(dtBaseMap,trueMap)
                     errReg = {'errReg': errorReg}
@@ -150,5 +154,17 @@ for itr in np.arange(N):
                 
                 sio.savemat(diceWholeFile,dcmw)
                 sio.savemat(diceRegionFile,dcmr)
+                
+                meanMethodDiceWB = meanMethodDiceWB/len(subjects)
+                mmdw = {'muwb': meanMethodDiceWB}
+                sio.savemat(outmmDW,mmdw)
+                
+                meanMethodDiceRG = meanMethodDiceRG/len(subjects)
+                mmdr = {'mureg': meanMethodDiceRG}
+                sio.savemat(outmmDR,mmdr)
+                
+                
+                
+        
             
                     
