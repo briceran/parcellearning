@@ -32,7 +32,7 @@ def singleLayerDice(pred,truth):
 def regionalMisclassification(pred,truth):
     
     labels = list(np.arange(181))
-    misClass = np.zeros((len(labels,2)))
+    misClass = np.zeros((len(labels),2))
     
     for lab in labels:
         indsT = np.where(truth == lab)[0]
@@ -125,7 +125,7 @@ for itr in np.arange(N):
                     
                     errorReg = regionalMisclassification(dtBaseMap,trueMap)
                     errReg = {'errReg': errorReg}
-                    sio.savemat(errReg,errorRegFile)
+                    sio.savemat(errorRegFile,errReg)
                     
                     errorMap = trueMap != dtBaseMap
                     funcObject.darrays[0].data = errorMap.astype(np.float32)
