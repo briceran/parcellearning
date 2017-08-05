@@ -142,6 +142,7 @@ for itr in np.arange(N):
                 funcObject.darrays[0].data = errorMap.astype(np.float32)
                 nb.save(funcObject,errorFile)
                 
+                print diceWholeFile
                 dcmw = {'wb': diceMatrix_Whole}
                 print dcmw
                 dcmr = {'reg': diceMatrix_Region}
