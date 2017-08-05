@@ -78,8 +78,8 @@ for itr in np.arange(N):
     
     itrExt = 'Iteration_{}'.format(itr)
     predItrDir = '{}Model_{}/'.format(predDir,itr)
-    diceDir = '{}/DiceMetrics/'.format(predItrDir)
-    erroDir = '{}/ErrorMaps/'.format(predItrDir,itr)
+    diceDir = '{}DiceMetrics/'.format(predItrDir)
+    erroDir = '{}ErrorMaps/'.format(predItrDir,itr)
     
     for hemi in hemiTypes:
         hExt = hemiMaps[hemi]
