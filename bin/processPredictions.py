@@ -126,6 +126,7 @@ for itr in np.arange(N):
                         J2 = metrics.jaccard_similarity_score(dtBaseMap,ndtBaseMap)
                         D2 = (2.*J2)/(1+J2)
                         ndt.append(D2)
+                        
                     ndt = np.asarray(ndt)
                     print ndt
                     print '{},{}'.format(k,len(ndt))
@@ -134,17 +135,18 @@ for itr in np.arange(N):
                     diceMatrix_Whole[0:len(ndt),k] = ndt
                     diceMatrix_Region[k,:] = singleLayerDice(dtBaseMap,trueMap)
                     
-                    dcmw = {'wb': diceMatrix_Whole}
-                    dcmr = {'reg': diceMatrix_Region}
-                    
-                    sio.savemat(diceWholeFile,dcmw)
-                    sio.savemat(diceRegionFile,dcmr)
-                    
                     errorReg = regionalMisclassification(dtBaseMap,trueMap)
                     errReg = {'errReg': errorReg}
                     sio.savemat(errorRegFile,errReg)
+                
+                errorMap = trueMap != dtBaseMap
+                funcObject.darrays[0].data = errorMap.astype(np.float32)
+                nb.save(funcObject,errorFile)
                     
-                    errorMap = trueMap != dtBaseMap
-                    funcObject.darrays[0].data = errorMap.astype(np.float32)
-                    nb.save(funcObject,errorFile)
+                dcmw = {'wb': diceMatrix_Whole}
+                dcmr = {'reg': diceMatrix_Region}
+                
+                sio.savemat(diceWholeFile,dcmw)
+                sio.savemat(diceRegionFile,dcmr)
+            
                     
