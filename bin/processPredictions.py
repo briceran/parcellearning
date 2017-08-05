@@ -24,7 +24,9 @@ def singleLayerDice(pred,truth):
         indsP = np.where(pred == lab)[0]
         indsT = np.where(truth == lab)[0]
         
-        D = (2*np.sum(indsP==indsT))/(len(indsP)+len(indsT))
+        overlap = len(set(indsP).intersection(set(indsT)))
+        
+        D = (2.*overlap)/(len(indsP)+len(indsT))
         dice[0,lab] = D
         
     return dice
