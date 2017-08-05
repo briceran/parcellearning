@@ -158,8 +158,8 @@ for itr in np.arange(N):
                 meanMethodDiceWB = np.zeros((4,4))
                 meanMethodDiceRG = np.zeros((3,181))
                 
-                outmwMC = '{}MeanMisClass.WB.{}.{}.{}.{}.mat'.format(diceDir,mt,hExt,DT,itrExt)
-                outmrMC = '{}MeanMisClass.Reg.{}.{}.{}.{}.mat'.format(diceDir,mt,hExt,DT,itrExt)
+                outmwMC = '{}MeanMisClass.WB.{}.{}.{}.{}.mat'.format(erroDir,mt,hExt,DT,itrExt)
+                outmrMC = '{}MeanMisClass.Reg.{}.{}.{}.{}.mat'.format(erroDir,mt,hExt,DT,itrExt)
                 outmmDW = '{}MeanDice.WB.{}.{}.{}.{}.mat'.format(diceDir,mt,hExt,DT,itrExt)
                 outmmDR = '{}MeanDice.Reg.{}.{}.{}.{}.mat'.format(diceDir,mt,hExt,DT,itrExt)
 
