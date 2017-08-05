@@ -98,7 +98,7 @@ for itr in np.arange(N):
                         D2 = (2.*J)/(1+J)
                         ndt.append(D2)
                     
-                    diceMatrix_Whole[0:2,0:2] = ndt.reshape(3,3)
+                    diceMatrix_Whole[0:2,0:2] = np.asarray(ndt).reshape(3,3)
                     diceMatrix_Region[k,:] = singleLayerDice(dtBaseMap,trueMap)
                     
                     dcmw = {'wb': diceMatrix_Whole}
