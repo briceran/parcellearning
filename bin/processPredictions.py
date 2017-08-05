@@ -123,6 +123,7 @@ for itr in np.arange(N):
                         ndtBaseMap = ld.loadGii(pairDTMap)
                         J2 = metrics.jaccard_similarity_score(dtBaseMap,ndtBaseMap)
                         D2 = (2.*J2)/(1+J2)
+                        print D2
                         ndt.append(D2)
                     
                     diceMatrix_Whole[k,0:3] = np.asarray(ndt)
