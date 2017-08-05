@@ -88,9 +88,11 @@ for itr in np.arange(N):
             
             outmmDW = '{}MeanDice.WB.{}.{}.{}.mat'.format(diceDir,mt,hExt,itrExt)
             outmmDR = '{}MeanDice.Reg.{}.{}.{}.mat'.format(diceDir,mt,hExt,itrExt)
+            outmrMC = '{}MeanMisClass.Reg.{}.{}.{}.mat'.format(diceDir,mt,hExt,itrExt)
             
             meanMethodDiceWB = np.zeros((4,4))
             meanMethodDiceRG = np.zeros((3,181))
+            meanRegMisClass = np.zeros((181,2))
             
             for s,subj in enumerate(subjects):
 
@@ -137,13 +139,14 @@ for itr in np.arange(N):
                     diceMatrix_Whole[k,0:len(ndt)] = ndt
                     diceMatrix_Whole[0:len(ndt),k] = ndt
                     diceMatrix_Region[k,:] = singleLayerDice(dtBaseMap,trueMap)
-                    
-                    meanMethodDiceWB+=diceMatrix_Whole
-                    meanMethodDiceRG+=diceMatrix_Region
-                    
+
                     errorReg = regionalMisclassification(dtBaseMap,trueMap)
                     errReg = {'errReg': errorReg}
                     sio.savemat(errorRegFile,errReg)
+                    
+                    meanMethodDiceWB+=diceMatrix_Whole
+                    meanMethodDiceRG+=diceMatrix_Region
+                    meanRegMisClass+=errorReg
                 
                 errorMap = trueMap != dtBaseMap
                 funcObject.darrays[0].data = errorMap.astype(np.float32)
@@ -162,6 +165,11 @@ for itr in np.arange(N):
                 meanMethodDiceRG = meanMethodDiceRG/len(subjects)
                 mmdr = {'mureg': meanMethodDiceRG}
                 sio.savemat(outmmDR,mmdr)
+                
+                meanRegMisClass = meanRegMisClass/len(subjects)
+                mmrmc = {'muregmc': meanRegMisClass}
+                sio.savemat(outmrMC,mmrmc)
+                
                 
                 
                 
