@@ -89,15 +89,7 @@ for itr in np.arange(N):
         hExt = hemiMaps[hemi]
     
         for mt in methodTypes:
-            
-            outmmDW = '{}MeanDice.WB.{}.{}.{}.mat'.format(diceDir,mt,hExt,itrExt)
-            outmmDR = '{}MeanDice.Reg.{}.{}.{}.mat'.format(diceDir,mt,hExt,itrExt)
-            outmrMC = '{}MeanMisClass.Reg.{}.{}.{}.mat'.format(diceDir,mt,hExt,itrExt)
-            
-            meanMethodDiceWB = np.zeros((4,4))
-            meanMethodDiceRG = np.zeros((3,181))
-            meanRegMisClass = np.zeros((181,2))
-            
+
             for s,subj in enumerate(subjects):
 
                 trueMapFile = '{}{}.{}.{}'.format(lablDir,subj,hExt,lablExt)
@@ -115,11 +107,12 @@ for itr in np.arange(N):
                 
                 diceWholeFile = '{}{}.{}.{}.Dice.WB.{}.mat'.format(diceDir,subj,mt,hExt,itrExt)
                 diceRegionFile = '{}{}.{}.{}.Dice.Reg.{}.mat'.format(diceDir,subj,mt,hExt,itrExt)
-                errorFile = '{}{}.{}.{}.Error.{}.func.gii'.format(erroDir,subj,mt,hExt,itrExt)
-                errorRegFile = '{}{}.{}.{}.Error.Regional.{}.mat'.format(erroDir,subj,mt,hExt,itrExt)
         
                 ### Jaccard Computations ###
                 for k,DT in enumerate(dataTypes):
+                    
+                    errorFile = '{}{}.{}.{}.Error.{}.{}.func.gii'.format(erroDir,subj,mt,hExt,DT,itrExt)
+                    errorRegFile = '{}{}.{}.{}.Error.Regional.{}.{}.mat'.format(erroDir,subj,mt,hExt,DT,itrExt)
 
                     inDTMap = '{}{}.{}.{}.{}.{}.label.gii'.format(predItrDir,subj,mt,hExt,DT,itrExt)
                     dtBaseMap = ld.loadGii(inDTMap)
@@ -147,14 +140,10 @@ for itr in np.arange(N):
                     errorReg = regionalMisclassification(dtBaseMap,trueMap)
                     errReg = {'errReg': errorReg}
                     sio.savemat(errorRegFile,errReg)
-                    
-                    meanMethodDiceWB+=diceMatrix_Whole
-                    meanMethodDiceRG+=diceMatrix_Region
-                    meanRegMisClass+=errorReg
                 
-                errorMap = trueMap != dtBaseMap
-                funcObject.darrays[0].data = errorMap.astype(np.float32)
-                nb.save(funcObject,errorFile)
+                    errorMap = trueMap != dtBaseMap
+                    funcObject.darrays[0].data = errorMap.astype(np.float32)
+                    nb.save(funcObject,errorFile)
                 
                 dcmw = {'wb': diceMatrix_Whole}
                 dcmr = {'reg': diceMatrix_Region}
@@ -162,21 +151,44 @@ for itr in np.arange(N):
                 sio.savemat(diceWholeFile,dcmw)
                 sio.savemat(diceRegionFile,dcmr)
                 
-                meanMethodDiceWB = meanMethodDiceWB/len(subjects)
-                mmdw = {'muwb': meanMethodDiceWB}
-                sio.savemat(outmmDW,mmdw)
+            for k,DT in enumerate(dataTypes):
                 
-                meanMethodDiceRG = meanMethodDiceRG/len(subjects)
-                mmdr = {'mureg': meanMethodDiceRG}
-                sio.savemat(outmmDR,mmdr)
+                meanMissClass = np.zeros((32492,1))
+                meanRegMisClass = np.zeros((181,2))
+                meanMethodDiceWB = np.zeros((4,4))
+                meanMethodDiceRG = np.zeros((3,181))
                 
-                meanRegMisClass = meanRegMisClass/len(subjects)
+                outmwMC = '{}MeanMisClass.WB.{}.{}.{}.{}.mat'.format(diceDir,mt,hExt,DT,itrExt)
+                outmrMC = '{}MeanMisClass.Reg.{}.{}.{}.{}.mat'.format(diceDir,mt,hExt,DT,itrExt)
+                outmmDW = '{}MeanDice.WB.{}.{}.{}.{}.mat'.format(diceDir,mt,hExt,DT,itrExt)
+                outmmDR = '{}MeanDice.Reg.{}.{}.{}.{}.mat'.format(diceDir,mt,hExt,DT,itrExt)
+
+                for s,subj in enumerate(subjects):
+                    
+                    errorFile = '{}{}.{}.{}.Error.{}.{}.func.gii'.format(erroDir,subj,mt,hExt,DT,itrExt)
+                    errorRegFile = '{}{}.{}.{}.Error.Regional.{}.{}.mat'.format(erroDir,subj,mt,hExt,DT,itrExt)
+                    
+                    errorMap = nb.load(errorFile)
+                    meanMissClass+=errorMap.darrays[0].data
+                    
+                    errorReg = sio.loadmat(errorRegFile)
+                    meanRegMisClass+=errorReg['errReg']
+                    
+                    
+                meanMissClass/=len(subjects)
+                meanRegMisClass/=len(subjects)
+                meanMethodDiceWB/=len(subjects)
+                meanMethodDiceRG/=len(subjects)
+            
+                mmwmc = {'muwbmc': meanMissClass}
+                sio.savemat(outmrMC,mmwmc)
+            
                 mmrmc = {'muregmc': meanRegMisClass}
                 sio.savemat(outmrMC,mmrmc)
                 
+                mmdw = {'muwb': meanMethodDiceWB}
+                sio.savemat(outmmDW,mmdw)
                 
-                
-                
-        
+                mmdr = {'mureg': meanMethodDiceRG}
+                sio.savemat(outmmDR,mmdr)
             
-                    
