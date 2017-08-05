@@ -28,7 +28,22 @@ def singleLayerDice(pred,truth):
         dice[0,lab] = D
         
     return dice
+
+def regionalMisclassification(pred,truth):
+    
+    labels = list(np.arange(181))
+    misClass = np.zeros((len(labels,2)))
+    
+    for lab in labels:
+        indsT = np.where(truth == lab)[0]
         
+        labsP = pred[indsT]
+        labsT = truth[indsT]
+        
+        misClass[lab,0] = len(indsT)
+        misClass[lab,1] = np.mean(labsT == labsP)
+    
+    return misClass
 
 methodTypes = ['NeuralNetwork','RandomForest','GMM']
 dataTypes = ['RestingState','ProbTrackX2','Full']
@@ -80,6 +95,7 @@ for itr in np.arange(N):
                     diceWholeFile = '{}{}.{}.{}.{}.Dice.WB.{}.mat'.format(diceDir,subj,mt,hExt,DT,itrExt)
                     diceRegionFile = '{}{}.{}.{}.{}.Dice.Reg.{}.mat'.format(diceDir,subj,mt,hExt,DT,itrExt)
                     errorFile = '{}{}.{}.{}.{}.Error.{}.func.gii'.format(erroDir,subj,mt,hExt,DT,itrExt)
+                    errorRegFile = '{}{}.{}.{}.{}.Error.Regional.{}.mat'.format(erroDir,subj,mt,hExt,DT,itrExt)
 
                     inDTMap = '{}{}.{}.{}.{}.{}.label.gii'.format(predItrDir,subj,mt,hExt,DT,itrExt)
                     dtBaseMap = ld.loadGii(inDTMap)
@@ -106,6 +122,10 @@ for itr in np.arange(N):
                     
                     sio.savemat(diceWholeFile,dcmw)
                     sio.savemat(diceRegionFile,dcmr)
+                    
+                    errorReg = regionalMisclassification(dtBaseMap,trueMap)
+                    errReg = {'errReg': errorReg}
+                    sio.savemat(errReg,errorRegFile)
                     
                     errorMap = trueMap != dtBaseMap
                     funcObject.darrays[0].data = errorMap.astype(np.float32)
