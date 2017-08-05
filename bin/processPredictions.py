@@ -106,6 +106,8 @@ for itr in np.arange(N):
                 ### Jaccard Computations ###
                 for k,DT in enumerate(dataTypes):
                     
+                    "Row Data Type: {}".format(DT)
+                    
                     diceWholeFile = '{}{}.{}.{}.{}.Dice.WB.{}.mat'.format(diceDir,subj,mt,hExt,DT,itrExt)
                     diceRegionFile = '{}{}.{}.{}.{}.Dice.Reg.{}.mat'.format(diceDir,subj,mt,hExt,DT,itrExt)
                     errorFile = '{}{}.{}.{}.{}.Error.{}.func.gii'.format(erroDir,subj,mt,hExt,DT,itrExt)
@@ -120,7 +122,8 @@ for itr in np.arange(N):
                     diceMatrix_Whole[3,k] = D
 
                     ndt = []
-                    for nDT in dataTypes:
+                    for j,nDT in enumerate(dataTypes):
+                        print "Data Tpe: {}".format(nDT)
                         
                         pairDTMap = '{}{}.{}.{}.{}.{}.label.gii'.format(predItrDir,subj,mt,hExt,nDT,itrExt)
                         ndtBaseMap = ld.loadGii(pairDTMap)
@@ -142,9 +145,7 @@ for itr in np.arange(N):
                 funcObject.darrays[0].data = errorMap.astype(np.float32)
                 nb.save(funcObject,errorFile)
                 
-                print diceWholeFile
                 dcmw = {'wb': diceMatrix_Whole}
-                print dcmw
                 dcmr = {'reg': diceMatrix_Region}
                 
                 sio.savemat(diceWholeFile,dcmw)
