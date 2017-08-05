@@ -128,9 +128,7 @@ for itr in np.arange(N):
                         ndt.append(D2)
                         
                     ndt = np.asarray(ndt)
-                    print ndt
-                    print '{},{}'.format(k,len(ndt))
-                    
+
                     diceMatrix_Whole[k,0:len(ndt)] = ndt
                     diceMatrix_Whole[0:len(ndt),k] = ndt
                     diceMatrix_Region[k,:] = singleLayerDice(dtBaseMap,trueMap)
@@ -142,6 +140,9 @@ for itr in np.arange(N):
                 errorMap = trueMap != dtBaseMap
                 funcObject.darrays[0].data = errorMap.astype(np.float32)
                 nb.save(funcObject,errorFile)
+                
+                print diceMatrix_Whole
+                print diceMatrix_Region
                     
                 dcmw = {'wb': diceMatrix_Whole}
                 dcmr = {'reg': diceMatrix_Region}
