@@ -26,8 +26,13 @@ def singleLayerDice(pred,truth):
         
         overlap = len(set(indsP).intersection(set(indsT)))
         
-        D = (2.*overlap)/(len(indsP)+len(indsT))
-        dice[0,lab] = D
+        denom = (len(indsP) + len(indsT))
+        
+        if denom == 0:
+            dice[0,lab] = 0
+        else:
+            D = (2.*overlap)/(len(indsP)+len(indsT))
+            dice[0,lab] = D
         
     return dice
 
