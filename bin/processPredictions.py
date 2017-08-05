@@ -18,7 +18,7 @@ from sklearn import metrics
 def singleLayerDice(pred,truth):
     
     labels = list(np.arange(181))
-    dice = np.zeros((len(labels),1))
+    dice = np.zeros((1,len(labels)))
     
     for lab in labels:
         indsP = np.where(pred == lab)[0]
