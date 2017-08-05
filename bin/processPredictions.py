@@ -85,6 +85,7 @@ for itr in np.arange(N):
         hExt = hemiMaps[hemi]
     
         for s,subj in enumerate(subjects):
+            print subj
             for mt in methodTypes:
                 
                 print 'Method Type: {}'.format(mt)
@@ -141,9 +142,8 @@ for itr in np.arange(N):
                 funcObject.darrays[0].data = errorMap.astype(np.float32)
                 nb.save(funcObject,errorFile)
                 
-                print diceMatrix_Whole
-                    
                 dcmw = {'wb': diceMatrix_Whole}
+                print dcmw
                 dcmr = {'reg': diceMatrix_Region}
                 
                 sio.savemat(diceWholeFile,dcmw)
