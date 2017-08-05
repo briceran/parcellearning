@@ -93,6 +93,10 @@ for itr in np.arange(N):
                 diceMatrix_Whole = np.zeros((4,4))
                 diceMatrix_Region = np.zeros((3,181))
                 
+                jTrue = metrics.jaccard_similarity_score(trueMap,trueMap)
+                dTrue = (2.*jTrue)/(1+jTrue)
+                diceMatrix_Whole[3,3] = dTrue
+                
                 inMyl = '{}MyelinDensity/{}.{}.MyelinMap.32k_fs_LR.func.gii'.format(dataDir,subj,hExt)
                 funcObject = nb.load(inMyl)
         
@@ -122,6 +126,7 @@ for itr in np.arange(N):
                         ndt.append(D2)
                     
                     diceMatrix_Whole[k,0:3] = np.asarray(ndt)
+                    diceMatrix_Whole[0:3,k] = np.asarray(ndt)
                     diceMatrix_Region[k,:] = singleLayerDice(dtBaseMap,trueMap)
                     
                     dcmw = {'wb': diceMatrix_Whole}
