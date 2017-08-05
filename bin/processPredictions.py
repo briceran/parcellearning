@@ -102,16 +102,16 @@ for itr in np.arange(N):
                 
                 inMyl = '{}MyelinDensity/{}.{}.MyelinMap.32k_fs_LR.func.gii'.format(dataDir,subj,hExt)
                 funcObject = nb.load(inMyl)
+                
+                diceWholeFile = '{}{}.{}.{}.Dice.WB.{}.mat'.format(diceDir,subj,mt,hExt,itrExt)
+                diceRegionFile = '{}{}.{}.{}.Dice.Reg.{}.mat'.format(diceDir,subj,mt,hExt,itrExt)
+                errorFile = '{}{}.{}.{}.Error.{}.func.gii'.format(erroDir,subj,mt,hExt,itrExt)
+                errorRegFile = '{}{}.{}.{}.Error.Regional.{}.mat'.format(erroDir,subj,mt,hExt,itrExt)
         
                 ### Jaccard Computations ###
                 for k,DT in enumerate(dataTypes):
                     
                     "Row Data Type: {}".format(DT)
-                    
-                    diceWholeFile = '{}{}.{}.{}.{}.Dice.WB.{}.mat'.format(diceDir,subj,mt,hExt,DT,itrExt)
-                    diceRegionFile = '{}{}.{}.{}.{}.Dice.Reg.{}.mat'.format(diceDir,subj,mt,hExt,DT,itrExt)
-                    errorFile = '{}{}.{}.{}.{}.Error.{}.func.gii'.format(erroDir,subj,mt,hExt,DT,itrExt)
-                    errorRegFile = '{}{}.{}.{}.{}.Error.Regional.{}.mat'.format(erroDir,subj,mt,hExt,DT,itrExt)
 
                     inDTMap = '{}{}.{}.{}.{}.{}.label.gii'.format(predItrDir,subj,mt,hExt,DT,itrExt)
                     dtBaseMap = ld.loadGii(inDTMap)
