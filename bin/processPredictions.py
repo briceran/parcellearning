@@ -6,6 +6,7 @@ Created on Fri Aug  4 17:15:05 2017
 @author: kristianeschenburg
 """
 
+import sys
 sys.path.append('..')
 import parcellearning.loaded as ld
 
