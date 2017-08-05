@@ -47,8 +47,12 @@ def regionalMisclassification(pred,truth):
         labsP = pred[indsT]
         labsT = truth[indsT]
         
+        mu = np.mean(labsT == labsP)
+        if np.isnan(mu):
+            mu = 0;
+        
         misClass[lab,0] = len(indsT)
-        misClass[lab,1] = np.mean(labsT == labsP)
+        misClass[lab,1] = mu
     
     return misClass
 
