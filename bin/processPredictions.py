@@ -124,7 +124,7 @@ for itr in np.arange(N):
                         J2 = metrics.jaccard_similarity_score(dtBaseMap,ndtBaseMap)
                         D2 = (2.*J2)/(1+J2)
                         ndt.append(D2)
-                    ndt = ndt.asarray(ndt)
+                    ndt = np.asarray(ndt)
                     print ndt
                     
                     diceMatrix_Whole[k,0:3] = np.asarray(ndt)
