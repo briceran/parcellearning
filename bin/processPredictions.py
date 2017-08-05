@@ -142,7 +142,6 @@ for itr in np.arange(N):
                 nb.save(funcObject,errorFile)
                 
                 print diceMatrix_Whole
-                print diceMatrix_Region
                     
                 dcmw = {'wb': diceMatrix_Whole}
                 dcmr = {'reg': diceMatrix_Region}
