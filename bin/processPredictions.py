@@ -32,7 +32,7 @@ def singleLayerDice(pred,truth):
             dice[0,lab] = 0
         else:
             D = (2.*overlap)/(len(indsP)+len(indsT))
-            dice[lab] = D
+            dice[0,lab] = D
         
     return dice
 
