@@ -25,7 +25,7 @@ def singleLayerDice(pred,truth):
         indsT = np.where(truth == lab)[0]
         
         D = (2*np.sum(indsP==indsT))/(len(indsP)+len(indsT))
-        dice[lab] = D
+        dice[0,lab] = D
         
     return dice
         
