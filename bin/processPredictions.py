@@ -79,7 +79,7 @@ for itr in np.arange(N):
                     
                     diceWholeFile = '{}{}.{}.{}.{}.Dice.WB.{}.mat'.format(diceDir,subj,mt,hExt,DT,itrExt)
                     diceRegionFile = '{}{}.{}.{}.{}.Dice.Reg.{}.mat'.format(diceDir,subj,mt,hExt,DT,itrExt)
-                    errorFile = '{}{}.{}.{}.{}.Error.{}.mat'.format(erroDir,subj,mt,hExt,DT,itrExt)
+                    errorFile = '{}{}.{}.{}.{}.Error.{}.func.gii'.format(erroDir,subj,mt,hExt,DT,itrExt)
 
                     inDTMap = '{}{}.{}.{}.{}.{}.label.gii'.format(predItrDir,subj,mt,hExt,DT,itrExt)
                     dtBaseMap = ld.loadGii(inDTMap)
