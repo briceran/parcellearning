@@ -47,7 +47,7 @@ N = 10
 
 for itr in np.arange(N):
     
-    itrDir = '{}Model_{}/'.format(itr)
+    itrDir = '{}Model_{}/'.format(predDir,itr)
     subjList = '{}TestingSubjects.{}.txt'.format(testDir,itr)
     
     with open(subjList,'r') as insubj:
