@@ -153,7 +153,7 @@ for itr in np.arange(N):
                 
             for k,DT in enumerate(dataTypes):
                 
-                meanMissClass = np.zeros((32492,1))
+                meanMisClass = np.zeros((32492,1))
                 meanRegMisClass = np.zeros((181,2))
                 meanMethodDiceWB = np.zeros((4,4))
                 meanMethodDiceRG = np.zeros((3,181))
@@ -169,19 +169,18 @@ for itr in np.arange(N):
                     errorRegFile = '{}{}.{}.{}.Error.Regional.{}.{}.mat'.format(erroDir,subj,mt,hExt,DT,itrExt)
                     
                     errorMap = nb.load(errorFile)
-                    meanMissClass+=errorMap.darrays[0].data
+                    meanMisClass[:,0]+=errorMap.darrays[0].data
                     
                     errorReg = sio.loadmat(errorRegFile)
                     meanRegMisClass+=errorReg['errReg']
                     
                     
-                meanMissClass/=len(subjects)
+                meanMisClass/=len(subjects)
                 meanRegMisClass/=len(subjects)
                 meanMethodDiceWB/=len(subjects)
                 meanMethodDiceRG/=len(subjects)
             
-                mmwmc = {'muwbmc': meanMissClass}
-                sio.savemat(outmrMC,mmwmc)
+                myl.darrays[0].data = np.asarray(meanMisClass).astype(np.float32)
             
                 mmrmc = {'muregmc': meanRegMisClass}
                 sio.savemat(outmrMC,mmrmc)
