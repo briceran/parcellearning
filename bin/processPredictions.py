@@ -15,6 +15,9 @@ import parcellearning.loaded as ld
 import nibabel as nb
 import numpy as np
 import scipy.io as sio
+import pickle
+
+import sklearn
 from sklearn import metrics
 
 def singleLayerDice(pred,truth):
@@ -100,6 +103,9 @@ if PART == 1:
             hExt = hemiMaps[hemi]
         
             for mt in methodTypes:
+                
+                misClassDictFile = '{}MisClass.WB.{}.{}.p'.format(erroDir,hExt,mt)
+                misClassDict = {k: [] for k in dataTypes}
     
                 for s,subj in enumerate(subjects):
     
@@ -118,6 +124,8 @@ if PART == 1:
                     
                     diceWholeFile = '{}{}.{}.{}.Dice.WB.{}.mat'.format(diceDir,subj,mt,hExt,itrExt)
                     diceRegionFile = '{}{}.{}.{}.Dice.Reg.{}.mat'.format(diceDir,subj,mt,hExt,itrExt)
+                    
+                    
             
                     ### Jaccard Computations ###
                     for k,DT in enumerate(dataTypes):
@@ -132,6 +140,9 @@ if PART == 1:
                         
                         diceMatrix_Whole[k,3] = D
                         diceMatrix_Whole[3,k] = D
+                        
+                        acc = sklearn.metrics.accuracy_score(trueMap,dtBaseMap)
+                        misClassDict[DT].append(acc)
     
                         ndt = []
                         for j,nDT in enumerate(dataTypes):
