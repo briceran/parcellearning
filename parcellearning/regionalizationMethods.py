@@ -311,10 +311,14 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
                 if l == []:
                     minDist.remove(l)
                     
-            print len(sg_nodes)
+            #print len(sg_nodes)
+            #print len(minDist)
+            #print sg_nodes
+            #print minDist
+            
+            minDist = list(np.squeeze(np.asarray(minDist).astype(np.int32)))
             print len(minDist)
-            print sg_nodes
-            print minDist
+            print len(sg_nodes)
             
             for k,v in enumerate(sg_nodes):
                 if v in sg_intern:
