@@ -326,6 +326,7 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
 
     print 'Label {} layers'.format(lab)
     D = distances.values()
+    print D
     print set(D)
 
     layered = {k: [] for k in set(D)}
