@@ -147,7 +147,7 @@ if PART == 1:
                         diceMatrix_Whole[k,3] = D
                         diceMatrix_Whole[3,k] = D
                         
-                        acc = sklearn.metrics.accuracy_score(trueMap,dtBaseMap)
+                        acc = np.mean(trueMap == dtBaseMap)
                         misClassDict[DT].append(acc)
     
                         ndt = []
