@@ -103,6 +103,8 @@ if PART == 1:
         
         for hemi in hemiTypes:
             hExt = hemiMaps[hemi]
+            
+            print hemi
         
             for mt in methodTypes:
                 
