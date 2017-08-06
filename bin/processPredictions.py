@@ -188,17 +188,18 @@ if PART == 1:
                     meanMisClass = np.zeros((32492,1))
                     meanRegMisClass = np.zeros((181,2))
                     meanMethodDiceWB = np.zeros((4,4))
-                    meanMethodDiceRG = np.zeros((3,181))
+                    #meanMethodDiceRG = np.zeros((3,181))
                     
                     outmwMC = '{}MeanMisClass.WB.{}.{}.{}.{}.func.gii'.format(erroDir,mt,hExt,DT,itrExt)
                     outmrMC = '{}MeanMisClass.Reg.{}.{}.{}.{}.mat'.format(erroDir,mt,hExt,DT,itrExt)
                     outmmDW = '{}MeanDice.WB.{}.{}.{}.{}.mat'.format(diceDir,mt,hExt,DT,itrExt)
-                    outmmDR = '{}MeanDice.Reg.{}.{}.{}.{}.mat'.format(diceDir,mt,hExt,DT,itrExt)
+                    #outmmDR = '{}MeanDice.Reg.{}.{}.{}.{}.mat'.format(diceDir,mt,hExt,DT,itrExt)
     
                     for s,subj in enumerate(subjects):
-                        
+
                         errorFile = '{}{}.{}.{}.Error.{}.{}.func.gii'.format(erroDir,subj,mt,hExt,DT,itrExt)
                         errorRegFile = '{}{}.{}.{}.Error.Regional.{}.{}.mat'.format(erroDir,subj,mt,hExt,DT,itrExt)
+                        diceWholeFile = '{}{}.{}.{}.Dice.WB.{}.mat'.format(diceDir,subj,mt,hExt,itrExt)
                         
                         errorMap = nb.load(errorFile)
                         meanMisClass[:,0]+=errorMap.darrays[0].data
@@ -206,12 +207,16 @@ if PART == 1:
                         errorReg = sio.loadmat(errorRegFile)
                         meanRegMisClass+=errorReg['errReg']
                         
+                        dice = sio.load(diceWholeFile)
+                        dice = dice['dcmw']
+                        meanMethodDiceWB+=dice
+                        
                         
                     meanMisClass/=(1.*len(subjects))
                     meanRegMisClass/=(1.*len(subjects))
                     meanMethodDiceWB/=(1.*len(subjects))
                     #print meanMethodDiceWB
-                    meanMethodDiceRG/=(1*len(subjects))
+                    #meanMethodDiceRG/=(1*len(subjects))
                 
                     funcObject.darrays[0].data = np.asarray(meanMisClass).astype(np.float32)
                     nb.save(funcObject,outmwMC)
@@ -222,8 +227,8 @@ if PART == 1:
                     mmdw = {'muwb': meanMethodDiceWB}
                     sio.savemat(outmmDW,mmdw)
                     
-                    mmdr = {'mureg': meanMethodDiceRG}
-                    sio.savemat(outmmDR,mmdr)
+                    #mmdr = {'mureg': meanMethodDiceRG}
+                    #sio.savemat(outmmDR,mmdr)
 
 if PART == 2:
 
