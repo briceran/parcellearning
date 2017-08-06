@@ -220,7 +220,7 @@ if PART == 2:
                     print itr
                     
                     meanDir = '{}Model_{}/ErrorMaps/'.format(predDir,itr)
-                    meanFile = '{}MeanMisClass.Reg.{}.{}.{}.Iteration_0.mat'.format(meanDir,mt,hExt,dt)
+                    meanFile = '{}MeanMisClass.Reg.{}.{}.{}.Iteration_{}.mat'.format(meanDir,mt,hExt,dt,itr)
                     
                     data = sio.loadmat(meanFile)
                     data = data['muregmc']
@@ -247,7 +247,7 @@ if PART == 2:
                     print itr
                     
                     meanDir = '{}Model_{}/DiceMetrics/'.format(predDir,itr)
-                    meanFile = '{}MeanDice.WB.{}.{}.{}.Iteration_0.mat'.format(meanDir,mt,hExt,dt)
+                    meanFile = '{}MeanDice.WB.{}.{}.{}.Iteration_{}.mat'.format(meanDir,mt,hExt,dt,itr)
                     
                     data = sio.loadmat(meanFile)
                     data = data['muwb']
