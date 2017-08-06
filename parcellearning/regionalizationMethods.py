@@ -307,7 +307,7 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
             se = sp[:,external]
             se = se.astype(np.int32)
             
-            for x in se.shape[0]:
+            for x in np.arange(se.shape[0]):
                 print se[x,:]
             minDist = np.min(se,axis=1)
 
