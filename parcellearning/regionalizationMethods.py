@@ -250,11 +250,12 @@ def computeLabelLayers(labelFile,surfaceAdjacency,borderFile):
     """
     
     for i,labelValue in enumerate(L):
+        if borders.has_key(labelValue):
         
-        inds = np.where(label == labelValue)[0]
-        bm = borders[labelValue]
-
-        layers[labelValue] = labelLayers(labelValue,inds,surfAdj,bm)
+            inds = np.where(label == labelValue)[0]
+            bm = borders[labelValue]
+    
+            layers[labelValue] = labelLayers(labelValue,inds,surfAdj,bm)
 
     return layers
 
@@ -311,8 +312,7 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
                 if v in sg_intern:
                     distances[v] = int(np.asarray(minDist[k]))
 
-    print 'layers'
-    print distances.values()
+    print 'Label {} layers'.format(lab)
     layered = {k: [] for k in set(distances.values())}
     
     for vertex in distances.keys():
