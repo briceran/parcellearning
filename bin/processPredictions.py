@@ -108,7 +108,7 @@ if PART == 1:
         
             for mt in methodTypes:
                 
-                misClassDictFile = '{}MisClass.WB.{}.{}.p'.format(erroDir,hExt,mt)
+                misClassDictFile = '{}MisClass.WB.{}.{}.Iteration_{}.p'.format(erroDir,hExt,mt,itr)
                 misClassDict = {k: [] for k in dataTypes}
     
                 for s,subj in enumerate(subjects):
