@@ -229,7 +229,7 @@ if PART == 2:
                 concatList = np.row_stack(concatList)
                 concat = {}
                 concat['muregconc'] = concatList
-                sio.savMat(concatFile,concat)
+                sio.savemat(concatFile,concat)
                 
     
        # Concatenate Regional Mean Errors Across Iterations
@@ -256,4 +256,4 @@ if PART == 2:
                 concatList = np.row_stack(concatList)
                 concat = {}
                 concat['muwb'] = concatList
-                sio.savMat(concatFile,concat)             
+                sio.savemat(concatFile,concat)             
