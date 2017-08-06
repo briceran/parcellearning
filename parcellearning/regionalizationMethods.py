@@ -313,10 +313,10 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
 
     print 'Label {} layers'.format(lab)
     D = distances.values()
-    print type(D)
-    print (len(D))
-    if len(D) > 1:
+    try:
         D = np.concatenate(D)
+    except:
+        D = D
     
     layered = {k: [] for k in set(D)}
     
