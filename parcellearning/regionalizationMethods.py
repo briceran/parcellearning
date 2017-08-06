@@ -312,7 +312,8 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
                     distances[v] = int(np.asarray(minDist[k]))
 
     print 'layers'
-    layered = {k: [] for k in set(np.squeeze(distances.values()))}
+    print distances.values()
+    layered = {k: [] for k in set(distances.values())}
     
     for vertex in distances.keys():
         dist = distances[vertex]
