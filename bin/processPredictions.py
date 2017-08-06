@@ -163,6 +163,7 @@ if PART == 1:
     
                         diceMatrix_Whole[k,0:len(ndt)] = ndt
                         diceMatrix_Whole[0:len(ndt),k] = ndt
+                        print diceMatrix_Whole
                         diceMatrix_Region[k,:] = singleLayerDice(dtBaseMap,trueMap)
     
                         errorReg = regionalMisclassification(dtBaseMap,trueMap)
@@ -209,7 +210,7 @@ if PART == 1:
                     meanMisClass/=(1.*len(subjects))
                     meanRegMisClass/=(1.*len(subjects))
                     meanMethodDiceWB/=(1.*len(subjects))
-                    print meanMethodDiceWB
+                    #print meanMethodDiceWB
                     meanMethodDiceRG/=(1*len(subjects))
                 
                     funcObject.darrays[0].data = np.asarray(meanMisClass).astype(np.float32)
