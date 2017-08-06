@@ -309,7 +309,9 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
             
             for k,v in enumerate(sg_nodes):
                 if v in sg_intern:
-                    distances[v] = int(np.asarray(minDist[k]))
+                    minD = minDist[k]
+                    if minD:
+                        distances[v] = int(np.asarray(minDist[k]))
 
     print 'Label {} layers'.format(lab)
     D = distances.values()
