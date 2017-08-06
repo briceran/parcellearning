@@ -312,7 +312,8 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
                 print set(list(np.squeeze(np.asarray(se[x,:]))))
 
             minDist = np.min(se,axis=1)
-            print "min24: {}".format(minDist[24])
+            if lab == 131:
+                print "min24: {}".format(minDist[24])
 
             for k,v in enumerate(sg_nodes):
                 if v in sg_intern:
