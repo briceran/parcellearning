@@ -173,7 +173,6 @@ if PART == 1:
                         funcObject.darrays[0].data = errorMap.astype(np.float32)
                         nb.save(funcObject,errorFile)
                     
-                    print diceMatrix_Whole
                     dcmw = {'wb': diceMatrix_Whole}
                     dcmr = {'reg': diceMatrix_Region}
                     
