@@ -206,10 +206,11 @@ if PART == 1:
                         meanRegMisClass+=errorReg['errReg']
                         
                         
-                    meanMisClass/=len(subjects)
-                    meanRegMisClass/=len(subjects)
-                    meanMethodDiceWB/=len(subjects)
-                    meanMethodDiceRG/=len(subjects)
+                    meanMisClass/=(1.*len(subjects))
+                    meanRegMisClass/=(1.*len(subjects))
+                    meanMethodDiceWB/=(1.*len(subjects))
+                    print meanMethodDiceWB
+                    meanMethodDiceRG/=(1*len(subjects))
                 
                     funcObject.darrays[0].data = np.asarray(meanMisClass).astype(np.float32)
                     nb.save(funcObject,outmwMC)
