@@ -308,7 +308,8 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
             se = se.astype(np.int32)
             
             for x in np.arange(se.shape[0]):
-                print se[x,:]
+                print set(se[x,:])
+
             minDist = np.min(se,axis=1)
 
             for k,v in enumerate(sg_nodes):
