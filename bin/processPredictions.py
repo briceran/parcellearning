@@ -78,6 +78,7 @@ parser.add_argument('-p','--part',help='hemisphere to process.',required=True)
 args = parser.parse_args()
 
 PART = args.part
+print "Processing Part {}".format(PART)
 
 if PART == 1:
 
@@ -212,8 +213,11 @@ if PART == 2:
                 
                 concatFile = '{}MeanMisClass.Reg.Concatenated.{}.{}.{}.mat'.format(predDir,mt,hExt,dt)
                 concatList = []
+                
+                print concatFile
             
                 for itr in np.arange(N):
+                    print itr
                     
                     meanDir = '{}Model_{}/ErrorMaps/'.format(predDir,itr)
                     meanFile = '{}MeanMisClass.Reg.{}.{}.{}.Iteration_0.mat'.format(meanDir,mt,hExt,dt)
@@ -236,8 +240,11 @@ if PART == 2:
                 
                 concatFile = '{}MeanDice.WB.Concatenated.{}.{}.{}.mat'.format(predDir,mt,hExt,dt)
                 concatList = []
+                
+                print concatFile
             
                 for itr in np.arange(N):
+                    print itr
                     
                     meanDir = '{}Model_{}/DiceMetrics/'.format(predDir,itr)
                     meanFile = '{}MeanDice.WB.{}.{}.{}.Iteration_0.mat'.format(meanDir,mt,hExt,dt)
