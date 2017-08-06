@@ -307,20 +307,22 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
             se = sp[:,external]
             minDist = np.min(se,axis=1)
             
+            for l in minDist:
+                if l == []:
+                    minDist.remove(l)
+                    
+            print len(sg_nodes)
+            print len(minDist)
+            print sg_nodes
+            print minDist
+            
             for k,v in enumerate(sg_nodes):
                 if v in sg_intern:
-                    minD = minDist[k]
-                    if minD:
-                        distances[v] = int(np.asarray(minDist[k]))
+                    distances[v] = int(np.asarray(minDist[k]))
 
     print 'Label {} layers'.format(lab)
     D = distances.values()
-    try:
-        D = np.concatenate(D)
-    except:
-        D = D
-    
-    print D
+
     layered = {k: [] for k in set(D)}
     
     for vertex in distances.keys():
