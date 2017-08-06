@@ -305,15 +305,12 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
             
             sp = nx.floyd_warshall_numpy(subGraph)
             se = sp[:,external]
+            print se
             minDist = np.min(se,axis=1)
 
             for k,v in enumerate(sg_nodes):
                 if v in sg_intern:
-                    md = minDist[k]
-                    if md == []:
-                        md = 0;
-                        
-                    distances[v] = int(np.asarray(md))
+                    distances[v] = int(np.asarray(minDist[k]))
 
     print 'Label {} layers'.format(lab)
     D = distances.values()
@@ -326,7 +323,6 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
     
     for vertex in distances.keys():
         dist = distances[vertex]
-        print dist
         layered[dist].append(vertex)
         
     return layered      
