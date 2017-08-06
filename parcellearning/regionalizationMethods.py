@@ -312,6 +312,7 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
                 print set(list(np.squeeze(np.asarray(se[x,:]))))
 
             minDist = np.min(se,axis=1)
+            print "min24: {}".format(minDist[24])
 
             for k,v in enumerate(sg_nodes):
                 if v in sg_intern:
@@ -328,9 +329,7 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
     layered = {k: [] for k in md}
     
     for j,vertex in enumerate(distances.keys()):
-        print(j)
         dist = distances[vertex]
-        print dist
         layered[dist].append(vertex)
         
     return layered      
