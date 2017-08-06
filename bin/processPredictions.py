@@ -207,7 +207,7 @@ if PART == 1:
                         errorReg = sio.loadmat(errorRegFile)
                         meanRegMisClass+=errorReg['errReg']
                         
-                        dice = sio.load(diceWholeFile)
+                        dice = sio.loadmat(diceWholeFile)
                         dice = dice['dcmw']
                         meanMethodDiceWB+=dice
                         
