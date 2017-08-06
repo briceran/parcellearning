@@ -163,7 +163,6 @@ if PART == 1:
     
                         diceMatrix_Whole[k,0:len(ndt)] = ndt
                         diceMatrix_Whole[0:len(ndt),k] = ndt
-                        print diceMatrix_Whole
                         diceMatrix_Region[k,:] = singleLayerDice(dtBaseMap,trueMap)
     
                         errorReg = regionalMisclassification(dtBaseMap,trueMap)
@@ -174,6 +173,7 @@ if PART == 1:
                         funcObject.darrays[0].data = errorMap.astype(np.float32)
                         nb.save(funcObject,errorFile)
                     
+                    print diceMatrix_Whole
                     dcmw = {'wb': diceMatrix_Whole}
                     dcmr = {'reg': diceMatrix_Region}
                     
