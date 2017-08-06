@@ -172,6 +172,7 @@ if PART == 1:
                     
                     sio.savemat(diceWholeFile,dcmw)
                     sio.savemat(diceRegionFile,dcmr)
+                    pickle.dump(misClassDict,misClassDictFile,-1)
                     
                 for k,DT in enumerate(dataTypes):
                     
