@@ -322,6 +322,7 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
     
     for vertex in distances.keys():
         dist = distances[vertex]
+        print dist
         layered[dist].append(vertex)
         
     return layered      
