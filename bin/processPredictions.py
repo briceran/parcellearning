@@ -112,6 +112,8 @@ if PART == 1:
                 misClassDict = {k: [] for k in dataTypes}
     
                 for s,subj in enumerate(subjects):
+                    
+                    print subj
     
                     trueMapFile = '{}{}.{}.{}'.format(lablDir,subj,hExt,lablExt)
                     trueMap = ld.loadGii(trueMapFile)
