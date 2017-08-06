@@ -87,6 +87,8 @@ if PART == 1:
 
     for itr in np.arange(N):
         
+        print itr
+        
         itrDir = '{}Model_{}/'.format(predDir,itr)
         subjList = '{}TestingSubjects.{}.txt'.format(testDir,itr)
         
