@@ -318,6 +318,7 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
     except:
         D = D
     
+    print D
     layered = {k: [] for k in set(D)}
     
     for vertex in distances.keys():
