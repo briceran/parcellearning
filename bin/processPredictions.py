@@ -74,7 +74,7 @@ testDir = '{}TrainTestLists/'.format(dataDir)
 N = 10
 
 parser = argparse.ArgumentParser(description='Build training objects.')
-parser.add_argument('-p','--part',help='hemisphere to process.',required=True)
+parser.add_argument('-p','--part',help='hemisphere to process.',required=True,type=int)
 args = parser.parse_args()
 
 PART = args.part
