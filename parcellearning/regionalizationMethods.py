@@ -289,7 +289,6 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
     distances = {n: [] for n in internalNodes}
     
     
-    print 'distances'
     # here, we allow for connected components in the regions
     for subGraph in nx.connected_component_subgraphs(G):
         
@@ -313,7 +312,11 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
                     distances[v] = int(np.asarray(minDist[k]))
 
     print 'Label {} layers'.format(lab)
-    layered = {k: [] for k in set(distances.values())}
+    D = distances.values()
+    if len(D) > 1:
+        D = np.concatenate(D)
+    
+    layered = {k: [] for k in set(D)}
     
     for vertex in distances.keys():
         dist = distances[vertex]
