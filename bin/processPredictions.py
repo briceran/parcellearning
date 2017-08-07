@@ -139,6 +139,7 @@ if PART == 1:
                         errorRegFile = '{}{}.{}.{}.Error.Regional.{}.{}.mat'.format(erroDir,subj,mt,hExt,DT,itrExt)
     
                         inDTMap = '{}{}.{}.{}.{}.{}.label.gii'.format(predItrDir,subj,mt,hExt,DT,itrExt)
+                        print inDTMap
                         dtBaseMap = ld.loadGii(inDTMap)
                         J = metrics.jaccard_similarity_score(dtBaseMap,trueMap)
                         D = (2.*J)/(1+J)
