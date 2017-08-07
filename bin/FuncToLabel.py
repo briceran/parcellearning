@@ -26,8 +26,8 @@ inCMAP = '{}Labels/Label_Lookup_300.txt'.format(dataDir)
 
 for itr in np.arange(N):
     
-    itrDir = '{}Predictions/Model_{}/'.format(dataDir)
-    inList = '{}TestingSubjects.{}.txt'.format(itr)
+    itrDir = '{}Predictions/Model_{}/'.format(dataDir,itr)
+    inList = '{}TestingSubjects.{}.txt'.format(dataDir,itr)
     
     with open(inList,'r') as inSubjects:
         subjects = inSubjects.readlines()
