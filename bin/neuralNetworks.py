@@ -91,7 +91,12 @@ def loadData(subjectList,dataDir,features,hemi):
     labs = {}
     vlib = {}
     
-    dataFeatures = list(set(features).difference({'label'}))
+    #dataFeatures = list(set(features).difference({'label'}))
+
+    nf = []
+    for f in features:
+        if f != 'label':
+            nf.append(f)
     
     for s in subjectList:
 
@@ -120,7 +125,7 @@ def loadData(subjectList,dataDir,features,hemi):
             uni_subj = unicode(s, "utf-8")
 
             # Get data corresponding to features of interest
-            trainFeatures = ld.parseH5(trainH5,dataFeatures)
+            trainFeatures = ld.parseH5(trainH5,nf)
             print trainH5
             print trainFeatures.keys()
             try:
@@ -133,7 +138,7 @@ def loadData(subjectList,dataDir,features,hemi):
             labelFeatures = labelFeatures[uni_subj]
             
             # Merge training features into single array
-            mergedDataFeatures = cu.mergeFeatures(trainFeatures,dataFeatures)
+            mergedDataFeatures = cu.mergeFeatures(trainFeatures,nf)
             mergedLablFeatures = cu.mergeFeatures(labelFeatures,['label'])
             
             # Get the true data coordiantes (exclude midline coordinates)

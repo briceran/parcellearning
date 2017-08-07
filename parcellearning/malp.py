@@ -268,9 +268,15 @@ class Atlas(object):
         training = []
         labels = []
         
-        trainFeatures = list(set(self.features).difference({'label'}))
+        #trainFeatures = list(set(self.features).difference({'label'}))
+
+        nf = []
+        for f in self.features:
+            if f != 'label':
+                nf.append(f)
+                
         for subj in trainData.keys():
-            training.append(cu.mergeFeatures(trainData[subj],trainFeatures))
+            training.append(cu.mergeFeatures(trainData[subj],nf))
             labels.append(cu.mergeFeatures(trainData[subj],['label']))
         
         trainData = np.squeeze(np.row_stack(training))
