@@ -36,8 +36,8 @@ fi
 
 layers=3
 downSample='equal'
-nodes=100
-epochs=30
+nodes=150
+epochs=40
 batchSize=256
 rate=0.001
 
