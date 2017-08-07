@@ -11,10 +11,6 @@ dataDir=/mnt/parcellator/parcellation/parcellearning/Data/
 binDir=/mnt/parcellator/parcellation/GitHub/parcellearning/bin/
 script=${binDir}neuralNetworks.py
 
-#dataDir=/Users/kristianeschenburg/Desktop/Programming/Data/
-#binDir=/Users/kristianeschenburg/Documents/GitHub/parcellearning/bin/
-#script=${binDir}neuralNetworks.py
-
 outDir=${dataDir}Models/
 
 if [ ! -d "$outDir" ]; then
