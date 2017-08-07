@@ -74,7 +74,7 @@ lablDir = '{}Labels/HCP/'.format(dataDir)
 lablExt = 'CorticalAreas.fixed.32k_fs_LR.label.gii'
 testDir = '{}TrainTestLists/'.format(dataDir)
 
-N = 10
+N = 8
 
 parser = argparse.ArgumentParser(description='Build training objects.')
 parser.add_argument('-p','--part',help='hemisphere to process.',required=True,type=int)
@@ -112,9 +112,7 @@ if PART == 1:
                 misClassDict = {k: [] for k in dataTypes}
     
                 for s,subj in enumerate(subjects):
-                    
-                    print subj
-    
+
                     trueMapFile = '{}{}.{}.{}'.format(lablDir,subj,hExt,lablExt)
                     trueMap = ld.loadGii(trueMapFile)
     
@@ -130,9 +128,7 @@ if PART == 1:
                     
                     diceWholeFile = '{}{}.{}.{}.Dice.WB.{}.mat'.format(diceDir,subj,mt,hExt,itrExt)
                     diceRegionFile = '{}{}.{}.{}.Dice.Reg.{}.mat'.format(diceDir,subj,mt,hExt,itrExt)
-                    
-                    
-            
+
                     ### Jaccard Computations ###
                     for k,DT in enumerate(dataTypes):
                         
@@ -174,10 +170,10 @@ if PART == 1:
                         nb.save(funcObject,errorFile)
                     
                     dcmw = {'wb': diceMatrix_Whole}
-                    dcmr = {'reg': diceMatrix_Region}
+                    #dcmr = {'reg': diceMatrix_Region}
                     
                     sio.savemat(diceWholeFile,dcmw)
-                    sio.savemat(diceRegionFile,dcmr)
+                    #sio.savemat(diceRegionFile,dcmr)
                     
                     with open(misClassDictFile,'w') as outFile:
                         pickle.dump(misClassDict,outFile,-1)
