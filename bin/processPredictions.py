@@ -17,7 +17,6 @@ import numpy as np
 import scipy.io as sio
 import pickle
 
-import sklearn
 from sklearn import metrics
 
 def singleLayerDice(pred,truth):
@@ -87,7 +86,7 @@ if PART == 1:
 
     for itr in np.arange(N):
         
-        print itr
+        print "Iteration: {}".format(itr)
         
         itrDir = '{}Model_{}/'.format(predDir,itr)
         subjList = '{}TestingSubjects.{}.txt'.format(testDir,itr)
@@ -104,14 +103,18 @@ if PART == 1:
         for hemi in hemiTypes:
             hExt = hemiMaps[hemi]
             
-            print hemi
+            print "Hemisphere: {}".format(hemi)
         
             for mt in methodTypes:
+                
+                print "Method type: {}".format(mt)
                 
                 misClassDictFile = '{}MisClass.WB.{}.{}.Iteration_{}.p'.format(erroDir,hExt,mt,itr)
                 misClassDict = {k: [] for k in dataTypes}
     
                 for s,subj in enumerate(subjects):
+                    
+                    print "Subject: {}".format(subj)
 
                     trueMapFile = '{}{}.{}.{}'.format(lablDir,subj,hExt,lablExt)
                     trueMap = ld.loadGii(trueMapFile)
@@ -177,6 +180,8 @@ if PART == 1:
                     
                     with open(misClassDictFile,'w') as outFile:
                         pickle.dump(misClassDict,outFile,-1)
+                        
+                    print "Results saved."
                     
                 for k,DT in enumerate(dataTypes):
                     
