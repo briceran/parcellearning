@@ -280,7 +280,7 @@ class GMM(object):
         return [threshed,mtd,ltvm]
 
 
-    def predict(self,mtd,testLTVM):
+    def predict(self,mtd,ltvm,mm,**kwargs):
         
         """
         Method to compute Mahalanobis distance of test data from the
@@ -293,9 +293,15 @@ class GMM(object):
                     base classification and weighted classification of the
                     surface vertices
         """
-
-        ltvm = testLTVM
         
+        if kwargs:
+            if 'power' in kwargs.keys():
+                p = kwargs['power']
+            else:
+                p = 1
+        else:
+            p = 1
+
         R = 180
         labels = self.labels
 
@@ -321,103 +327,13 @@ class GMM(object):
                 # save results in self.predict
                 baseline[members,lab] = scores
                 
+        mm = np.power(mm,p)
+        baseline = mm*(1.*baseline[:,1:])
         predicted = np.argmin(baseline,axis=1)
-        
+
         self.baseline = baseline
         self.predicted = predicted
-        self._classified = True
-        
-        """
-        if self.power:
-            weightedLL = self.weight(baseline,self.power)
-            self.weighted = self._classify(weightedLL)
-        """
-    
-    def weight(self,baseline,power):
-        
-        """
-        Method to weight the score by the frequency with which
-        the test vertex mapped to the training labels.
-        
-        Parameters:
-        - - - - -
-        
-            base : likehoods computed without mapping frequency
-            
-            power : mapping frequency exponent
-            
-        """
-        
-        vertLib = self.testMatch
 
-        weighted = {}
-        weighted = weighted.fromkeys(vertLib.keys())
-    
-        # for each vertex in test brain, and its mapped labels
-        for vert,mapped in vertLib.items():
-            vert = np.int(vert)
-            
-            # if vertex is mapped to labels
-            if mapped:
-
-                # get log-likelihood for each label mixture model a vertex 
-                # is mapped to
-                logScore = baseline[vert]
-
-                # return weighted log-likelihoods
-                weighted[vert] = self._weightPoint(mapped,logScore,power)
-                
-        return weighted
-            
-    def _weightPoint(self,mapLabels,labelScore,power):
-        
-        """
-        Method to weight the scores of a single vertex.  Since we want the 
-        maximum log-liklihood, weighting by the frequency will upweight labels 
-        that are mapped to more frequently.
-        
-        If weight != 0, we weight the distances by 
-            
-            (mapCount / sumCounts)^power
-        
-        Parameters:
-        - - - - -
-        
-            mapLabels : dictionary of labels to which the test vertex is mapped
-                        and frequency with which those labels are mapped to
-                        
-            labelScore : dictionary of labels to which a test vertex is mapped
-                        and log-likelihood between vertex test point given 
-                        that labels mixture model
-                        
-            power : power to which the raise the mapping frequency to
-                        
-        Returns:
-        - - - -
-            
-            weight : dictionary of weighted log-likelihoods for each of 
-                        the mapped-to labels
-        """
-        
-        mappedSum = np.float(np.sum(mapLabels.values()))
-        labels = mapLabels.keys()
-        
-        weight = {}
-
-        for l in labels:
-            
-            if l > 0:
-                
-                # get mapping frequency
-                inv = (1/mappedSum)*mapLabels[l]
-                # raise frequency to power
-                lWeight = np.power(inv,power)
-                # apply weight to log-likelihood score
-                weight[l] = lWeight*labelScore[l]
-                
-        return weight
-    
-    
     def assignComponent(self,predicted):
         
         """

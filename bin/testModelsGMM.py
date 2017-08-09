@@ -68,6 +68,61 @@ def loadTest(model,yObject,yMatch):
         ltvm = cu.vertexMemberships(threshed,180)
 
         return [threshed,mtd,ltvm]
+    
+    
+def predict(model,mtd,ltvm,mm,**kwargs):
+    
+    """
+    Method to compute Mahalanobis distance of test data from the
+    distribution of all training data for each label.
+    
+    Parameters:
+    - - - - - 
+    
+    **kwargs : if power parameter is defined in kwargs, will perform
+                base classification and weighted classification of the
+                surface vertices
+    """
+    
+    if kwargs:
+        if 'power' in kwargs.keys():
+            p = kwargs['power']
+        else:
+            p = 1
+    else:
+        p = 1;
+
+    R = 180
+    labels = model.labels
+
+    xTest,yTest = mtd.shape
+    if yTest != model.input_dim:
+        raise Warning('Test data does not have the same number \
+                      features as the training data.')
+
+    # initialize prediction dictlionary
+    baseline = np.zeros((mtd.shape[0],R+1))
+
+    # for all labels in in training set
+    for lab in labels:
+        # compute vertices that map to that label
+        members = ltvm[lab]
+        memberData = mtd[members,:]
+        estimator = model.mixtures[lab]
+                    
+        if len(members) > 0:
+            
+            scores = estimator.score_samples(memberData)
+
+            # save results in self.predict
+            baseline[members,lab] = scores
+    
+    mm = np.power(mm,p)
+    baseline = mm*(1.*baseline[:,1:])
+    predicted = np.argmin(baseline,axis=1)
+
+    return (baseline,predicted)
+
 
 # Directories where data and models exist
 dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
@@ -208,15 +263,18 @@ for itr in np.arange(N):
                                     
                                     [mm,mtd,ltvm] = loadTest(currentModel,testObject,testMatch)
                                     
-                                    currentModel.predict(mtd,ltvm)
-                                    
-                                P = currentModel.predicted
-        
-                                P[mids] = 0
-            
-                                myl.darrays[0].data = np.array(P).astype(np.float32)
-                                nb.save(myl,testOutput)
-                        
+                                    try:
+                                        currentModel.predict(mtd,ltvm)
+                                    except:
+                                        [bl,pr] = predict(currentModel,mtd,ltvm,mm)
+                                    else:
+                                        bl = currentModel.baseline
+                                        pr = currentModel.predicted
+                                    finally:
+                                        pr[mids] = 0
+                                        myl.darrays[0].data = np.rray(pr).astype(np.float32)
+                                        nb.save(myl,testOutput)
+
                         else:
                             print '{} already generated.'.format(testOutput)
                 else:
