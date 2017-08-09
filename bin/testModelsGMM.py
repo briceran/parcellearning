@@ -260,7 +260,7 @@ for itr in np.arange(N):
                                 # along with the test data
         
                                 if classifier == 'GMM':
-                                    poaf
+                                    
                                     [mm,mtd,ltvm] = loadTest(currentModel,testObject,testMatch)
                                     
                                     try:
