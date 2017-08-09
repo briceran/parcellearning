@@ -108,12 +108,27 @@ def predict(model,mtd,ltvm,mm,**kwargs):
     
     return predicted
 
+parser = argparse.ArgumentParser(description='Build training objects.')
+parser.add_argument('-f','--frequencyBased',help='Whether to use frequency-based neighborhood constraint.',
+                    default=False,type,bool,required=False)
+parser.add_argument('-p','--power',help='Power to raise matching matrix to.',default=1,type=int,required=False)
+args = parser.parse_args()
+
+freq = args.frequencyBased
+power = args.power
+powDict = {'power':power}
+
 # Directories where data and models exist
 dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
 
 # Directory and file extensions of matching matrices
 matchDir = '{}MatchingLibraries/Test/MatchingMatrices/'.format(dataDir)
-matchExt = 'MatchingMatrix.0.05.mat'
+if freq:
+    print 'Using frequency-based matching matrix.\n'
+    matchExt = 'MatchingMatrix.0.05.Frequencies.mat'
+else:
+    print 'Using original matching matrix.\n'
+    matchExt = 'MatchingMatrix.0.05.Frequencies.mat'
 
 # Directory and file extension of midline vertices
 midsDir = '{}Midlines/'.format(dataDir)
@@ -218,8 +233,12 @@ for itr in np.arange(N):
                 
                     currentModel = loadDict[fExt](modelFull)
                     
-                    outputExt = '{}.{}.{}.Frequency.Iteration_{}.func.gii'.format(classifier,
-                                 hExt,d,itr)
+                    if freq:
+                        outputExt = '{}.{}.{}.Frequency.Iteration_{}.func.gii'.format(classifier,
+                                     hExt,d,itr)
+                    else:
+                        outputExt = '{}.{}.{}.Iteration_{}.func.gii'.format(classifier,
+                                     hExt,d,itr)
                     
                     G = glob.glob('{}*{}'.format(outDirIter,outputExt)) 
                     if len(G) < len(subjects):
@@ -237,13 +256,12 @@ for itr in np.arange(N):
                                 testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
                                 
                                 mids = ld.loadMat(testMids)-1
-                                #mids = ld.loadMat(testMids)
                 
                                 if fExt == '.h5':
             
                                     [mm,mtd,ltvm] = loadTest(testObject,testMatch,data_features)
 
-                                    predicted = predict(currentModel,mtd,ltvm,mm)
+                                    predicted = predict(currentModel,mtd,ltvm,mm,**powDict)
                                     predicted[mids] = 0
                 
                                     myl.darrays[0].data = np.array(predicted).astype(np.float32)

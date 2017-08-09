@@ -134,12 +134,29 @@ def predict(model,mtd,ltvm,mm,**kwargs):
     return (baseline,predicted)
 
 
+
+parser = argparse.ArgumentParser(description='Build training objects.')
+parser.add_argument('-f','--frequencyBased',help='Whether to use frequency-based neighborhood constraint.',
+                    default=False,type,bool,required=False)
+parser.add_argument('-p','--power',help='Power to raise matching matrix to.',default=1,type=int,required=False)
+args = parser.parse_args()
+
+freq = args.frequencyBased
+power = args.power
+powDict = {'power': power}
+
+
 # Directories where data and models exist
 dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
 
 # Directory and file extensions of matching matrices
 matchDir = '{}MatchingLibraries/Test/MatchingMatrices/'.format(dataDir)
-matchExt = 'MatchingMatrix.0.05.Frequencies.mat'
+if freq:
+    print 'Using frequency-based matching matrix.\n'
+    matchExt = 'MatchingMatrix.0.05.Frequencies.mat'
+else:
+    print 'Using original matching matrix.\n'
+    matchExt = 'MatchingMatrix.0.05.Frequencies.mat'
 
 # Directory and file extension of midline vertices
 midsDir = '{}Midlines/'.format(dataDir)
@@ -225,6 +242,8 @@ for itr in np.arange(N):
             classExt = classExtsFunc[classifier]
             fExt = classTypeFunc[classifier]
             
+            
+            
             for d in data:
                 
                 print 'Data: {}'.format(d)
@@ -238,12 +257,18 @@ for itr in np.arange(N):
                 # load the model here
                 currentModel = loadDict[fExt](modelFull)
                 
-                outputExt = '{}.{}.{}.Frequency.Iteration_{}.func.gii'.format(classifier,
-                             hExt,d,itr)
+                if freq:
+                    outputExt = '{}.{}.{}.Frequency.Iteration_{}.func.gii'.format(classifier,
+                                 hExt,d,itr)
+                else:
+                    outputExt = '{}.{}.{}.Iteration_{}.func.gii'.format(classifier,
+                                 hExt,d,itr)
+                
+                
                 
                 G = glob.glob('{}*{}'.format(outDirIter,outputExt)) 
                 if len(G) < len(subjects):
-                
+                    
                     for test_subj in subjects:
                         
                         print 'Subject: {}'.format(test_subj)
@@ -274,10 +299,10 @@ for itr in np.arange(N):
                                     [mm,mtd,ltvm] = loadTest(currentModel,testObject,testMatch)
                                     
                                     try:
-                                        currentModel.predict(mtd,ltvm)
+                                        currentModel.predict(mtd,ltvm,**powDict)
                                     except:
                                         print 'Route 2\n'
-                                        [bl,pr] = predict(currentModel,mtd,ltvm,mm)
+                                        [bl,pr] = predict(currentModel,mtd,ltvm,mm,**powDict)
                                     else:
                                         print 'Route 1\n'
                                         bl = currentModel.baseline
