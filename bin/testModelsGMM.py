@@ -73,11 +73,21 @@ def loadTest(model,yObject,yMatch):
 def predict(model,mtd,ltvm,mm,**kwargs):
     
     """
-    Method to compute Mahalanobis distance of test data from the
-    distribution of all training data for each label.
+    Method to predict labels of a test brain, if the model predict method
+    failure due to mis-serialization of the Pickle file.  The code is the same, 
+    but if code within the model is changed post-model creation, the method
+    will fail.
     
     Parameters:
     - - - - - 
+    
+    model : loaded GMM model
+    
+    mtd : test data is numpy array format
+    
+    ltvm : label to vertex mappings
+    
+    mm : matching matrix (binary or frequency based)
     
     **kwargs : if power parameter is defined in kwargs, will perform
                 base classification and weighted classification of the

@@ -9,8 +9,6 @@ Created on Tue Aug  1 11:34:08 2017
 import sys
 sys.path.append('..')
 
-import copy
-
 import parcellearning.classifier_utilities as cu
 import parcellearning.loaded as ld
 
@@ -38,20 +36,24 @@ def loadTest(yObject,yMatch,features):
         
         Parameters:
         - - - - -
-            y : SubjectFeatures object for a test brain      
+            y : SubjectFeatures object for a test brain   
+            
             yMatch : MatchingFeaturesTest object containing vertLib attribute 
                     detailing which labels each vertex in surface y maps to 
                     in the training data
+                    
+            features : feature to included in the test data numpy array
+                        these must be the same as the training data
         """
         
-        print 'Model features: {}'.format(features)
+        print 'Train features: {}'.format(features)
         
         nf = []
         for f in features:
             if f != 'label':
                 nf.append(f)
         
-        print 'Load test features: {}'.format(nf)
+        print 'Test features: {}'.format(nf)
         
         # load test subject data, save as attribtues
         tObject = ld.loadH5(yObject,*['full'])
@@ -68,6 +70,43 @@ def loadTest(yObject,yMatch,features):
         ltvm = cu.vertexMemberships(threshed,180)
 
         return [threshed,mtd,ltvm]
+    
+    
+def predict(model,mtd,ltvm,mm,**kwargs):
+    
+    """
+    Method to predict neural network model cortical map.
+    
+    Parameters:
+    - - - - -
+        model : trained neural network
+        
+        mtd : member test data in numpy array format
+        
+        ltvm : label to vertex mappings
+        
+        mm : matching matrix (binary or frequency)
+        
+        kwargs : 
+    
+    """
+    
+    if kwargs:
+        if 'power' in kwargs.keys():
+            p = kwargs['power']
+        else:
+            p = 1
+    else:
+        p = 1
+        
+    mm = np.power(mm,p)
+    
+    predProbs = model.predict(mtd)
+    threshProbs = mm*predProbs[:,1:]
+    
+    predicted = np.argmax(threshProbs,axis=1)+1
+    
+    return predicted
 
 # Directories where data and models exist
 dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
@@ -202,19 +241,13 @@ for itr in np.arange(N):
                 
                                 if fExt == '.h5':
             
-                                    [threshed,mtd,_] = loadTest(testObject,testMatch,data_features)
-                                    #mtd[mids,:] = 0
-                                    #threshed[mids,:] = 0
-                                    
-                                    predProbs = currentModel.predict(mtd)
-                                    threshProbs = threshed*predProbs[:,1:]
-                                    
-                                    predicted = np.argmax(threshProbs,axis=1)+1
-                                
-                                predicted[mids] = 0
-            
-                                myl.darrays[0].data = np.array(predicted).astype(np.float32)
-                                nb.save(myl,testOutput)
+                                    [mm,mtd,ltvm] = loadTest(testObject,testMatch,data_features)
+
+                                    predicted = predict(currentModel,mtd,ltvm,mm)
+                                    predicted[mids] = 0
+                
+                                    myl.darrays[0].data = np.array(predicted).astype(np.float32)
+                                    nb.save(myl,testOutput)
                                                 
                             else:
                                 print '{} already generated.'.format(testOutput)
