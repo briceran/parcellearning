@@ -6,6 +6,7 @@ Created on Tue Aug  1 11:34:08 2017
 @author: kristianeschenburg
 """
 
+import argparse
 import sys
 sys.path.append('..')
 
@@ -137,7 +138,7 @@ def predict(model,mtd,ltvm,mm,**kwargs):
 
 parser = argparse.ArgumentParser(description='Build training objects.')
 parser.add_argument('-f','--frequencyBased',help='Whether to use frequency-based neighborhood constraint.',
-                    default=False,type,bool,required=False)
+                    default=False,type=bool,required=False)
 parser.add_argument('-p','--power',help='Power to raise matching matrix to.',default=1,type=int,required=False)
 args = parser.parse_args()
 
