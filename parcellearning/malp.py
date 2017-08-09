@@ -371,7 +371,7 @@ class Atlas(object):
         return [threshed,mtd,ltvm]
 
 
-    def predict(self,mtd,mm,testLTVM,testMids,softmax_type = 'BASE'):
+    def predict(self,mtd,mm,ltvm,softmax_type = 'BASE'):
         
         """
         Method to predict labels of test data.
@@ -385,13 +385,14 @@ class Atlas(object):
                     in the training data
                     
         """
-        
-        mids = ld.loadMat(testMids)-1
-        
-        mm[mids,:] = 0;
-        mtd[mids,:] = 0
-        ltvm = testLTVM
 
+        if kwargs:
+            if 'power' in kwargs.keys():
+                p = kwargs['power']
+            else:
+                p = 1
+        else:
+            p = 1
 
         funcs = {'BASE': baseSoftMax,
                  'TREES': treeSoftMax,
@@ -408,6 +409,8 @@ class Atlas(object):
 
         # initialize prediction dictionary
         baseline = np.zeros((mtd.shape[0],R+1))
+
+        mm = np.power(mm,p)
 
         for lab in labels:
             if lab in neighbors.keys():
@@ -500,7 +503,7 @@ def forestSoftMax(metaEstimator,members,memberData,mm,R):
     forestMatrix[:,classes] = predProbs
     forestMatrix = forestMatrix[:,1:]
     
-    predThresh = memberMatrix*forestMatrix
+    predThresh = memberMatrix*(1.*forestMatrix)
     
     labels = np.argmax(predThresh,axis=1)+1
 
@@ -555,7 +558,7 @@ def treeSoftMax(metaEstimator,members,memberData,mm,R):
         tm[:,treeClasses] = treeProbabilities
         tm = tm[:,1:]
         
-        treeThresh = memberMatrix*tm
+        treeThresh = memberMatrix*(1.*tm)
         predictedLabels.append(np.argmax(treeThresh,axis=1)+1)
     
     predictedLabels = np.column_stack(predictedLabels)

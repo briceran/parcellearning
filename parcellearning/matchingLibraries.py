@@ -556,6 +556,8 @@ def mappingThreshold(mapCounts,threshold,limit):
         passed : list of labels with frequencies greater than the cutoff
     """
 
+    """
+    ORIGINAL CODE, preceded by mappingThresholdDict
     options = ['inside','outside']
 
     if limit not in options:
@@ -578,10 +580,65 @@ def mappingThreshold(mapCounts,threshold,limit):
             thresholdC[key] = passed
         else:
             thresholdC[key] = None
+    """
+
+    threshedMappings = mappingThresholdDict(mapCounts,threshold,limit)
+
+    for k in threshedMappings.keys():
+        if threshedMappings[k]:
+            threshedMappings[k] = threshedMappings[k].keys()
+
+    return threshedMappings
+
+def mappingThresholdDict(mapCounts,threshold,limit):
+
+    """
+    Method to threshold the mappings at a specified frequencies.  Only those
+    labels with mapping frequencies greater than the threshold will be
+    included in the training model.
+    
+    Parameters:
+    - - - - -
+        mapCounts : dictionary of sub-dictionaries, where main keys
+                        are labels, and sub-key/label pairs are labels
+                        and an associated frequency
+        threshold : count cutoff
+        
+        limit : whether to include labels above or below the threhsold
+    Returns:
+    - - - -
+        passed : dictionary of dictionaris, mapping a vertex to a dictionary
+                    where the sub-dictionary maps labels to frequencies,
+                    if that label passes the threshold constraint.
+    """
+
+    options = ['inside','outside']
+
+    if limit not in options:
+        raise ValueError('limit must be in {}.'.format(' '.join(options)))
+
+    if threshold < 0:
+        raise ValueError('threshold must be non-negative.')
+
+    thresholdC = {k: [] for k in mapCounts.keys()}
+
+    for key in mapCounts.keys():
+        if mapCounts[key]:
+            zips = zip(mapCounts[key].keys(),mapCounts[key].values())
+    
+            if limit == 'inside':
+                passed = [(k,v) for k,v in zips if v <= threshold]
+            else:
+                passed = [(k,v) for k,v in zips if v >= threshold]
+    
+            thresholdC[key] = dict(passed)
+        else:
+            thresholdC[key] = None
 
     return thresholdC
 
-def buildMappingMatrix(merged,R,*kwargs):
+
+def buildMappingMatrix(merged,R,**kwargs):
     
     """
     Method to build a binary matrix, where entries in this matrix correspond
@@ -597,21 +654,32 @@ def buildMappingMatrix(merged,R,*kwargs):
     if kwargs:
         if 'thresh' in kwargs.keys():
             T = kwargs['thresh']
+        else:
+            T = 0.05
+        if 'frequency' in kwargs.keys():
+            F = kwargs['frequency']
+        else:
+            F = False;
     else:
         T = 0.05;
+        F = False;
     
     mergedFreq = mappingFrequency(merged);
     
-    mergedThresh = mappingThreshold(mergedFreq,T,'outside');
+    mergedThresh = mappingThresholdDict(mergedFreq,T,'outside');
     
     N = len(mergedThresh.keys());
     
     mappingMatrix = np.zeros((N,R+1))
+    threshedMatrix = np.zeros((N,R+1))
     
     for v in mergedThresh.keys():
         if mergedThresh[v]:
             maps = mergedThresh[v]
-            mappingMatrix[v,maps] = 1;
+            if F:
+                mappingMatrix[v,maps.keys()] = maps.values();
+            else:
+                mappingMatrix[v.maps.keys()] = 1;
             
     mappingMatrix = mappingMatrix[:,1:]
     

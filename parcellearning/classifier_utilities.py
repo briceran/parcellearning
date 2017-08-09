@@ -249,9 +249,17 @@ def vertexMemberships(matchingMatrix,R):
         labelVerts : dictionary that maps labels to sets of vertices that 
                         map to it
     """
+
+    print matchingMatrix
+    print type(matchingMatrix)
     
     labels = np.arange(1,R+1)
-    idMatrix = matchingMatrix * labels
+
+    inds = matchingMatrix!=0;
+    mm = np.zeros((matchingMatrix.shape))
+    mm[inds] = 1;
+
+    idMatrix = mm * labels
     
     labelVerts = {}.fromkeys(list(labels))
     
