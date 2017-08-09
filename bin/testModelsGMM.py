@@ -274,7 +274,7 @@ for itr in np.arange(N):
                                         pr = currentModel.predicted
                                     finally:
                                         pr[mids] = 0
-                                        myl.darrays[0].data = np.rray(pr).astype(np.float32)
+                                        myl.darrays[0].data = np.array(pr).astype(np.float32)
                                         nb.save(myl,testOutput)
 
                         else:
