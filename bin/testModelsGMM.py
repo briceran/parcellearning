@@ -119,7 +119,7 @@ def predict(model,mtd,ltvm,mm,**kwargs):
     
     mm = np.power(mm,p)
     baseline = mm*(1.*baseline[:,1:])
-    predicted = np.argmin(baseline,axis=1)
+    predicted = np.argmin(baseline,axis=1)+1
 
     return (baseline,predicted)
 
