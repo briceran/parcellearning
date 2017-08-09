@@ -44,14 +44,14 @@ def loadTest(model,yObject,yMatch):
                     in the training data
         """
         
-        print 'Model features: {}'.format(model.features)
+        print 'Train features: {}'.format(model.features)
         
         nf = []
         for f in model.features:
             if f != 'label':
                 nf.append(f)
         
-        print 'Load test features: {}'.format(nf)
+        print 'Test features: {}'.format(nf)
         
         # load test subject data, save as attribtues
         tObject = ld.loadH5(yObject,*['full'])
@@ -260,16 +260,16 @@ for itr in np.arange(N):
                                 # along with the test data
         
                                 if classifier == 'GMM':
-                                    
+                                    poaf
                                     [mm,mtd,ltvm] = loadTest(currentModel,testObject,testMatch)
                                     
                                     try:
                                         currentModel.predict(mtd,ltvm)
                                     except:
-                                        print 'Route 2'
+                                        print 'Route 2\n'
                                         [bl,pr] = predict(currentModel,mtd,ltvm,mm)
                                     else:
-                                        print 'Route 1'
+                                        print 'Route 1\n'
                                         bl = currentModel.baseline
                                         pr = currentModel.predicted
                                     finally:

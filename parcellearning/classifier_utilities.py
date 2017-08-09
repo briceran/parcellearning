@@ -250,9 +250,6 @@ def vertexMemberships(matchingMatrix,R):
                         map to it
     """
 
-    print matchingMatrix
-    print type(matchingMatrix)
-    
     labels = np.arange(1,R+1)
 
     inds = matchingMatrix!=0;
