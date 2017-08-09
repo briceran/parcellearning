@@ -179,7 +179,7 @@ for itr in np.arange(N):
                 
                     currentModel = loadDict[fExt](modelFull)
                     
-                    outputExt = '{}.{}.{}.Iteration_{}.func.gii'.format(classifier,
+                    outputExt = '{}.{}.{}.Frequency.Iteration_{}.func.gii'.format(classifier,
                                  hExt,d,itr)
                     
                     G = glob.glob('{}*{}'.format(outDirIter,outputExt)) 

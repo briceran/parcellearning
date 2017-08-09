@@ -16,9 +16,6 @@ import parcellearning.loaded as ld
 import parcellearning.malp as malp
 import parcellearning.MixtureModel as MM
 
-import keras
-from keras.models import load_model
-
 import glob
 import os
 import pickle
@@ -77,7 +74,7 @@ dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
 
 # Directory and file extensions of matching matrices
 matchDir = '{}MatchingLibraries/Test/MatchingMatrices/'.format(dataDir)
-matchExt = 'MatchingMatrix.0.05.mat'
+matchExt = 'MatchingMatrix.0.05.Frequencies.mat'
 
 # Directory and file extension of midline vertices
 midsDir = '{}Midlines/'.format(dataDir)
@@ -108,8 +105,8 @@ classTypeFunc = dict(zip(methods,exts))
 
 
 # Map file extension to loading functions
-loadExt = ['.p','.h5']
-loadFuncs = [pickleLoad,load_model]
+loadExt = ['.p',]
+loadFuncs = [pickleLoad]
 loadDict = dict(zip(loadExt,loadFuncs))
 
 
@@ -176,7 +173,7 @@ for itr in np.arange(N):
                 # load the model here
                 currentModel = loadDict[fExt](modelFull)
                 
-                outputExt = '{}.{}.{}.Iteration_{}.func.gii'.format(classifier,
+                outputExt = '{}.{}.{}.Frequency.Iteration_{}.func.gii'.format(classifier,
                              hExt,d,itr)
                 
                 G = glob.glob('{}*{}'.format(outDirIter,outputExt)) 
