@@ -266,8 +266,10 @@ for itr in np.arange(N):
                                     try:
                                         currentModel.predict(mtd,ltvm)
                                     except:
+                                        print 'Route 2'
                                         [bl,pr] = predict(currentModel,mtd,ltvm,mm)
                                     else:
+                                        print 'Route 1'
                                         bl = currentModel.baseline
                                         pr = currentModel.predicted
                                     finally:
