@@ -46,14 +46,13 @@ def loadTest(yObject,yMatch,features):
             features : feature to included in the test data numpy array
                         these must be the same as the training data
         """
-        
-        print 'Train features: {}'.format(features)
-        
+
         nf = []
         for f in features:
             if f != 'label':
                 nf.append(f)
         
+        print 'Train features: {}'.format(features)
         print 'Test features: {}'.format(nf)
         
         # load test subject data, save as attribtues
@@ -101,10 +100,8 @@ def predict(model,mtd,ltvm,mm,**kwargs):
         p = 1
         
     mm = np.power(mm,p)
-    
     predProbs = model.predict(mtd)
     threshProbs = mm*predProbs[:,1:]
-    
     predicted = np.argmax(threshProbs,axis=1)+1
     
     return predicted

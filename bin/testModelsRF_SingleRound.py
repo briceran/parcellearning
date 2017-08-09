@@ -10,8 +10,6 @@ import argparse
 import sys
 sys.path.append('..')
 
-import copy
-
 import parcellearning.classifier_utilities as cu
 import parcellearning.loaded as ld
 import parcellearning.malp as malp
@@ -52,13 +50,13 @@ def loadTest(model,yObject,yMatch):
                     detailing which labels each vertex in surface y maps to 
                     in the training data
         """
-        print 'Model features: {}'.format(model.features)
         
         nf = []
         for f in model.features:
             if f != 'label':
                 nf.append(f)
-        
+                
+        print 'Model features: {}'.format(model.features)
         print 'Load test features: {}'.format(nf)
 
         # load test subject data, save as attribtues
@@ -78,13 +76,25 @@ def loadTest(model,yObject,yMatch):
         return [threshed,mtd,ltvm]
     
     
-def parallelPredictRF(models,yTestObject,yTestMatch,yTestMids):
+"""
+
+parallelPredictRF and atlasPredictRF rely on the internal predict method of
+the MultiAtlas and Atlas objects.  In the event that we have serialization
+problems (after saving the models, changing the code for MultiAtlas and Atlas)
+we need different predict methods that are independent of the state at the 
+point of serialization.
+"""
+def parallelPredictRF(models,yTestObject,yTestMatch,predictCase = 0):
     
-    predictedLabels = Parallel(n_jobs=NUM_CORES)(delayed(atlasPredictRF)(models[i],
-                               yTestObject,yTestMatch,yTestMids) for i,m in enumerate(models))
+    if predictCase:
+    
+        predictedLabels = Parallel(n_jobs=NUM_CORES)(delayed(atlasPredictRF)(models[i],
+                                   yTestObject,yTestMatch,'FORESTS') for i,m in enumerate(models))
+    else:
+        predictedLabels = Parallel(n_jobs=NUM_CORES)(delayed(atlasPredictBaseCase)(models[i],
+                                   yTestObject,yTestMatch,'FORESTS') for i,m in enumerate(models))
 
     predictedLabels = np.column_stack(predictedLabels)
-
     classification = []
         
     for i in np.arange(predictedLabels.shape[0]):
@@ -97,29 +107,116 @@ def parallelPredictRF(models,yTestObject,yTestMatch,yTestMids):
 
     return classification
 
-def atlasPredictRF(mod,yObject,yMatch,yMids):
+def atlasPredictRF(mod,yObject,yMatch,sfmt):
+    
+    """
+    Method to predict labels of test data using model predict method.
+    
+    Parameters:
+    - - - - -
+        mod : current random forest model
+        
+        yObject : testing subject training object
+        
+        yMatch : test subject matching matrix
+        
+        mm : matching matrix (binary or frequency)
+    """
     
     [mm,mtd,ltvm] = loadTest(mod,yObject,yMatch)
     
-    mod.predict(mtd,mm,ltvm,yMids,softmax_type = 'FORESTS')
+    mod.predict(mtd,mm,ltvm,softmax_type = sfmt)
     
     P = mod.predicted
     
     return P
 
+def atlasPredictBaseCase(mod,yObject,yMatch,sfmt,**kwargs):
+    
+    """
+    Method to predict labels of test data using external method.
+    
+    Parameters:
+    - - - - -
+        mod : current random forest model
+        
+        yObject : testing subject training object
+        
+        yMatch : test subject matching matrix
+        
+        mm : matching matrix (binary or frequency)
+    """
+    
+    [mm,mtd,ltvm] = loadTest(mod,yObject,yMatch)
+    softmax_type = sfmt
+
+    if kwargs:
+        if 'power' in kwargs.keys():
+            p = kwargs['power']
+        else:
+            p = 1
+    else:
+        p = 1
+
+    funcs = {'BASE': malp.baseSoftMax,
+             'TREES': malp.treeSoftMax,
+             'FORESTS': malp.forestSoftMax}
+    
+    labels = mod.labels
+    neighbors = mod.neighbors
+    
+    R = 180
+    [xTest,yTest] = mtd.shape
+    if yTest != mod.input_dim:
+        raise Warning('Test data does not have the same number \
+                      features as the training data.')
+
+    # initialize prediction dictionary
+    baseline = np.zeros((mtd.shape[0],R+1))
+
+    mm = np.power(mm,p)
+
+    for lab in labels:
+        if lab in neighbors.keys():
+            
+            members = ltvm[lab]
+            memberData = mtd[members,:]
+            estimator = mod.models[lab]
+            
+            if len(members) > 0:
+                preds = funcs[softmax_type](estimator,members,memberData,mm,R)
+                baseline = cu.updatePredictions(baseline,members,preds)
+            
+    predicted = np.argmax(baseline,axis=1)
+    
+    return (baseline,predicted)
+
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
 # Parameters for input data
 parser.add_argument('-r','--round',help='Group of subjects to process.',type=int,required=True)
+parser.add_argument('-f','--frequencyBased',help='Whether to use frequency-based neighborhood constraint.',
+                    default=False,type=bool,required=False)
+parser.add_argument('-p','--power',help='Power to raise matching matrix to.',default=1,type=int,required=False)
 args = parser.parse_args()
 
 r = args.round
+freq = args.frequencyBased
+power = args.power
+powDict = {'power':power}
+
+
 
 # Directories where data and models exist
 dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
 
 # Directory and file extensions of matching matrices
 matchDir = '{}MatchingLibraries/Test/MatchingMatrices/'.format(dataDir)
-matchExt = 'MatchingMatrix.0.05.mat'
+if freq:
+    print 'Using frequency-based matching matrix.\n'
+    matchExt = 'MatchingMatrix.0.05.Frequencies.mat'
+else:
+    print 'Using original matching matrix.\n'
+    matchExt = 'MatchingMatrix.0.05.Frequencies.mat'
 
 # Directory and file extension of midline vertices
 midsDir = '{}Midlines/'.format(dataDir)
@@ -161,11 +258,6 @@ hemiFunc = dict(zip(hemispheres,hAbb))
 
 # Mapping training data type to features included in model
 data = ['RestingState','ProbTrackX2','Full']
-dataFeatures = ['fs_cort,fs_subcort,sulcal,myelin,curv,label',
-                'pt_cort,pt_subcort,sulcal,myelin,curv,label',
-                'fs_cort,fs_subcort,pt_cort,pt_subcort,sulcal,myelin,curv,label']
-
-dataFeatureFunc = dict(zip(data,dataFeatures))
 
 # List of rounds to process
 N = [r]
@@ -179,7 +271,6 @@ for itr in N:
     
     # Load test subject file, get list of subjects
     testSubjectFile = '{}TestingSubjects.{}.txt'.format(testListDir,itr)
-    
     with open(testSubjectFile,'r') as inFile:
         subjects = inFile.readlines()
     subjects = [x.strip() for x in subjects]
@@ -191,7 +282,6 @@ for itr in N:
         hExt = hemiFunc[hemi]
         
         inMyl = '{}MyelinDensity/285345.{}.MyelinMap.32k_fs_LR.func.gii'.format(dataDir,hExt)
-        
         myl = nb.load(inMyl)
         
         # Iterate over model types (GMM,RandomForest,NetworkModel)
@@ -206,15 +296,17 @@ for itr in N:
             for d in data:
                 
                 print 'Data: {}'.format(d)
-                
-                data_features = dataFeatureFunc[d]
-                
+
                 modelBase = '{}.{}.{}.{}.Iteration_{}{}'.format(classifier,
                                   hExt,classExt,d,itr,fExt)
                 modelFull = '{}{}'.format(modelDir,modelBase)
                 
-                outputExt = '{}.{}.{}.Iteration_{}.func.gii'.format(classifier,
-                             hExt,d,itr)   
+                if freq:
+                    outputExt = '{}.{}.{}.Frequency.Iteration_{}.func.gii'.format(classifier,
+                                 hExt,d,itr)
+                else:
+                    outputExt = '{}.{}.{}.Iteration_{}.func.gii'.format(classifier,
+                                 hExt,d,itr)  
                 
                 G = glob.glob('{}*{}'.format(outDirIter,outputExt))
                 
@@ -228,35 +320,25 @@ for itr in N:
                         print 'Subject: {}'.format(test_subj)
                         
                         testOutput = '{}{}.{}'.format(outDirIter,test_subj,outputExt)
-                        #print 'Test Output: {}'.format(testOutput)
                         
                         # Check to make sure current subject hasn't been run yet
                         # If it has, skip
                         if not os.path.isfile(testOutput):
                             
-                            testObject = '{}{}.{}.{}'.format(testDir,test_subj,hExt,testExt)
-                            #print 'Test Object: {}'.format(testObject)
-                            
-                            testMids = '{}{}.{}.{}'.format(midsDir,test_subj,hExt,midsExt)
-                            #print 'Test Mids: {}'.format(testMids)
-                            
+                            testObject = '{}{}.{}.{}'.format(testDir,test_subj,hExt,testExt)                            
+                            testMids = '{}{}.{}.{}'.format(midsDir,test_subj,hExt,midsExt)                            
                             testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
-                            #print 'Test Match: {}'.format(testMatch)
     
-                            mids = ld.loadMat(testMids)-1
+                            
 
                             if fExt == '.p':
-                                # If model was a random forest,current model is a LIST
-                                # of models.  We feed this in to malp.parallelPredictiong
-                                # along with the test data
-
                                 if classifier == 'RandomForest':
+                                    mids = ld.loadMat(testMids)-1
                                     
                                     P = parallelPredictRF(currentModel,testObject,
-                                                          testMatch,testMids)
+                                                          testMatch,predictCase = 0)
                                     
                                     P[mids] = 0
-                
                                     myl.darrays[0].data = np.array(P).astype(np.float32)
                                     nb.save(myl,testOutput)
                         else:

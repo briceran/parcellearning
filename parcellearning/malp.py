@@ -371,7 +371,7 @@ class Atlas(object):
         return [threshed,mtd,ltvm]
 
 
-    def predict(self,mtd,mm,ltvm,softmax_type = 'BASE'):
+    def predict(self,mtd,mm,ltvm,softmax_type = 'BASE',**kwargs):
         
         """
         Method to predict labels of test data.
@@ -424,7 +424,6 @@ class Atlas(object):
                     baseline = cu.updatePredictions(baseline,members,preds)
                 
         predicted = np.argmax(baseline,axis=1)
-        predicted[mids] = 0
         
         self.baseline = baseline
         self.predicted = predicted
