@@ -126,7 +126,7 @@ if freq:
     matchExt = 'MatchingMatrix.0.05.Frequencies.mat'
 else:
     print 'Using original matching matrix.\n'
-    matchExt = 'MatchingMatrix.0.05.Frequencies.mat'
+    matchExt = 'MatchingMatrix.0.05.mat'
 
 # Directory and file extension of midline vertices
 midsDir = '{}Midlines/'.format(dataDir)
