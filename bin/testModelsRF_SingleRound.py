@@ -189,7 +189,7 @@ def atlasPredictBaseCase(mod,yObject,yMatch,sfmt,**kwargs):
             
     predicted = np.argmax(baseline,axis=1)
     
-    return (baseline,predicted)
+    return predicted
 
 parser = argparse.ArgumentParser(description='Compute random forest predictions.')
 # Parameters for input data
