@@ -15,8 +15,6 @@ import parcellearning.loaded as ld
 import parcellearning.malp as malp
 import parcellearning.MixtureModel as MM
 
-from keras.models import load_model
-
 import nibabel as nb
 import numpy as np
 
@@ -247,8 +245,8 @@ classExtsFunc = dict(zip(methods,methodExtens))
 classTypeFunc = dict(zip(methods,exts))
 
 # Map file extension to loading functions
-loadExt = ['.p','.h5']
-loadFuncs = [pickleLoad,load_model]
+loadExt = ['.p']
+loadFuncs = [pickleLoad]
 loadDict = dict(zip(loadExt,loadFuncs))
 
 # Map full hemisphere to abbreviationc
