@@ -671,8 +671,7 @@ def buildMappingMatrix(merged,R,**kwargs):
     N = len(mergedThresh.keys());
     
     mappingMatrix = np.zeros((N,R+1))
-    threshedMatrix = np.zeros((N,R+1))
-    
+
     for v in mergedThresh.keys():
         if mergedThresh[v]:
             maps = mergedThresh[v]
@@ -684,4 +683,48 @@ def buildMappingMatrix(merged,R,**kwargs):
     mappingMatrix = mappingMatrix[:,1:]
     
     return mappingMatrix;
-            
+
+
+def downsampleVertices(matches,threshold):
+    
+    """
+    Method to downsample the trainng data set, based on those vertices that map
+    most frequently to any given label.
+    
+    Originally, we'd thought to threshold the matchingMatrix itself, and choose
+    only those vertices with maximum frequencies above a given threshold. This 
+    resulted in a situation where some region classes were not represented in
+    the training data at all because their maximum mapping frequencies were
+    considerably lower than this threshold.
+    
+    Parameters:
+    - - - - -
+        matchingMatrix : matrix containing mapping frequency information
+                        for each vertex in a training brain
+        threshold : percentage of vertces to keep
+    """
+
+    maxF = np.max(matches,axis=1)
+    zeroInds = maxF > 0
+    maxFLabel = np.argmax(matches,axis=1)+1
+    maxFLabel = maxFLabel*zeroInds
+    
+    N = 180
+    labels = np.arange(1,N+1)
+    
+    highestMaps = {}.fromkeys(labels)
+    
+    for L in labels:
+        
+        indices = np.where(maxFLabel == L)[0]
+        maxFL = maxF[indices]
+        
+        sortedCoords = np.flip(np.argsort(maxFL),axis=0)
+        sortedInds = indices[sortedCoords]
+        
+        upper = int(np.ceil(threshold*len(sortedInds)))
+        
+        acceptedInds = sorted(sortedInds[0:upper])
+        highestMaps[L] = list(acceptedInds)
+    
+    return highestMaps
