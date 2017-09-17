@@ -39,7 +39,7 @@ import numpy as np
 import sklearn
 import os
 import pickle
-
+ 
 from keras import callbacks, optimizers
 from keras.models import Sequential
 from keras.layers import Dense,normalization
@@ -163,40 +163,6 @@ def loadData(subjectList,dataDir,features,hemi):
         
     return (data,labs,vlib)
 
-def aggregateDictValues(inDict):
-    
-    """
-    Method to aggregate the values of a dictionary, where the values are assumed
-    to be numpy arrays.
-    """
-    
-    data = [inDict[k] for k in inDict.keys()]
-    data = np.row_stack(data)
-    
-    return data
-
-def splitDataByLabel(fullDataArray,labelVector):
-    
-    """
-    Get sample data for each label and compile into dictionary, hashed by
-    label value.
-    
-    Parameters:
-    - - - - -
-        fullDataArray : data array
-        labelVector : array of labels
-    """
-    
-    labels = set(np.squeeze(labelVector)).difference({0})
-    
-    coreData = {}.fromkeys(labels)
-    
-    for l in labels:
-        inds = np.where(labelVector == l)[0]
-        coreData[l] = fullDataArray[inds,:]
-    
-    return coreData
-
 
 ## Functions for Down-sampling data
 def noDS(trainingData,labelVector,mm):
@@ -239,7 +205,7 @@ def downsampleRandomly(coreTData,coreMData,labels):
     """
     
     # Find sample set with minimum number of points
-    m = 10000000
+    m = sys.maxint
     for k in labels:
         m = np.min([m,coreTData[k].shape[0]])
     
@@ -255,55 +221,6 @@ def downsampleRandomly(coreTData,coreMData,labels):
         downMData[k] = coreMData[k][tempCoords,:]
     
     return downTData,downMData
-
-### Need to fix this to incorporate matchingMatrix
-def dbsDS(trainingData,mm,labelVector):
-    
-    """
-    Apply DBSCAN to each label sample set, then apply down-sampling.
-    """
-    
-    labels = set(np.squeeze(labelVector)).difference({0})
-
-    # get samples for each label
-    coreData = splitDataByLabel(trainingData,labelVector)
-    coreMM = splitDataByLabel(mm,labelVector)
-    
-    # Compute filtered coordinates using DBSCAN
-    clusterCoordinates = regm.trainDBSCAN(coreData,mxp=DBSCAN_PERC)
-    
-    # Extract the samples that passed using DBSCAN filtering
-    dbscanData = condenseDBSCAN(coreData,clusterCoordinates)
-    dbscanMM = condenseDBSCAN(coreMM,clusterCoordinates)
-
-    # Apply random down-sampling scheme to DBSCAN-ed data and matchingMatrix
-    # so that all labels match the smallest label
-    [dataDS,mmDS] = downsampleRandomly(dbscanData,dbscanMM,labels)
-
-    # Build response vectors for each label
-    dbsRespDS = cu.buildResponseVector(labels,dataDS)
-    
-    # Aggregate samples and response vectors
-    aggDataDS= aggregateDictValues(dataDS)
-    aggMMDS = aggregateDictValues(mmDS)
-    aggRespDS = aggregateDictValues(dbsRespDS)
-    
-    # return samples and response arrays
-    return (aggDataDS,aggMMDS,aggRespDS)
-
-def condenseDBSCAN(inSamples,coords):
-    
-    """
-    Given the coordinates of dbscan-accepted samples, reduce the sample
-    dimensionality.
-    """
-    
-    outSamples = {}.fromkeys(coords.keys())
-    
-    for k in outSamples.keys():
-        outSamples[k] = inSamples[k][coords[k],:]
-        
-    return outSamples
 
 def shuffleData(training,matching,responses):
 

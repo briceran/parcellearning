@@ -685,7 +685,7 @@ def buildMappingMatrix(merged,R,**kwargs):
     return mappingMatrix;
 
 
-def downsampleVertices(matches,threshold):
+def downsampleVertices(matchingMatrix,threshold):
     
     """
     Method to downsample the trainng data set, based on those vertices that map
@@ -703,6 +703,8 @@ def downsampleVertices(matches,threshold):
                         for each vertex in a training brain
         threshold : percentage of vertces to keep
     """
+
+    matches = matchingMatrix
 
     maxF = np.max(matches,axis=1)
     zeroInds = maxF > 0
