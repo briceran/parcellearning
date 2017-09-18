@@ -36,25 +36,29 @@ class Atlas(object):
         depth : maximum depth of grown trees
         
         n_estimators : number of estimating trees per forest
+        
+        power : power with which to weight the matching frequency
     """
     
-    def __init__(self,depth=5,n_estimators=60):
+    def __init__(self,depth=5,n_estimators=60,power=1):
         
         self.classifier = ensemble.RandomForestClassifier(n_estimators=n_estimators,
                                                           max_depth=depth,n_jobs=-1)
+        
+        self.power = power
 
-    def set_params(self,**kwargs):
+    def set_params(self,**params):
         
         """
         Update parameters with user-specified dictionary.
         """
         
-        args, varargs, varkw, defaults = inspect.getargspec(self.__init__)
+        args,_,_,_ = inspect.getargspec(self.__init__)
         
-        if kwargs:
-            for key in kwargs:
+        if params:
+            for key in params:
                 if key in args:
-                    setattr(self,key,kwargs[key])
+                    setattr(self,key,params[key])
             
     def fit(self,x_train,y_train,neighbors,labels,model_type='ori',**kwargs):
         
@@ -316,7 +320,7 @@ class MultiAtlas(object):
         scale : standardize the training data
     """
     
-    def __init__(self,atlas_size = 1,atlases=None,exclude_testing = None):
+    def __init__(self,atlas_size = 1,atlases=None):
         
         """
         Method to initialize Mutli-Atlas label propagation scheme.
@@ -327,8 +331,6 @@ class MultiAtlas(object):
 
             atlases : number of atlases to generate
 
-            exclude_testing = (None,str,list) list of subjects to exclude from training data
-            
         """
         
         if atlas_size < 1:
@@ -338,13 +340,21 @@ class MultiAtlas(object):
         if atlases is not None and atlases < 0:
             raise ValueError('atlases must be positive integer or None.')
 
-        if exclude_testing is not None and not isinstance(exclude_testing,str) and not \
-                isinstance(exclude_testing,list):
-            raise ValueError('exclude_testing must by a string or None.')
-
         self.atlas_size = atlas_size
         self.atlases = atlases
-        self.exclude_testing = exclude_testing
+        
+    def set_params(self,**params):
+        
+        """
+        Update parameters with user-specified dictionary.
+        """
+        
+        args,_,_,_ = inspect.getargspec(self.__init__)
+        
+        if params:
+            for key in params:
+                if key in args:
+                    setattr(self,key,params[key])
 
 
     def load(self,trainingData,trainingLabels,**kwargs):
@@ -370,9 +380,6 @@ class MultiAtlas(object):
 
         subjects = trainingData.keys()
 
-        if self.exclude_testing:
-            subjects = list(set(subjects).difference(set(self.exclude_testing)))
-        
         if not self.atlases:
             self.atlases = len(subjects)
         else:
@@ -440,7 +447,7 @@ class MultiAtlas(object):
         return [dataSets,labelSets]
         
 
-def parallelFitting(trainingData,trainingLabels,maps,**kwargs):
+def parallelFitting(trainingData,trainingLabels,maps,**fit_params):
 
     """
     Method to fit a set of Atlas objects.
@@ -453,10 +460,11 @@ def parallelFitting(trainingData,trainingLabels,maps,**kwargs):
     """
 
     BaseAtlas = Atlas()
+    BaseAtlas.set_params(fit_params)
 
     # fit atlas on each componentraransarra
     fittedAtlases = Parallel(n_jobs=NUM_CORES)(delayed(atlasFit)(BaseAtlas,dat,
-                             labs,maps,**kwargs) for (dat,labs) in zip(trainingData,trainingLabels))
+                             labs,maps,**fit_params) for (dat,labs) in zip(trainingData,trainingLabels))
     
     return fittedAtlases
     

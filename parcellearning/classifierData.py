@@ -10,15 +10,17 @@ import classifierUtilities as cu
 import loaded as ld
 import matchingLibraries as lb
 
+import inspect
+import json
+
 import copy
 import h5py
 import os
 import numpy as np
-import nibabel as nb
 import sklearn
 
 
-class PrepareObject():
+class Prepare():
     
     """
     Class to prepare data for classifiers.  Originally, I'd thought
@@ -60,7 +62,20 @@ class PrepareObject():
         
         self.dataMap = dataMap
         
+    def setParams(self,**params):
         
+        """
+        Set parameters of Prepare object, as in the case of reading in
+        parameters from a JSON file.
+        """
+        
+        args,_,_,_ = inspect.getargspec(self.__init__)
+        
+        if params:
+            for key in params:
+                if key in args:
+                    setattr(self,key,params[key])
+
     def load(self,subjects,training=True):
         
         """
@@ -179,7 +194,6 @@ class PrepareObject():
         
         supraData = np.squeeze(np.row_stack(supraData))
         supraLabels = np.squeeze(np.concatenate(supraLabels))
-        self.labels = set(supraLabels).difference({0,-1})
         
         labInds = np.where(supraLabels > 0)[0]
         
@@ -198,7 +212,7 @@ class PrepareObject():
         return [mergedData,mergedLabels]
 
 
-    def testing(self,dataObject,matchingMatrix):
+    def testing(self,subject):
         
         """
         Method to process testing data.  If the training data was scaled to
@@ -213,9 +227,20 @@ class PrepareObject():
         """
 
         features = self.features
+        scaler = self.scaler
         
         print 'Loading testing data with {} features.'.format(features)
-        scaler = self.scaler
+        
+        objDict = self.dataMap['object'].items()
+        objDir = objDict[0][0]
+        objExt = objDict[0][1]
+
+        matDict = self.dataMap['matching'].items()
+        matDir = matDict[0][0]
+        matExt = matDict[0][1]
+        
+        dataObject = ''.join([objDir,subject,objExt])
+        matchingMatrix = ''.join([matDir,subject,matExt])
 
         # load test subject data, save as attribtues
         rawTestData = ld.loadH5(dataObject,*['full'])
@@ -359,3 +384,36 @@ def neighborhoodMaps(neighborhoodMap,neighborhoodType,distance):
     neighbors = lb.mappingThreshold(neighborhoodMap,threshold,boundary)
     
     return neighbors
+
+def parseJSON(templateFile):
+    
+    DATA_PARAMETERS = ['features','training','hemisphere',
+                       'dataMap','downsample']
+    
+    CLASSIFIER_PARAMETERS = {'RandomForest': ['max_depth','n_estimators',
+                                              'power'],
+                            'MALP': ['atlases','atlas_size'],
+                            'NeuralNetwork': ['eval_factor','layers',
+                                              'node_structure','epochs',
+                                              'batch_size','rate']
+                            }
+    
+    assert os.path.isfile(templateFile)
+    
+    with open(templateFile,'r') as template:
+        template = json.load(template)
+        
+    data = template['data']
+    classifier = template['classifier']
+
+    Prep = Prepare(dataMap,hemisphere,features)
+    
+    return Prep
+    
+    
+    
+    
+    
+    
+        
+    

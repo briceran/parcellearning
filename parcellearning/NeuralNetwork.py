@@ -10,8 +10,8 @@ import numpy as np
 import pickle
 import sklearn
 
-import loaded as ld
-import matchingLibraries as lb
+import inspect
+
 import classifierUtilities as cu
 
 from keras import callbacks, optimizers
@@ -92,6 +92,19 @@ class Network(object):
         else:
             opt = optimizers.SGD(lr=rate, decay=1e-6, momentum=0.9, nesterov=True)
         self.opt_object = opt
+        
+    def set_params(self,**params):
+        
+        """
+        Update parameters with user-specified dictionary.
+        """
+        
+        args,_,_,_ = inspect.getargspec(self.__init__)
+        
+        if params:
+            for key in params:
+                if key in args:
+                    setattr(self,key,params[key])
             
     def build(self,input_dimension,output_dimension):
         
