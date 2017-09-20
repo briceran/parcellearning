@@ -338,23 +338,29 @@ if __name__ == "__main__":
                             
                             #[acc1,sc1,sh1] = testSuite(truth,test1,x_test)
                             #[acc2,sc2,sh2] = testSuite(truth,test2,x_test)
-                            [acc1,sc1] = testSuite(truth,test1,x_test)
-                            [acc2,sc2] = testSuite(truth,test2,x_test)
+                            #[acc1,sc1] = testSuite(truth,test1,x_test)
+                            #[acc2,sc2] = testSuite(truth,test2,x_test)
                             
                             
                             error1 = errorMap(truth,test1)
                             error2 = errorMap(truth,test2)
                             errorT = errorMap(test1,test2)
+                            
+                            acc1 = np.mean(error1)
+                            acc2 = np.mean(error2)
+                            accT = np.mean(errorT)
 
                             jcc1 = jaccard(truth,test1)
                             jcc2 = jaccard(truth,test2)
                             jccT = jaccard(test1,test2)
-                            accT = accuracy(test1,test2)
+
+                            params.append(acc1)
+                            params.append(acc2)
+                            params.append(accT)
                             
                             params.append(jcc1)
                             params.append(jcc2)
                             params.append(jccT)
-                            params.append(accT)
                             
                             results.append(params)
                             
