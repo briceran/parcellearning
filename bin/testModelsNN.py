@@ -193,6 +193,8 @@ for hemi in hemispheres:
 
         modelBase = 'NeuralNetwork.{}.{}.{}.{}.h5'.format(hExt,modelParams,d,extension)
         modelFull = '{}{}'.format(modelDir,modelBase)
+
+        print 'Model: {}'.format(modelFull)
         
         if os.path.isfile(modelFull):
         
