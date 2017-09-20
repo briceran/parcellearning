@@ -321,6 +321,8 @@ if __name__ == "__main__":
                             
                             print 'Layers: {}'.format(l)
                             
+                            print 'Results Length: {}'.format(len(results))
+                            
                             params = [test_subj,d,h,f,n,l]
                             
                             midPre = '{}.Layers.{}.Nodes.{}'.format(h,l,n)
