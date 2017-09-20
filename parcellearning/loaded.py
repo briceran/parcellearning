@@ -239,12 +239,16 @@ def parseH5(h5Object,features):
     """
     
     groups = h5Object.keys()
+    print groups
     parsedData = {str(s): {}.fromkeys(features) for s in groups}
     
     for s in groups:
+        
+        print s
 
         cond = True
         for f in features:
+            print f
             if f in h5Object[s].keys():
                 parsedData[str(s)][f] = np.asarray(h5Object[str(s)][f])
             else:
