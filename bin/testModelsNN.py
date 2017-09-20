@@ -72,7 +72,7 @@ def loadTest(yObject,yMatch,features):
         return [threshed,mtd,ltvm]
     
     
-def predict(model,mtd,ltvm,mm,**kwargs):
+def predict(model,x_test,ltvm,match,power=1):
     
     """
     Method to predict neural network model cortical map.
@@ -91,16 +91,15 @@ def predict(model,mtd,ltvm,mm,**kwargs):
     
     """
     
-    if kwargs:
-        if 'power' in kwargs.keys():
-            p = kwargs['power']
-        else:
-            p = 1
+    if power == None:
+            match = np.power(match,0)
+    elif power == 0:
+        nz = np.nonzero(match)
+        match[nz] = 1
     else:
-        p = 1
-        
-    mm = np.power(mm,p)
-    predProbs = model.predict(mtd)
+        match = np.power(match,power)
+
+    predProbs = model.predict(x_test)
     threshProbs = mm*predProbs[:,1:]
     predicted = np.argmax(threshProbs,axis=1)+1
     
