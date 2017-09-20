@@ -280,18 +280,26 @@ if __name__ == "__main__":
             
             for h in hemi:
                 
+                print 'Hemisphere: {}'.format(h)
+                
                 truth = '{}{}.{}.CorticalAreas.fixed.32k_fs_LR.label.gii'.format(trueDir,
                                      test_subj,h)
                 truth = nb.load(truth)
                 truth = truth.darrays[0].data
                 
-                mylFile = '{}Myelin/{}.{}.MyelinMap.32k_fs_LR.func.gii'.format(baseDir,
+                print 'True label loaded.'
+                
+                mylFile = '{}MyelinDensity/{}.{}.MyelinMap.32k_fs_LR.func.gii'.format(baseDir,
                        test_subj,h)
                 mylData = nb.load(mylFile)
                 myl = mylData.darrays[0].data
                 
+                print 'Functional map loaded.'
+                
                 subjData = '{}{}.{}.TrainingObject.aparc.a2009s.h5'.format(dataDir,test_subj,h)
                 x_test = loadData(subjData,features)
+                
+                print 'Feature data loaded.'
                 
                 for f in freqs:
                     f = float(f)
