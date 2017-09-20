@@ -90,6 +90,8 @@ def predict(model,x_test,ltvm,match,power=1):
         kwargs : 
     
     """
+
+    print 'Raising matches to {} power.'.format(power)
     
     if power == None:
             match = np.power(match,0)
