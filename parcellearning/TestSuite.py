@@ -49,6 +49,9 @@ def loadData(yObject,features):
         tObject = ld.loadH5(yObject,*['full'])
         ID = tObject.attrs['ID']
         
+        print tObject
+        print tObject.keys()
+        
         print 'Subject ID: {}'.format(ID)
 
         parsedData = ld.parseH5(tObject,nf)
