@@ -278,6 +278,7 @@ if __name__ == "__main__":
         
         print 'DataType: {}'.format(d)
         features = dataFeatureFunc[d]
+        features = features.split(',')
         
         for test_subj in testSubjects:
             
