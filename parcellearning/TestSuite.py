@@ -306,8 +306,15 @@ if __name__ == "__main__":
                 
                 for f in freqs:
                     f = float(f)
+                    
+                    print 'Frequency Power: {}'.format(f)
+                    
                     for n in nodes:
+                        
+                        print 'Nodes: {}'.format(n)
                         for l in layers:
+                            
+                            print 'Layers: {}'.format(l)
                             
                             params = [test_subj,d,h,f,n,l]
                             
@@ -317,12 +324,10 @@ if __name__ == "__main__":
                             fullExt = '{}.{}.{}.{}'.format(test_subj,midPre,midExt,midSuf)
                             
                             test1 = '{}{}1.func.gii'.format(predDataDir,fullExt)
-                            print test1
                             test1 = nb.load(test1)
                             test1 = test1.darrays[0].data
                             
                             test2 = '{}{}2.func.gii'.format(predDataDir,fullExt)
-                            print test2
                             test2 = nb.load(test2)
                             test2 = test2.darrays[0].data
                             
