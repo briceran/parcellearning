@@ -119,7 +119,6 @@ freq = args.freq
 layers = args.layers
 nodes = args.nodes
 power = args.power
-powDict = {'power':power}
 
 testFile = args.testFile
 extension = args.modelExtension
@@ -223,7 +222,7 @@ for hemi in hemispheres:
                         mids = ld.loadMat(testMids)-1
 
                         [mm,mtd,ltvm] = loadTest(testObject,testMatch,data_features)
-                        predicted = predict(model,mtd,ltvm,mm,**powDict)
+                        predicted = predict(model,mtd,ltvm,mm,power=power)
                         predicted[mids] = 0
                         myl.darrays[0].data = np.array(predicted).astype(np.float32)
                         nb.save(myl,outputGii)

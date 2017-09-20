@@ -197,7 +197,5 @@ def testSuite(truthLabel,predictedLabel,featureData):
     
     return [acc,shScore,shSamples]
 
-def testReTestOverlap(cbp1,cbp2,)
-    
-    
 
+def __init__(main)
