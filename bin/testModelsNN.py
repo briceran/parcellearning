@@ -154,7 +154,7 @@ outputDir = '{}Predictions/TestReTest/'.format(dataDir)
 
 
 #### Model parameters as string
-modelParams = ['Layers.{}.Nodes.{}.Sampling.equal.Epochs.40.Batch.256.Rate.0.001'.format(layers,nodes)]
+modelParams = 'Layers.{}.Nodes.{}.Sampling.equal.Epochs.40.Batch.256.Rate.0.001'.format(layers,nodes)
 
 # Map full hemisphere to abbreviationc
 hemispheres = ['Left','Right']
