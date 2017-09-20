@@ -7,21 +7,23 @@ hemisphere=$2
 layers=$3
 nodes=$4
 outDir=$5
+outExt=$6
+
+trainList=$7
 
 dataDir=/mnt/parcellator/parcellation/parcellearning/Data/
 binDir=/mnt/parcellator/parcellation/GitHub/parcellearning/bin/
 script=${binDir}neuralNetworks.py
 
-N=9
 
 # Check that "kind" is either probtrackx2, functional, or combined
-if [ $kind != "ptx" ] && [ $kind != "fs" ] && [ $kind != "full" ]; then
+if [ "$kind" != "ptx" ] && [ "$kind" != "fs" ] && [ "$kind" != "full" ]; then
 	echo "Incorrect data type."
 	exit
 fi
 
 # Check that hemisphere is either left or right
-if [ $hemisphere != "Left" ] && [ $hemisphere != "Right" ]; then
+if [ "$hemisphere" != "Left" ] && [ "$hemisphere" != "Right" ]; then
 	echo "Incorrect hemisphere."
 	exit
 fi
@@ -33,7 +35,7 @@ fi
 
 # If number of nodes is undefined, default = 150
 if [ -z "$4" ]; then
-	nodes=150
+	nodes=50
 fi
 
 # If output directory is undefined, default is generic "models" directory
@@ -44,6 +46,7 @@ fi
 if [ ! -d "$outDir" ]; then
 	mkdir ${outDir}
 fi
+
 
 if [ $kind = "ptx" ]; then
 	exten="ProbTrackX2"
@@ -56,29 +59,29 @@ elif [ $kind = "full" ]; then
 	feats="fs_cort,fs_subcort,pt_cort,pt_subcort,sulcal,myelin,curv,label"
 fi
 
+
 if [ $hemisphere = 'Left' ]; then
 	H='L'
 elif [ $hemisphere = 'Right' ]; then
 	H='R'
 fi
 
-#layers=2
-#nodes=150
 
 downSample='equal'
 epochs=40
 batchSize=256
 rate=0.001
 
-for i in $(seq 0 $N); do
-		outFileExtension=NeuralNetwork.${H}.Layers.${layers}.Nodes.${nodes}.Sampling.${downSample}.Epochs.${epochs}.Batch.${batchSize}.Rate.${rate}.${exten}
-		echo ${outFileExtension}
-		outFile=${outDir}${outFileExtension}.Iteration_${i}
-		trainingList=${dataDir}TrainTestLists/TrainingSubjects.${i}.txt
-		logFile=${outDir}logFile.NeuralNetwork.${exten}.${H}.${i}.Nodes.${nodes}.out
-    	# Check if model already exists
-		if [ ! -f ${outFile}.h5 ]; then
-    		echo "Model does not exist yet."
-			nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainingList} -hm ${hemisphere} -o ${outFile} -ds ${downSample} -l ${layers} -n ${nodes} -e ${epochs} -b ${batchSize} -r ${rate} >& ${logFile} 2>&1&
-		fi
-done
+
+outFileExtension=NeuralNetwork.${H}.Layers.${layers}.Nodes.${nodes}.Sampling.${downSample}.Epochs.${epochs}.Batch.${batchSize}.Rate.${rate}.${exten}.${outExt}
+
+echo ${outFileExtension}
+
+outFile=${outDir}${outFileExtension}
+logFile=${outDir}logFile.NeuralNetwork.${exten}.${H}.Nodes.${nodes}.out
+
+# Check if model already exists
+if [ ! -f ${outFile}.h5 ]; then
+    	echo "Model does not exist yet."
+	nohup ${PYTHON} ${script} -dDir ${dataDir} -f ${feats} -sl ${trainList} -hm ${hemisphere} -o ${outFile} -ds ${downSample} -l ${layers} -n ${nodes} -e ${epochs} -b ${batchSize} -r ${rate} >& ${logFile} 2>&1&
+fi

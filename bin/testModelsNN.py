@@ -107,13 +107,19 @@ def predict(model,mtd,ltvm,mm,**kwargs):
     return predicted
 
 parser = argparse.ArgumentParser(description='Build training objects.')
-parser.add_argument('-f','--frequencyBased',help='Whether to use frequency-based neighborhood constraint.',
+parser.add_argument('--freq',help='Whether to use frequency-based neighborhood constraint.',
                     default=False,type=bool,required=False)
-parser.add_argument('-p','--power',help='Power to raise matching matrix to.',default=1,type=int,required=False)
+parser.add_argument('--power',help='Power to raise matching matrix to.',default=1,type=float,required=False)
+parser.add_argument('--iters',help='Number of testing iterations to run.',default=10,type=int,required=False)
+parser.add_argument('--layers',help='Number of layers in model.',required=True,type=int)
+parser.add_argument('--nodes',help='Number of nodes per layer.',required=True,type=int)
 args = parser.parse_args()
 
-freq = args.frequencyBased
+freq = args.freq
+layers = args.layers
+nodes = args.nodes
 power = args.power
+iters = args.iters
 powDict = {'power':power}
 
 # Directories where data and models exist
@@ -141,7 +147,7 @@ modelDir = '{}Models/'.format(dataDir)
 testListDir = '{}TrainTestLists/'.format(dataDir)
 
 # Output directory
-outputDir = '{}Predictions/'.format(dataDir)
+outputDir = '{}Predictions/TestReTest/'.format(dataDir)
 
 
 
@@ -152,7 +158,9 @@ methods = ['NeuralNetwork']
 exts = ['.h5']
 
 #methodExtens = ['Layers.3.Nodes.100.Sampling.equal.Epochs.30.Batch.256.Rate.0.001']
-methodExtens = ['Layers.3.Nodes.150.Sampling.equal.Epochs.40.Batch.256.Rate.0.001']
+#methodExtens = ['Layers.3.Nodes.150.Sampling.equal.Epochs.40.Batch.256.Rate.0.001']
+methodExtens = 'NeuralNetwork.Layers.{}.Nodes.{}.Sampling.equal.Epochs.40.Batch.256.Rate.0.001'.format(layers,nodes)
+
 
 # Maping model type to file extension
 classExtsFunc = dict(zip(methods,methodExtens))
@@ -181,7 +189,7 @@ dataFeatures = ['fs_cort,fs_subcort,sulcal,myelin,curv',
 dataFeatureFunc = dict(zip(data,dataFeatures))
 
 # Number of testing sets
-N = 10
+N = iters
 
 # Iterate over test sets
 for itr in np.arange(N):
@@ -232,11 +240,11 @@ for itr in np.arange(N):
                     currentModel = loadDict[fExt](modelFull)
                     
                     if freq:
-                        outputExt = '{}.{}.{}.Frequency.Iteration_{}.func.gii'.format(classifier,
-                                     hExt,d,itr)
+                        outputExt = '{}.{}.{}.Frequency.{}.Power.{}.Iteration_{}.func.gii'.format(classifier,
+                                     hExt,d,freq,power,itr)
                     else:
-                        outputExt = '{}.{}.{}.Iteration_{}.func.gii'.format(classifier,
-                                     hExt,d,itr)
+                        outputExt = '{}.{}.{}.Binary.Power.{}.Iteration_{}.func.gii'.format(classifier,
+                                     hExt,d,power,itr)
                     
                     G = glob.glob('{}*{}'.format(outDirIter,outputExt)) 
                     if len(G) < len(subjects):
