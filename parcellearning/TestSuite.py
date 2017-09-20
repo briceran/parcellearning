@@ -14,7 +14,7 @@ accessing data in a dictionary -- that is, with key-value pairs.
 """
 
 import loaded as ld
-import classifier_utilies as cu
+import classifierUtilies as cu
 
 import numpy as np
 import nibabel as nb
