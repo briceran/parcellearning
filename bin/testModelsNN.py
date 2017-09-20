@@ -110,7 +110,6 @@ parser = argparse.ArgumentParser(description='Build training objects.')
 parser.add_argument('--freq',help='Whether to use frequency-based neighborhood constraint.',
                     default=False,type=bool,required=False)
 parser.add_argument('--power',help='Power to raise matching matrix to.',default=1,type=float,required=False)
-parser.add_argument('--iters',help='Number of testing iterations to run.',default=10,type=int,required=False)
 parser.add_argument('--layers',help='Number of layers in model.',required=True,type=int)
 parser.add_argument('--nodes',help='Number of nodes per layer.',required=True,type=int)
 parser.add_argument('--testFile',help='List of testing subjects.',required=True,type=str)
@@ -121,7 +120,6 @@ freq = args.freq
 layers = args.layers
 nodes = args.nodes
 power = args.power
-iters = args.iters
 powDict = {'power':power}
 
 testFile = args.testFile
