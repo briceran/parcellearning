@@ -104,6 +104,8 @@ def predict(model,x_test,ltvm,match,power=1):
         print '{}th power.'
         match = np.power(match,power)
 
+    print 'QA of matching after power: {}'.format(set(match[0,:]))
+
     predProbs = model.predict(x_test)
     threshProbs = mm*predProbs[:,1:]
     predicted = np.argmax(threshProbs,axis=1)+1
