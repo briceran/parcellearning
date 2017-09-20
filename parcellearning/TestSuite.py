@@ -313,18 +313,10 @@ if __name__ == "__main__":
                 
                 for f in freqs:
                     f = float(f)
-                    
-                    print 'Frequency Power: {}'.format(f)
-                    
+
                     for n in nodes:
-                        
-                        print 'Nodes: {}'.format(n)
                         for l in layers:
-                            
-                            print 'Layers: {}'.format(l)
-                            
-                            print 'Results Length: {}'.format(len(results))
-                            
+
                             params = [test_subj,d,h,f,n,l]
                             
                             midPre = '{}.Layers.{}.Nodes.{}'.format(h,l,n)
@@ -354,26 +346,17 @@ if __name__ == "__main__":
                             acc2 = np.mean(error2)
                             accT = np.mean(errorT)
 
-                            jcc1 = jaccard(truth,test1)
-                            jcc2 = jaccard(truth,test2)
-                            jccT = jaccard(test1,test2)
-
                             params.append(acc1)
                             params.append(acc2)
                             params.append(accT)
-                            
-                            params.append(jcc1)
-                            params.append(jcc2)
-                            params.append(jccT)
-                            
+
                             results.append(params)
     
     results = np.row_stack(results)
     dataFrame = pd.DataFrame(results)
     
-    pNames = ['id','data','hemi','freq','nodes','layers',
-              'error_1','error_2','error_test','jacc_1',
-              'jacc_2','jacc_test']
+    pNames = ['id','data','hemi','freq','nodes',
+              'layers','acc_1','acc_2','acc_test']
     dataFrame.columns = pNames
     
     dataFrame.to_pickle('/mnt/parcellator/parcellation/parcellearning/Data/TestReTestData.p')
