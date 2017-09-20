@@ -213,7 +213,7 @@ for hemi in hemispheres:
                     
                     print 'Subject: {}'.format(test_subj)
                     
-                    outputGii = '{}{}.{}'.format(outDirIter,test_subj,outputExt)
+                    outputGii = '{}{}.{}'.format(outputDir,test_subj,outputExt)
                     
                     if not os.path.isfile(outputGii):
                     
