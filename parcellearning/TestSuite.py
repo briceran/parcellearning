@@ -48,6 +48,8 @@ def loadData(yObject,features):
         # load test subject data, save as attribtues
         tObject = ld.loadH5(yObject,*['full'])
         ID = tObject.attrs['ID']
+        
+        print 'Subject ID: {}'.format(ID)
 
         parsedData = ld.parseH5(tObject,nf)
         tObject.close()
