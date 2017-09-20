@@ -217,9 +217,11 @@ def silhouette(data,labels):
     """
     
     score = metrics.silhouette_score(data,labels,metric='correlation')
-    sample_scores = metrics.silhouette_samples(data,labels,metric='correlation')
+    #sample_scores = metrics.silhouette_samples(data,labels,metric='correlation')
     
-    return [score,sample_scores]
+    #return [score,sample_scores]
+    
+    return score
 
 def testSuite(truth,predicted,featureData):
     
@@ -228,9 +230,12 @@ def testSuite(truth,predicted,featureData):
     """
 
     acc = accuracy(predicted,truth)
-    [shScore,shSamples] = silhouette(featureData,predicted)
+    #[shScore,shSamples] = silhouette(featureData,predicted)
+    shScore = silhouette(featureData,predicted)
     
-    return [acc,shScore,shSamples]
+    #return [acc,shScore,shSamples]
+    
+    return [acc,shScore]
 
 
 if __name__ == "__main__":
@@ -331,8 +336,10 @@ if __name__ == "__main__":
                             test2 = nb.load(test2)
                             test2 = test2.darrays[0].data
                             
-                            [acc1,sc1,sh1] = testSuite(truth,test1,x_test)
-                            [acc2,sc2,sh2] = testSuite(truth,test2,x_test)
+                            #[acc1,sc1,sh1] = testSuite(truth,test1,x_test)
+                            #[acc2,sc2,sh2] = testSuite(truth,test2,x_test)
+                            [acc1,sc1] = testSuite(truth,test1,x_test)
+                            [acc2,sc2] = testSuite(truth,test2,x_test)
                             
                             
                             error1 = errorMap(truth,test1)
