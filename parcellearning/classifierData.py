@@ -27,7 +27,7 @@ class Prepare():
     to process the data internally in the classifier, but I found 
     that I was repeating lots of code across classifer types.  Additionally,
     the data preprocessing is not "clean" -- it makes sense to
-    encapsulate the the preprocessing outside of the classifiers themselves.
+    encapsulate the preprocessing outside of the classifiers themselves.
     """
     
     def __init__(self,dataMap,hemisphere,features):
@@ -76,7 +76,7 @@ class Prepare():
                 if key in args:
                     setattr(self,key,params[key])
 
-    def load(self,subjects,training=True):
+    def training(self,subjects,training=True,scale=True):
         
         """
         Parameters:
@@ -85,99 +85,66 @@ class Prepare():
             training : boolean indicating whether this set of subjects is
                         a training set or not.  If training == True, loaded
                         data arrays will include the true label arrays.
+        Returns:
+        - - - -
+            mergedData : standardized, merged feature data arrays for each 
+                            subj in subjects.  
+            mergedLabels : dependent-variable vector of vertex labels for 
+                            each subj in subjects.  Number of samples is the
+                            same as the number of samples in mergedData.
+            matchDictionary : matching matrix for each subj in subjects,
+                                where each row is the mapping vertex to label
+                                mapping vector.
         """
+        
+        ### Check Parameters before loading any data
+        self.scale = scale
 
         ### CHECK PARAMETERS BEFORE PREPROCESSING ###
         features = self.features
         hemisphere = self.hemisphere
         dataMap = self.dataMap
         
+        nf = []
+        for f in features:
+            if f != 'label':
+                nf.append(f)
+                
+        loadingFeatures = copy.deepcopy(nf)
+        if training:
+            loadingFeatures.append('label')
+        
         # Check subject list
         if not subjects and not isinstance(subjects,list):
             raise ValueError('Subjects variable must be a non-empty list.')
-
-        print 'Loading training data with {} features.'.format(features)
-
-        loadingFeatures = copy.deepcopy(features)
-        if training:
-            loadingFeatures.append('label')
+        
 
         ### LOAD DATA ###
         
         # dataDictionary will be a dictionary of sub-dictionaries.
         # Super keys are subject names. For each sub-dictionary (super value),
         # keys are feature names, and values are data arrays.
+        print 'Training data columns (in order): {}'.format(nf)
         [dataDictionary,matchDictionary] = loadData(subjects,dataMap,loadingFeatures,hemisphere)
 
         if not dataDictionary:
             raise ValueError('Data dictionary cannot be empty.')
-
-        if isinstance(dataDictionary,h5py._hl.files.File):
-            parseFeatures = copy.deepcopy(features)
+        else:
+            parseFeatures = copy.deepcopy(nf)
             parseFeatures.append('label')
-
+    
             parsedData = ld.parseH5(dataDictionary,parseFeatures)
-            dataDictionary.close()
             dataDictionary = parsedData
-        
-        return [dataDictionary,matchDictionary]
-
             
-    def training(self,trainData,scale=True,rand=None):
-        
-        """
-        Method to process the training data for each subject.  This includes
-        excluding data corresponding to subjects in the test set, randomizing
-        the training set to a given size, and applying down-sampling to the
-        training data.
-        
-        Output is the zero-mean, unit variance data array for each training
-        subject, as a dictionary.
-        
-        Parameters:
-        - - - - -
-            trainData : data to process
-            matchData : matches to process
-            scale : boolean, whether to fit zero-mean, unit-variance model
-                    to data
-            exclude_testing : list of subjects to exclude from the training
-                                set.  Supply a list here is the same as 
-                                removing these subjects from the initial
-                                "subjects" list.
-            rand : size of training set.  If none, has no effect.  If less
-                    than current length of training size, randomly samples 
-                    "rand" subjects from training set, after excluding any
-                    testing subjects.
-        """
-
-        if not isinstance(rand,int) or rand < 1:
-            rand = None
-
-        self.rand = rand
-        self.scale = scale
-        
-        features = self.features
-        
-        nf = []
-        for f in features:
-            if f != 'label':
-                nf.append(f)
-        
-        ### PROCESS SUBJECTS ###
+        ### At this point, data has been loaded.
+        ### It exists as a dictionary of dictionaries
         
         # get subject IDs in training data
-        subjects = trainData.keys()
+        subjects = dataDictionary.keys()
 
-        # If rand is set, selects min(rand, current_training_size) random 
-        # subjects from the current training set.
-        if rand and rand < len(subjects):
-            sample = np.random.choice(subjects,size=rand,replace=False)
-            trainData = {s: trainData[s] for s in sample}
-            subjects = trainData.keys()
-            
         mergedData = {}.fromkeys(subjects)
         mergedLabels = {}.fromkeys(subjects)
-
+        
         # For each subject, merge the unique feature arrays into an single
         # array, where ordering of the columns is determined by ordering 
         # of names in the features variable.
@@ -185,9 +152,9 @@ class Prepare():
         supraData = []
         supraLabels = []
         
-        for subj in trainData.keys():
-            mergedData[subj] = cu.mergeFeatures(trainData[subj],nf)
-            mergedLabels[subj] = cu.mergeFeatures(trainData[subj],['label'])
+        for subj in dataDictionary.keys():
+            mergedData[subj] = cu.mergeFeatures(dataDictionary[subj],nf)
+            mergedLabels[subj] = cu.mergeFeatures(dataDictionary[subj],['label'])
             
             supraData.append(mergedData[subj])
             supraLabels.append(mergedLabels[subj])
@@ -196,9 +163,11 @@ class Prepare():
         supraLabels = np.squeeze(np.concatenate(supraLabels))
         
         labInds = np.where(supraLabels > 0)[0]
-        
-        # Apply zero-mean, unit-variance scaling AFTER down-sampling
+
+        # Apply zero-mean, unit-variance scaling
         if self.scale:
+            
+            print 'Standardizing samples.'
             scaler = sklearn.preprocessing.StandardScaler(with_mean=True,
                                                           with_std=True)
             scaler.fit(supraData[labInds,:])
@@ -209,27 +178,38 @@ class Prepare():
             
             mergedData[subj][tempInds,:] = scaler.transform(mergedData[subj][tempInds,:])
 
-        return [mergedData,mergedLabels]
-
-
+        return [mergedData,mergedLabels,matchDictionary]
+    
+    
     def testing(self,subject):
         
         """
-        Method to process testing data.  If the training data was scaled to
-        zero-mean and unit variance, we transform the test data using the fit
-        training data model.
+        Method to process testing data.  If training data was standardized,
+        we transform the test data using the fitted training model.
 
         Parameters:
         - - - - -
-            dataObject : SubjectFeatures object for a test brain      
-            matchingMatrix : matrix containg how frequently a given vertex
-                                maps to a vertex assigned to each label
+            subject : name of subject to load.  Uses same data map as 
+                        training data, so file format must be the same.
+        Returns:
+        - - - -
+            matchingMatrix : thresholded matching matrix for subject.  
+                                The threshold is set to a minimum of 0.05.
+            x_test : test data for subject
+            ltvm : label-to-vertex mapping dictionary.  Keys are label IDs,
+                    and values are lists of vertices that map to this label.
         """
 
         features = self.features
+        hemisphere = self.hemisphere
         scaler = self.scaler
         
-        print 'Loading testing data with {} features.'.format(features)
+        nf = []
+        for f in features:
+            if f != 'label':
+                nf.append(f)
+        
+        print 'Test data columns (in order): {}'.format(nf)
         
         objDict = self.dataMap['object'].items()
         objDir = objDict[0][0]
@@ -239,32 +219,32 @@ class Prepare():
         matDir = matDict[0][0]
         matExt = matDict[0][1]
         
-        dataObject = ''.join([objDir,subject,objExt])
-        matchingMatrix = ''.join([matDir,subject,matExt])
+        dataObject = '{}{}.{}.{}'.format(objDir,subject,hemisphere,objExt)
+        matchingMatrix = '{}{}.{}.{}'.format(matDir,subject,hemisphere,matExt)
 
         # load test subject data, save as attribtues
         rawTestData = ld.loadH5(dataObject,*['full'])
         ID = rawTestData.attrs['ID']
         
-        parsedData = ld.parseH5(rawTestData,features)
+        parsedData = ld.parseH5(rawTestData,nf)
         rawTestData.close()
 
         testData = parsedData[ID]
-        testData = cu.mergeFeatures(testData,features)
+        testData = cu.mergeFeatures(testData,nf)
 
         if self.scale:
             scaler = self.scaler
-            mtd = scaler.transform(testData)
+            x_test = scaler.transform(testData)
             
-        threshed = ld.loadMat(matchingMatrix)
+        matchingMatrix = ld.loadMat(matchingMatrix)
 
-        ltvm = cu.vertexMemberships(threshed,180)
+        ltvm = cu.vertexMemberships(matchingMatrix,180)
 
-        # Threshed : constrained matching matrix
-        # mtd : merged test data array
+        # matchingMatrix : constrained matching matrix
+        # x_test : merged test data array
         # ltvm : label-to-vertex maps
         
-        return [threshed,mtd,ltvm]
+        return [x_test,matchingMatrix,ltvm]
 
 
 def loadData(subjectList,dataMap,features,hemi):
@@ -284,20 +264,14 @@ def loadData(subjectList,dataMap,features,hemi):
     objDict = dataMap['object'].items()
     objDir = objDict[0][0]
     objExt = objDict[0][1]
-    
-    print 'Objects extracted.'
-    
+
     midDict = dataMap['midline'].items()
     midDir = midDict[0][0]
     midExt = midDict[0][1]
-    
-    print 'Midlines extracted.'
-    
+
     matDict = dataMap['matching'].items()
     matDir = matDict[0][0]
     matExt = matDict[0][1]
-    
-    print 'Matchings extracted.'
 
     data = {}
     matches = {}
@@ -404,7 +378,12 @@ def parseJSON(templateFile):
         template = json.load(template)
         
     data = template['data']
-    classifier = template['classifier']
+    
+    dataMap = data['dataMap']
+    hemisphere = data['hemisphere']
+    features = str(data['features']).split(',')
+    
+    #classifier = template['classifier']
 
     Prep = Prepare(dataMap,hemisphere,features)
     

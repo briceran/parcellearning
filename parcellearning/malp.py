@@ -125,7 +125,6 @@ class Atlas(object):
                     labelNeighbors = [nbs]
                     
                 labelNeighbors.append(l)
-
                 labelNeighbors = list(set(labelNeighbors).intersection(labels))
                 
                 # build classifier training data upon request

@@ -26,13 +26,14 @@ class Network(object):
     """
     
     def __init__(self,layers,node_structure,eval_factor=0.1,epochs=50,
-                 batch_size=128,rate=0.001,optimizer='rmsprop'):
+                 batch_size=256,rate=0.001,optimizer='rmsprop'):
         
         """
         Parameters:
         - - - - -
             eval_factor : percentage of training data to use as validation
-                            data
+                            data (will default to 1 if percentage is too high
+                            or too low in relation to training size)
             
             layers : number of layers in the network
             
@@ -44,6 +45,10 @@ class Network(object):
                                 number of nodes, node_structure[i] to layer[i].
                                 If they don't match, will add node_structure[1]
                                 nodes per layer.
+                                
+            input_dim : number of features in training data
+            output_dim : number of expected classes to predict
+            
             epochs : number of fitting iterations
             batch_size : size of each sub-training batch
             rate : gradient step size
@@ -111,6 +116,9 @@ class Network(object):
         """
         Build the network using the initialized parameters.
         """
+        
+        input_dimension = self.input_dim
+        output_dimension = self.output_dim
 
         model = Sequential()
         model.add(Dense(128,input_dim=input_dimension,init='uniform'))
@@ -151,19 +159,28 @@ class Network(object):
 
         epochs = self.epochs
         batch_size = self.batch_size
-        
-        L = len(labelSet)
 
-        [training,validation] = self.buildValidation(x_train,y_train,m_train)
+        [training,validation] = self.extractValidation(x_train,y_train,m_train)
         
-        train_OHL = to_categorical(training[1],num_classes=L+1)
-        valid_OHL = to_categorical(validation[1],num_classes=L+1)
+        # get dimensions of training data
+        input_dim = training[0].shape[1]
+        output_dim = len(labelSet)
         
+        # construct the network
+        self.build(input_dim,output_dim)
+
+        # generate one-hot-encoded training and validation class matrices
+        train_OHL = to_categorical(training[1],num_classes=output_dim+1)
+        valid_OHL = to_categorical(validation[1],num_classes=output_dim+1)
+
+        # initialize callback functions for training and validation data
+        # these are run after each epoch
         teConstraint = ConstrainedCallback(validation[0],validation[1],valid_OHL,
                                            validation[2],['ValLoss','ValAcc'])
-        trConstraint = ConstrainedCallback(training[1],training[1],train_OHL,
+        trConstraint = ConstrainedCallback(training[0],training[1],train_OHL,
                                            training[2],['TrainLoss','TrainAcc'])
         
+        # fit model, save the accuracy and loss after each epoch
         history = self.model.fit(training[0], train_OHL, epochs=epochs,
                             batch_size=batch_size,verbose=0,shuffle=True,
                             callbacks=[teConstraint,trConstraint])
@@ -172,7 +189,7 @@ class Network(object):
         self.teConstraint = teConstraint
         self.trConstraint = trConstraint
         
-    def predict(self,x_test,match,**kwargs):
+    def predict(self,x_test,match,power=1):
     
         """
         Method to predict neural network model cortical map.
@@ -190,18 +207,11 @@ class Network(object):
             thresholded : prediction probabilities, constrained (and
                             possibly weighted) by matches
             predicted : prediction vector of test samples
+            power : power to raise mapping frequency to
         """
-        
-        if kwargs:
-            if 'power' in kwargs.keys():
-                p = kwargs['power']
-            else:
-                p = 1
-        else:
-            p = 1
-            
-        match = np.power(match,p)
-        baseline = self.model.predict(x_test)
+
+        match = np.power(match,power)
+        baseline = self.model.predict(x_test,verbose=0)
         thresholded = match*baseline[:,1:]
         predicted = np.argmax(thresholded,axis=1)+1
         
@@ -250,15 +260,20 @@ class Network(object):
         eval_factor = self.eval_factor
         subjects = x_train.keys()
         
+        # By default, will select at least 1 validation subject from
+        # the training list
         full = len(subjects)
-        val = int(np.floor(eval_factor*full))
+        val = max(1,int(np.floor(eval_factor*full)))
         
         # subject lists for training and validation sets
         train = list(np.random.choice(subjects,size=(full-val),replace=False))
         valid = list(set(subjects).difference(set(train)))
         
-        training = self.subselectData(train,x_train,y_train,m_train)
-        validation = self.subselectData(valid,x_train,y_train,m_train)
+        print '{} training subjects.'.format(len(train))
+        print '{} validation subjects.'.format(len(valid))
+        
+        training = self.subselect(train,x_train,y_train,m_train)
+        validation = self.subselect(valid,x_train,y_train,m_train)
 
         mgTD = cu.mergeValues(training[0])
         mgTL = cu.mergeValues(training[1])
@@ -269,7 +284,7 @@ class Network(object):
         mgVM = cu.mergeValues(validation[2])
         
         N = mgTD.shape[0]
-        N = sklearn.utils.shuffle(N)
+        N = sklearn.utils.shuffle(np.arange(N))
         
         mgTD = mgTD[N,:]
         mgTL = np.squeeze(mgTL[N,:].astype(np.int32))
@@ -280,7 +295,7 @@ class Network(object):
         
         return [training,validation]
     
-    def subselect(subjects,featureData,labelData,matchingData):
+    def subselect(self,subjects,featureData,labelData,matchingData):
         
         fd = {}.fromkeys(subjects)
         labd = {}.fromkeys(subjects)
