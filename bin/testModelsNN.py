@@ -94,11 +94,14 @@ def predict(model,x_test,ltvm,match,power=1):
     print 'Raising matches to {} power.'.format(power)
     
     if power == None:
+            print 'No power.'
             match = np.power(match,0)
     elif power == 0:
+        print '0th power.'
         nz = np.nonzero(match)
         match[nz] = 1
     else:
+        print '{}th power.'
         match = np.power(match,power)
 
     predProbs = model.predict(x_test)
