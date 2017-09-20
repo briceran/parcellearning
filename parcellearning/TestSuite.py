@@ -376,7 +376,7 @@ if __name__ == "__main__":
               'jacc_2','jacc_test']
     dataFrame.columns = pNames
     
-    pd.DataFrame.to_pickle('/mnt/parcellator/parcellation/TestReTest_Data.p')
+    dataFrame.to_pickle('/mnt/parcellator/parcellation/parcellearning/Data/TestReTestData.p')
                             
                             
                             
