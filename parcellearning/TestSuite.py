@@ -48,11 +48,6 @@ def loadData(yObject,features):
         # load test subject data, save as attribtues
         tObject = ld.loadH5(yObject,*['full'])
         ID = tObject.attrs['ID']
-        
-        print tObject
-        print tObject.keys()
-        
-        print 'Subject ID: {}'.format(ID)
 
         parsedData = ld.parseH5(tObject,nf)
         tObject.close()
@@ -314,16 +309,16 @@ if __name__ == "__main__":
                             
                             params = [test_subj,d,h,f,n,l]
                             
-                            midPre = '{}.Layers.{}.Nodes.{}'.format(h,l,h)
+                            midPre = '{}.Layers.{}.Nodes.{}'.format(h,l,n)
                             midSuf = 'Freq.{}.{}.TestReTest_'.format(f,d)
                             
-                            test1 = '{}{}.{}.{}1.func.gii'.format(midPre,test_subj,
-                                     midExt,midSuf)
+                            fullExt = '{}.{}.{}.{}'.format(test_subj,midPre,midExt,midSuf)
+                            
+                            test1 = '{}{}1.func.gii'.format(dataDir,fullExt)
                             test1 = nb.load(test1)
                             test1 = test1.darrays[0].data
                             
-                            test2 = '{}{}.{}.{}2.func.gii'.format(midPre,test_subj,
-                                     midExt,midSuf)
+                            test2 = '{}{}2.func.gii'.format(dataDir,fullExt)
                             test2 = nb.load(test2)
                             test2 = test2.darrays[0].data
                             
