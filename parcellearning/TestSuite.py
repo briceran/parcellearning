@@ -275,6 +275,8 @@ if __name__ == "__main__":
         features = dataFeatureFunc[d]
         features = features.split(',')
         
+        predDataDir = '{}{}/'.format(predDir,d)
+        
         for test_subj in testSubjects:
             
             print 'Subject: {}'.format(test_subj)
@@ -314,11 +316,13 @@ if __name__ == "__main__":
                             
                             fullExt = '{}.{}.{}.{}'.format(test_subj,midPre,midExt,midSuf)
                             
-                            test1 = '{}{}1.func.gii'.format(dataDir,fullExt)
+                            test1 = '{}{}1.func.gii'.format(predDataDir,fullExt)
+                            print test1
                             test1 = nb.load(test1)
                             test1 = test1.darrays[0].data
                             
-                            test2 = '{}{}2.func.gii'.format(dataDir,fullExt)
+                            test2 = '{}{}2.func.gii'.format(predDataDir,fullExt)
+                            print test2
                             test2 = nb.load(test2)
                             test2 = test2.darrays[0].data
                             
