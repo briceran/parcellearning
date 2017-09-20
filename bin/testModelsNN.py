@@ -201,9 +201,9 @@ for hemi in hemispheres:
             model = load_model(modelFull)
             
             if freq:
-                outputExt = 'NeuralNetwork.{}.{}.Frequency.Power.{}.{}.{}.func.gii'.format(hExt,modelParams,power,d,extension)
+                outputExt = '{}.{}.Freq.{}.{}.{}.func.gii'.format(hExt,modelParams,power,d,extension)
             else:
-                outputExt = 'NeuralNetwork.{}.{}.Binary.{}.{}.func.gii'.format(hExt,modelParams,d,extension)
+                outputExt = '{}.{}.Bin.{}.{}.func.gii'.format(hExt,modelParams,d,extension)
 
             G = glob.glob('{}*{}'.format(outputDir,outputExt))
 
