@@ -16,6 +16,8 @@ accessing data in a dictionary -- that is, with key-value pairs.
 import loaded as ld
 import classifierUtilities as cu
 
+
+import pandas as pd
 import numpy as np
 import nibabel as nb
 from sklearn import metrics
@@ -365,6 +367,16 @@ if __name__ == "__main__":
                             params.append(jccT)
                             
                             results.append(params)
+    
+    results = np.row_stack(results)
+    dataFrame = pd.DataFrame(results)
+    
+    pNames = ['id','data','hemi','freq','nodes','layers',
+              'error_1','error_2','error_test','jacc_1',
+              'jacc_2','jacc_test']
+    dataFrame.columns = pNames
+    
+    pd.DataFrame.to_pickle('/mnt/parcellator/parcellation/TestReTest_Data.p')
                             
                             
                             
