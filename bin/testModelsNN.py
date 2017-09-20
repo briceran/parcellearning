@@ -113,6 +113,8 @@ parser.add_argument('--power',help='Power to raise matching matrix to.',default=
 parser.add_argument('--iters',help='Number of testing iterations to run.',default=10,type=int,required=False)
 parser.add_argument('--layers',help='Number of layers in model.',required=True,type=int)
 parser.add_argument('--nodes',help='Number of nodes per layer.',required=True,type=int)
+parser.add_argument('--testFile',help='List of testing subjects.',required=True,type=str)
+parser.add_argument('--modelExtension',help='Extension of model file.',required=True,type=str)
 args = parser.parse_args()
 
 freq = args.freq
@@ -121,6 +123,9 @@ nodes = args.nodes
 power = args.power
 iters = args.iters
 powDict = {'power':power}
+
+testFile = args.testFile
+extension = args.modelExtension
 
 # Directories where data and models exist
 dataDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
@@ -150,30 +155,8 @@ testListDir = '{}TrainTestLists/'.format(dataDir)
 outputDir = '{}Predictions/TestReTest/'.format(dataDir)
 
 
-
-#### MAPS
-# Mapping model type to file name type and file name extension
-
-methods = ['NeuralNetwork']
-exts = ['.h5']
-
-#methodExtens = ['Layers.3.Nodes.100.Sampling.equal.Epochs.30.Batch.256.Rate.0.001']
-#methodExtens = ['Layers.3.Nodes.150.Sampling.equal.Epochs.40.Batch.256.Rate.0.001']
-methodExtens = 'NeuralNetwork.Layers.{}.Nodes.{}.Sampling.equal.Epochs.40.Batch.256.Rate.0.001'.format(layers,nodes)
-
-
-# Maping model type to file extension
-classExtsFunc = dict(zip(methods,methodExtens))
-# Mapping model type to file name type
-classTypeFunc = dict(zip(methods,exts))
-
-
-# Map file extension to loading functions
-loadExt = ['.p','.h5']
-loadFuncs = [pickleLoad,load_model]
-loadDict = dict(zip(loadExt,loadFuncs))
-
-
+#### Model parameters as string
+modelParams = ['Layers.{}.Nodes.{}.Sampling.equal.Epochs.40.Batch.256.Rate.0.001'.format(layers,nodes)]
 
 # Map full hemisphere to abbreviationc
 hemispheres = ['Left','Right']
@@ -188,93 +171,66 @@ dataFeatures = ['fs_cort,fs_subcort,sulcal,myelin,curv',
 
 dataFeatureFunc = dict(zip(data,dataFeatures))
 
-# Number of testing sets
-N = iters
+with open(testFile,'r') as inFile:
+    testSubjects = inFile.readlines()
+testSubjects = [x.strip() for x in testSubjects]
 
-# Iterate over test sets
-for itr in np.arange(N):
-    
-    print 'Iteration: {}'.format(itr)
-    
-    outDirIter = '{}Model_{}/'.format(outputDir,itr)
-    
-    # Load test subject file, get list of subjects
-    testSubjectFile = '{}TestingSubjects.{}.txt'.format(testListDir,itr)
-    
-    with open(testSubjectFile,'r') as inFile:
-        subjects = inFile.readlines()
-    subjects = [x.strip() for x in subjects]
 
-    # Iterate over hemispheres
-    for hemi in hemispheres:
+# Iterate over hemispheres
+for hemi in hemispheres:
+
+    print 'Hemisphere: {}'.format(hemi)
+    hExt = hemiFunc[hemi]
+
+    inMyl = '{}MyelinDensity/285345.{}.MyelinMap.32k_fs_LR.func.gii'.format(dataDir,hExt)
+
+    myl = nb.load(inMyl)
+
+    for d in data:
         
-        print 'Hemisphere: {}'.format(hemi)
-        hExt = hemiFunc[hemi]
+        print 'Data: {}'.format(d)
         
-        inMyl = '{}MyelinDensity/285345.{}.MyelinMap.32k_fs_LR.func.gii'.format(dataDir,hExt)
+        data_features = dataFeatureFunc[d]
+        data_features = list(data_features.split(','))
+
+        modelBase = 'NeuralNetwork.{}.{}.{}.{}.h5'.format(hExt,modelParams,d,extension)
+        modelFull = '{}{}'.format(modelDir,modelBase)
         
-        myl = nb.load(inMyl)
+        if os.path.isfile(modelFull):
         
-        # Iterate over model types (GMM,RandomForest,NetworkModel)
-        for classifier in methods:
+            model = load_model(modelFull)
             
-            print 'Classifier: {}'.format(classifier)
+            if freq:
+                outputExt = 'NeuralNetwork.{}.{}.Frequency.Power.{}.{}.func.gii'.format(hExt,modelParams,freq,power,d,extension)
+            else:
+                outputExt = 'NeuralNetwork.{}.{}.Binary.{}.{}.func.gii'.format(hExt,modelParams,d,extension)
+
+            G = glob.glob('{}*{}'.format(outputDir,outputExt))
+
+            if len(G) < len(testSubjects):
             
-            # Get classifier file name extension (w.o. data)
-            classExt = classExtsFunc[classifier]
-            fExt = classTypeFunc[classifier]
-            
-            for d in data:
-                
-                print 'Data: {}'.format(d)
-                
-                data_features = dataFeatureFunc[d]
-                data_features = list(data_features.split(','))
-                
-                modelBase = '{}.{}.{}.{}.Iteration_{}{}'.format(classifier,
-                                  hExt,classExt,d,itr,fExt)
-                modelFull = '{}{}'.format(modelDir,modelBase)
-                
-                if os.path.isfile(modelFull):
-                
-                    currentModel = loadDict[fExt](modelFull)
+                for test_subj in testSubjects:
                     
-                    if freq:
-                        outputExt = '{}.{}.{}.Frequency.{}.Power.{}.Iteration_{}.func.gii'.format(classifier,
-                                     hExt,d,freq,power,itr)
+                    print 'Subject: {}'.format(test_subj)
+                    
+                    outputGii = '{}{}.{}'.format(outDirIter,test_subj,outputExt)
+                    
+                    if not os.path.isfile(outputGii):
+                    
+                        testObject = '{}{}.{}.{}'.format(testDir,test_subj,hExt,testExt)
+                        testMids = '{}{}.{}.{}'.format(midsDir,test_subj,hExt,midsExt)
+                        testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
+                        
+                        mids = ld.loadMat(testMids)-1
+
+                        [mm,mtd,ltvm] = loadTest(testObject,testMatch,data_features)
+                        predicted = predict(model,mtd,ltvm,mm,**powDict)
+                        predicted[mids] = 0
+                        myl.darrays[0].data = np.array(predicted).astype(np.float32)
+                        nb.save(myl,outputGii)
+         
                     else:
-                        outputExt = '{}.{}.{}.Binary.Power.{}.Iteration_{}.func.gii'.format(classifier,
-                                     hExt,d,power,itr)
-                    
-                    G = glob.glob('{}*{}'.format(outDirIter,outputExt)) 
-                    if len(G) < len(subjects):
-                    
-                        for test_subj in subjects:
-                            
-                            print 'Subject: {}'.format(test_subj)
-                            
-                            testOutput = '{}{}.{}'.format(outDirIter,test_subj,outputExt)
-                            
-                            if not os.path.isfile(testOutput):
-                            
-                                testObject = '{}{}.{}.{}'.format(testDir,test_subj,hExt,testExt)
-                                testMids = '{}{}.{}.{}'.format(midsDir,test_subj,hExt,midsExt)
-                                testMatch = '{}{}.{}.{}'.format(matchDir,test_subj,hExt,matchExt)
-                                
-                                mids = ld.loadMat(testMids)-1
-                
-                                if fExt == '.h5':
-            
-                                    [mm,mtd,ltvm] = loadTest(testObject,testMatch,data_features)
+                        print '{} already generated.'.format(outputGii)
+            else:
+                print '{} for {} already processed.'.format(len(G),outputExt)
 
-                                    predicted = predict(currentModel,mtd,ltvm,mm,**powDict)
-                                    predicted[mids] = 0
-                
-                                    myl.darrays[0].data = np.array(predicted).astype(np.float32)
-                                    nb.save(myl,testOutput)
-                                                
-                            else:
-                                print '{} already generated.'.format(testOutput)
-                    else:
-                        print '{} for {} already processed.'.format(len(G),outputExt)
-        
