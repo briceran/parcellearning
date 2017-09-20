@@ -13,10 +13,49 @@ predicted label.  The metrics can be accessed in a similar manner to
 accessing data in a dictionary -- that is, with key-value pairs.
 """
 
+import loaded as ld
+import classifier_utilies as cu
+
 import numpy as np
 import nibabel as nb
 from sklearn import metrics
 import copy
+
+def loadData(yObject,features):
+        
+        """
+        Method to load the test data into the object.  We might be interested
+        in loading new test data into, so we have explicitly defined this is
+        as a method.
+        
+        Parameters:
+        - - - - -
+            y : SubjectFeatures object for a test brain   
+            
+            yMatch : MatchingFeaturesTest object containing vertLib attribute 
+                    detailing which labels each vertex in surface y maps to 
+                    in the training data
+                    
+            features : feature to included in the test data numpy array
+                        these must be the same as the training data
+        """
+
+        nf = []
+        for f in features:
+            if f != 'label':
+                nf.append(f)
+
+        # load test subject data, save as attribtues
+        tObject = ld.loadH5(yObject,*['full'])
+        ID = tObject.attrs['ID']
+
+        parsedData = ld.parseH5(tObject,nf)
+        tObject.close()
+
+        data = parsedData[ID]
+        x_test = cu.mergeFeatures(data,nf)
+
+        return x_test
 
 def atlasOverlap(atlasMap,cbpLabel,A,L):
     
@@ -76,20 +115,14 @@ def atlasOverlap(atlasMap,cbpLabel,A,L):
     
     return [atlName,overlaps]
 
-def accuracy(cbpLabel,trueLabel):
+def accuracy(label1,label2):
     
     """
     Compute the classification accuracy of the predicted label as compared to
     the ground truth label.
     """
-    
-    cbp = np.load(cbpLabel)
-    cbp = cbp.darrays[0].data
-    
-    truth = nb.load(trueLabel)
-    truth = truth.darrays[0].data
-    
-    return np.mean(cbp == truth)
+
+    return np.mean(label1 == label2)
 
 def modelHomogeneity(data,truthLabel,cbpLabel,L,iters):
     
@@ -168,6 +201,14 @@ def jaccard(label1,label2):
     
     return metrics.jaccard_similarity_score(label1,label2)
 
+def errorMap(label1,label2):
+    
+    """
+    Generate an error map of where the label1 == label2.
+    """
+    
+    return 1.*(np.asarray(label1) == np.asarray(label2))
+
 def silhouette(data,labels):
     
     """
@@ -180,22 +221,126 @@ def silhouette(data,labels):
     
     return [score,sample_scores]
 
-def testSuite(truthLabel,predictedLabel,featureData):
+def testSuite(truth,predicted,featureData):
     
     """
     Generate a suite of metrics associated with a predicted labeling.
     """
-    
-    truthLabel = nb.load(truthLabel)
-    truth = truthLabel.darrays[0].data
-    
-    predictedLabel = nb.load(predictedLabel)
-    predicted = predictedLabel.darrays[0].data
-    
+
     acc = accuracy(predicted,truth)
     [shScore,shSamples] = silhouette(featureData,predicted)
     
     return [acc,shScore,shSamples]
 
 
-def __init__(main)
+if __name__ == "__main__":
+    
+    baseDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
+    testFile = '{}TrainTestLists/TestRetest_Test.txt'.format(baseDir)
+    
+    predDir =  '{}Predictions/TestReTest/NeuralNetwork/'.format(baseDir)
+    trueDir = '{}Labels/HCP/'.format(baseDir)
+    
+    dataDir = '{}TrainingObjects/FreeSurfer/'.format(baseDir)
+    
+    rate = 0.001
+    samples = 'equal'
+    epochs = 40
+    batch = 256
+    
+    midExt = 'Sampling.{}.Epochs.{}.Batch.{}.Rate.{}'.format(samples,epochs,
+                       batch,rate)
+    
+    tRt = [1,2]
+    freqs = [0,1,2]
+    layers = [2,3]
+    nodes = [25,50]
+    hemi = ['L','R']
+    
+    dataTypes = ['Full','ProbTrackX2','RestingState']
+    dataFeatures = ['fs_cort,fs_subcort,sulcal,myelin,curv',
+                'pt_cort,pt_subcort,sulcal,myelin,curv',
+                'fs_cort,fs_subcort,pt_cort,pt_subcort,sulcal,myelin,curv']
+    dataFeatureFunc = dict(zip(dataTypes,dataFeatures))
+
+    with open(testFile,'r') as inTest:
+        testSubjects = inTest.readlines()
+    testSubjects = [x.strip() for x in testSubjects]
+    
+    results = []
+    
+    for d in dataTypes:
+        
+        print 'DataType: {}'.format(d)
+        features = dataFeatureFunc[d]
+        
+        for test_subj in testSubjects:
+            
+            print 'Subject: {}'.format(test_subj)
+            
+            for h in hemi:
+                
+                truth = '{}{}.{}.CorticalAreas.fixed.32k_fs_LR.label.gii'.format(trueDir,
+                                     test_subj,h)
+                truth = nb.load(truth)
+                truth = truth.darrays[0].data
+                
+                mylFile = '{}Myelin/{}.{}.MyelinMap.32k_fs_LR.func.gii'.format(baseDir,
+                       test_subj,h)
+                mylData = nb.load(mylFile)
+                myl = mylData.darrays[0].data
+                
+                subjData = '{}{}.{}.TrainingObject.aparc.a2009s.h5'.format(dataDir,test_subj,h)
+                x_test = loadData(subjData,features)
+                
+                for f in freqs:
+                    f = float(f)
+                    for n in nodes:
+                        for l in layers:
+                            
+                            params = [test_subj,d,h,f,n,l]
+                            
+                            midPre = '{}.Layers.{}.Nodes.{}'.format(h,l,h)
+                            midSuf = 'Freq.{}.{}.TestReTest_'.format(f,d)
+                            
+                            test1 = '{}{}.{}.{}1.func.gii'.format(midPre,test_subj,
+                                     midExt,midSuf)
+                            test1 = nb.load(test1)
+                            test1 = test1.darrays[0].data
+                            
+                            test2 = '{}{}.{}.{}2.func.gii'.format(midPre,test_subj,
+                                     midExt,midSuf)
+                            test2 = nb.load(test2)
+                            test2 = test2.darrays[0].data
+                            
+                            [acc1,sc1,sh1] = testSuite(truth,test1,x_test)
+                            [acc2,sc2,sh2] = testSuite(truth,test2,x_test)
+                            
+                            
+                            error1 = errorMap(truth,test1)
+                            error2 = errorMap(truth,test2)
+                            errorT = errorMap(test1,test2)
+
+                            jcc1 = jaccard(truth,test1)
+                            jcc2 = jaccard(truth,test2)
+                            jccT = jaccard(test1,test2)
+                            accT = accuracy(test1,test2)
+                            
+                            params.append(jcc1)
+                            params.append(jcc2)
+                            params.append(jccT)
+                            params.append(accT)
+                            
+                            results.append(params)
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                        
+                        
+    
+    
