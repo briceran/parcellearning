@@ -9,6 +9,7 @@ Created on Tue May  9 18:22:13 2017
 import os
 import sys
 
+import dataUtilities as du
 import loaded as ld
 import matchingLibraries as lb
 
@@ -23,115 +24,15 @@ from sklearn import preprocessing
 """
 ##########
 
-Below, we have methods related to down-sampling of data.
+DOWNSAMPLING
 
 ##########
 """
 
-def downsampleByCore(trainingData,trainingLabels,trainingMatches,labelSet):
-    
-    """
-    Downsample the training data for each subject, for each label, by
-    selecting the core vertices for each label.  We can follow this up by
-    downsampling by the minimum label size, or we can concatenate the data 
-    into a single array and feed this into a neural network.
-    
-    Likewise, we can partition this data by label, and feed the partitioned
-    data into a Random Forest, GMM, or MALP classifier.
-    
-    Parameters:
-    - - - - -
-        trainingData : dictionary of training data, where keys are subjects
-                        and values are the vertex-wise data arrays
-        trainingLabels : dictionary of training labels, where keys are subjects
-                            and values are vertex-wise label assignments
-        trainingMatches : dictionary of matches, where keys are subjects, and
-                            values are vertex-to-label frequency arrays
-        labelSet : set of unique labels across all training subjects
-    Returns:
-    - - - -
-        data : downsampled data array
-        labels : downsampled response vectors
-        matches : downsampled matches
-        coreMaps : indices of "good" vertices, per subject, per label
-    """
-    
-    assert trainingData.keys() == trainingLabels.keys()
-    
-    data = copy.deepcopy(trainingData)
-    labels = copy.deepcopy(trainingLabels)
-    matches = copy.deepcopy(trainingMatches)
-    
-    subjects = trainingData.keys()
-    coreMaps = {}.fromkeys(subjects)
 
-    for subj in trainingData.keys():
-        
-        tempData = trainingData[subj]
-        tempLabel = trainingLabels[subj]
-        tempMatch = trainingMatches[subj]
-
-        print 'Matching shape: {}'.format(tempMatch.shape)
-        print 'Training data shape: {}'.format(tempData.shape)
-
-        cores = labelCores(tempMatch,0.7)
-        coreMaps[subj] = cores
-        
-        cores = np.squeeze(np.concatenate(cores.values())).astype(np.int32)
-        cores = np.sort(cores)
-
-        data[subj] = tempData[cores,:]
-        labels[subj] = tempLabel[cores,:]
-        matches[subj] = tempMatch[cores,:]
-        
-    return [data,labels,matches,coreMaps]
         
 
-def labelCores(matchingMatrix,threshold):
-    
-    """
-    Method to downsample the trainng data set, based on those vertices that map
-    most frequently to any given label.
-    
-    Originally, we'd thought to threshold the matchingMatrix itself, and choose
-    only those vertices with maximum frequencies above a given threshold. This 
-    resulted in a situation where some region classes were not represented in
-    the training data at all because their maximum mapping frequencies were
-    considerably lower than this threshold.
-    
-    Parameters:
-    - - - - -
-        matchingMatrix : matrix containing mapping frequency information
-                        for each vertex in a training brain
-        threshold : percentage of vertces to keep
-    """
 
-    matches = matchingMatrix
-
-    maxF = np.max(matches,axis=1)
-    zeroInds = maxF > 0
-    maxFLabel = np.argmax(matches,axis=1)+1
-    maxFLabel = maxFLabel*zeroInds
-    
-    N = 180
-    labels = np.arange(1,N+1)
-    
-    highestMaps = {}.fromkeys(labels)
-    
-    for L in labels:
-        
-        indices = np.where(maxFLabel == L)[0]
-        maxFL = maxF[indices]
-        
-        sortedCoords = np.flip(np.argsort(maxFL),axis=0)
-        sortedInds = indices[sortedCoords]
-        
-        upper = int(np.ceil(threshold*len(sortedInds)))
-        
-        acceptedInds = sorted(sortedInds[0:upper])
-        highestMaps[L] = list(acceptedInds)
-    
-    return highestMaps
 
 def downsampleByMinimum(trainingData,trainingLabels,trainingMatches,labelSet):
     
@@ -167,7 +68,7 @@ def downsampleByMinimum(trainingData,trainingLabels,trainingMatches,labelSet):
     pData = mapLabelsToData(trainingData,trainingLabels,labelSet)
     pMatches = mapLabelsToData(trainingMatches,trainingLabels,labelSet)
     
-    pLabels = buildResponseVector(labelSet,pData)
+    pLabels = du.buildResponseVector(pData)
     
     for L in labelSet:
         
@@ -196,32 +97,16 @@ Below, we have methods to help build generic atlases and classifiers.
 ##########
 """
 
-def mergeValues(inDict):
-    
-    """
-    Method to aggregate the values of a dictionary, where the values are assumed
-    to be numpy arrays.
-    """
-    
-    data = [inDict[k] for k in inDict.keys()]
-    data = np.row_stack(data)
-    
-    return data
 
-def mapLabelsToData(data,trainingLabels,labelSet):
+def mapLabelsToData(dataDict,labelDict,labelSet):
     
     """
-    Partitions the training data for all subjects by label.  For each subject,
-    cu.partitionData finds all indices of vertices assigned to a given label,
-    and aggregates the data for these indices across all subjects.  The end
-    result is a dictionary of arrays, where each key is a label, and each
-    is an array of data corresponding to that label.
+    Partitions the training data for all subjects by label.
     
     Parameters:
     - - - - -
-        data : dictionary of  data, where keys are subjects to map by labels
-        trainingLabels : dictionary of training labels, where keys are subjects
-                            and values are vertex-wise label assignments
+        dataDict : dictionary mapping subject names to data arrays
+        labelDict : dictionary mapping subject names to cortical maps
         labelSet : set of unique labels across all training subjects
     Returns:
     - - - -
@@ -229,34 +114,21 @@ def mapLabelsToData(data,trainingLabels,labelSet):
         pLabels : partitioned labels
     """
     
-    supraData = []
-    supraLabels = []
+    assert dataDict.keys() == labelDict.keys()
     
-    for subj in data:
-        
-        supraData.append(data[subj])
-        supraLabels.append(trainingLabels[subj])
-        
-    supraData = np.squeeze(np.row_stack(supraData))
-    supraLabels = np.squeeze(np.concatenate(supraLabels))
+    supraData = du.mergeValueArrays(dataDict)
+    supraLabels = du.mergeValueLists(labelDict)
 
-    pData = partitionData(supraData,supraLabels,labelSet)
-    pResp = buildResponseVector(labelSet,pData)
+    partData = du.splitArrayByResponse(supraData,supraLabels,labelSet)
+    partResp = du.buildResponseVector(partData)
     
-    cond = True
-    if not compareTrainingDataKeys(pData,pResp):
-        cond = False
-    
-    if not compareTrainingDataSize(pData,pResp):
-        cond = False
-
-    if not cond:
+    if not compareTrainingDataSize(partData,partResp):
         raise ValueError('Training data is flawed.')
     
-    return pData
+    return partData
 
 
-def compareTrainingDataSize(labelData,response):
+def compareTrainingDataSize(partitionedData,partitionedResponse):
     
     """
     Method to ensure that the length of the response vector is the same 
@@ -267,60 +139,16 @@ def compareTrainingDataSize(labelData,response):
     """
     cond = True
 
-    for f,r in zip(set(labelData.keys()),set(response.keys())):
+    for f,r in zip(set(partitionedData.keys()),set(partitionedResponse.keys())):
         
-        sf = labelData[f].shape[0]
-        sr = response[r].shape[0]
+        sf = partitionedData[f].shape[0]
+        sr = partitionedResponse[r].shape[0]
         
         if sf != sr:
             cond = False
     
     return cond
-        
-def compareTrainingDataKeys(labelData,response):
-    
-    """
-    Method to ensure that the keys for the training data for the response
-    vectors are the same.  These must be the same in order to properly
-    access the training data for training the classifiers.
-    """
 
-    sf = set(labelData.keys())
-    sr = set(response.keys())
-    
-    return sf == sr
-
-def buildResponseVector(labels,labelData):
-    
-    """
-    Method to build the response vector.  The response vector is a vector
-    of labels, where each index corresponds to the value to
-    predict, given a single feature vector.  Generally, the feature vector
-    will be "many" vectors, for each data sample.
-    
-    Parameters:
-    - - - - - 
-        labels : list of labels in training data
-        
-        labelData : array of feature data for each label, generally has been
-                    concatenated across subjects 
-    Returns:
-    - - - - 
-        response : vector containing training response
-    """
-    
-    response = {}.fromkeys(list(labels))
-    
-    for r in response.keys():
-
-        tempData = labelData[r]
-        tempResp = np.repeat(r,tempData.shape[0])
-        tempResp.shape += (1,)
-        
-        response[r] = tempResp
-    
-    return response
-    
 
 def getLabels(trainData):
         
@@ -336,6 +164,10 @@ def getLabels(trainData):
             
         """
         
+        supraLabels = du.mergeValueLists(labelDict)
+        
+        
+        
         labs = set([])
         
         # loop over all training subjects in training data
@@ -346,47 +178,7 @@ def getLabels(trainData):
             labs.update(set(labelData))
             
         return list(labs)
-    
-def mergeFeatures(yData,feats,**kwargs):
-    
-    """
-    Method to merge the subject features of interest into a single array.
-    
-    Parameters:
-    - - - - - 
-        yData : SubjectFeatures object "data" attribute    
-        
-        feats : features the be merged together
-        
-        **kwargs : contains StandardScaler() objects to standardize the 
-                    test data using the training data features
-    """
 
-    data = []
-    
-    if kwargs:
-        if kwargs['scale']:
-            scalers = kwargs['scale']
-        else:
-            print('Does not have scaler objects -- will return '
-                  'non-standardized data.')
-    
-    for f in feats:
-        
-        if f in yData.keys():
-            featData = yData[f]
-            try:
-                scalers
-            except:
-                pass
-            else:
-                featData = scalers[f].transform(featData)
-            finally:
-                data.append(featData)
-        
-    data = np.column_stack(data)
-    
-    return data
     
 def mergeLabelData(labelData,responseData,labels):
     
@@ -453,34 +245,6 @@ def parseKwargs(acceptable,kwargs):
     return output
 
 
-def partitionData(trainingData,responseVector,labelSet):
-   
-    """
-     Method to parition feature data for all labels, from all training subjects
-     in the training object -- partitions the training data features by label.
-     
-     Parameters:
-     - - - - - 
-         trainData : loaded training data object
-         feats : list of features to whose data to include for each core
-     
-    Returns:
-    - - - - 
-        labelData : dictionary where keys are the unique labels in the
-                     training data and values are arrays corresponding to the 
-                     feature data for the label, aggregated from the entire
-                     training data object
-     """
-     
-    labelData = {}.fromkeys(labelSet)
-    for lab in labelSet:
-        
-        inds = np.where(responseVector == lab)[0]
-        labelData[lab] = trainingData[inds,:]
-        
-    return labelData
-
-
 def prepareUnitaryFeatures(trainingObject):
     
     """
@@ -541,183 +305,30 @@ def vertexMemberships(matchingMatrix,R):
 """
 ##########
 
-Below are methods related to the classification or prediction steps.
+CLASSIFIER PREDICTIONS
 
 ##########
 """
 
-def combineClassifications(models,ids):
-    
-    """
-    Combines classifier counts from multiple Atlases via list concatenation.
-    
-    Parameters:
-    - - - - -
-        models : individual atlases that have "predicted"
-        
-        ids : names of vertices
-        
-    Returns:
-    - - - -
-        counts : update baseline dictioncary with prediction counts from 
-                    multiple Atlases
-    """
-    
-    counts = {}.fromkeys(ids)
-    
-    for m in models:
-        for i in ids:
-            # if counts[i] doesn't have any values
-            if not counts[i]:
-                counts[i] = m.baseline[i]
-            else:
-                counts[i] = counts[i] + m.baseline[i]
-                            
-    return counts
-
-def combineFilter(mappings,combined,ids):
-    
-    """
-    Filter the classification results to include only those labels that a test
-    vertex mapping to using surface registration.
-    """
-    
-    filtered = {}.fromkeys(ids)
-    
-    for i in ids:
-        if combined[i] and mappings[i]:
-            
-            ic = combined[i].keys()
-            im = mappings[i].keys()
-            
-            filtered[i] = {l: combined[i][l] for l in ic if l in im}
-    
-    return filtered
-
-def countClassifications(classifications,ids):
-    
-    """
-    Counts instances of each classified element, returns dictionary of counts
-    for each test point.
-    
-    Parameters:
-    - - - - - 
-        classifications : (dictionary)  Keys are vertices, values are lists
-                            of labels
-        ids : (list) of vertex IDs
-    Returns:
-    - - - -
-        counts : (dictionary) Keys are vertices, values are sub-dictionaries.
-                                Sub-keys are label, sub-values are counts.
-    """
-    
-    counts = {k: {} for k in ids}
-    
-    for k in ids:
-        if classifications[k]:
-            for l in set(classifications[k]):
-                counts[k].update({l: classifications[k].count(l)})
-                
-    return counts
-
-def frequencyClassifications(baselineCounts,predicted,ids):
-    
-    """
-    Computes frequency with which test label was classified as final label.
-    
-    Parameters:
-    - - - - -
-        baselineCounts : (dictionary) Key are vertices, values are 
-                            sub-dictionaries.  Sub-keys are labels, and
-                            sub-values are counts.
-    Returns:
-    - - - -
-        maxFreq : (dictionary) Keys are vertices, values are frequencies.
-        
-    """
-    
-    pred = copy.copy(predicted)
-    
-    maxFreq = {}.fromkeys(ids)
-    
-    freqs = lb.mappingFrequency(baselineCounts)
-    
-    for n,k in enumerate(ids):
-        print(n,k)
-        if freqs[k]:
-            maxFreq[k] = freqs[k][pred[n]]
-    
-    return maxFreq
-
-def maximumLiklihood(y,yMatch):
-    
-    """
-    Method to return the label mapped to the most frequently by all test
-    vertices.
-    
-    Parameters:
-    - - - - -
-        y : loaded SubjectFeatures object for a test brain
-        yMatch : loaded MatchingFeaturesTest object containing vertLib attribute 
-                    detailing which labels each vertex in surface y maps to 
-                    in the training data
-    """
-    
-    verts = np.arange(0,y.obs)
-        
-    maxLik = {}
-    maxLik = maxLik.fromkeys(verts)
-        
-    for vert in maxLik.keys():
-        if vert not in yMatch.mids:
-            
-            temp = yMatch.vertLib[vert]
-            ml = max(temp,key=temp.get)
-            maxLik[vert] = ml
-    
-    return maxLik
-
-def maximumProbabilityClass(mappingMatrix,predMatrix):
-    
-    """
-    Many classifiers output and prediction probability matrix, where each row
-    corresponds to a data point, and each column corresponds to a specific
-    class.  The value at each index corresponds to the prediction probability
-    that a given point belongs to a given class.
-    
-    This method selects the highest scoring class, given the mappingMatrix.
-    
-    Parameters:
-    - - - - -
-        mappingMatrix : binary matrix, where each index is 0 or 1, indicating
-                        whether that vertex mapping to that label.
-        predMatrix : float matrix, containing probability that a given data
-                        point belongs to a given class.
-    """
-    
-    threshed = mappingMatrix*predMatrix;
-    
-    scores = np.argmax(threshed,axis=1);
-    
-    return scores;
-            
-def saveClassifier(classifier,output):
-    
-    """
-    Method to save a classifier object.
-    
-    Parameters:
-    - - - - -
-        classifier : for now, just a GMM object of Mahalanobis object.
-    """
-    if classifier._fitted:
-        try:
-            with open(output,"wb") as outFile:
-                pickle.dump(classifier,outFile,-1);
-        except:
-            pass
-    else:
-        print('Classifier has not been trained.  Not saving.')
+# =============================================================================
+# def saveClassifier(classifier,output):
+#     
+#     """
+#     Method to save a classifier object.
+#     
+#     Parameters:
+#     - - - - -
+#         classifier : for now, just a GMM object of Mahalanobis object.
+#     """
+#     if classifier._fitted:
+#         try:
+#             with open(output,"wb") as outFile:
+#                 pickle.dump(classifier,outFile,-1);
+#         except:
+#             pass
+#     else:
+#         print('Classifier has not been trained.  Not saving.')
+# =============================================================================
 
 def standardize(grouped, features):
     """
@@ -822,6 +433,3 @@ def updateScores(storage,label,members,scores):
                 storage[vert].update({label: scr})
                 
         return storage
-    
-    
-    

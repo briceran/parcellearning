@@ -13,6 +13,8 @@ import sklearn
 import inspect
 
 import classifierUtilities as cu
+import dataUtilities as du
+import NeuralNetorkCallbacks as nnc
 
 from keras import callbacks, optimizers
 from keras.models import Sequential
@@ -175,9 +177,9 @@ class Network(object):
 
         # initialize callback functions for training and validation data
         # these are run after each epoch
-        teConstraint = ConstrainedCallback(validation[0],validation[1],valid_OHL,
+        teConstraint = nnc.ConstrainedCallback(validation[0],validation[1],valid_OHL,
                                            validation[2],['ValLoss','ValAcc'])
-        trConstraint = ConstrainedCallback(training[0],training[1],train_OHL,
+        trConstraint = nnc.ConstrainedCallback(training[0],training[1],train_OHL,
                                            training[2],['TrainLoss','TrainAcc'])
         
         # fit model, save the accuracy and loss after each epoch
@@ -279,8 +281,8 @@ class Network(object):
         print '{} training subjects.'.format(len(train))
         print '{} validation subjects.'.format(len(valid))
         
-        training = self.subselect(train,x_train,y_train,m_train)
-        validation = self.subselect(valid,x_train,y_train,m_train)
+        training = du.subselectDictionary(train,[x_train,y_train,m_train])
+        validation = du.subselectDictionary(valid,[x_train,y_train,m_train])
 
         mgTD = cu.mergeValues(training[0])
         mgTL = cu.mergeValues(training[1])
@@ -301,81 +303,3 @@ class Network(object):
         validation = [mgVD,mgVL,mgVM]
         
         return [training,validation]
-    
-    def subselect(self,subjects,featureData,labelData,matchingData):
-        
-        fd = {}.fromkeys(subjects)
-        labd = {}.fromkeys(subjects)
-        md = {}.fromkeys(subjects)
-        
-        for subj in subjects:
-            fd[subj] = featureData[subj]
-            labd[subj] = labelData[subj]
-            md[subj] = matchingData[subj]
-        
-        return [fd,labd,md]
-    
-class ConstrainedCallback(callbacks.Callback):
-    
-    """
-    Callback to test neighborhood-constrained accuracy.
-    """
-    
-    def __init__(self,x_val,y_true,y_OHL,mappings,metricKeys):
-        
-        """
-        Parameters:
-        - - - - -
-            x_val : validation data feature matrix
-            y_true : validation data response vector
-            y_OHL : validation data one-hot matrix
-            
-            mappings : binary matrix of mapping results, where each row is a
-                            sample, and each column is a label.  If a sample
-                            mapped to a label during surface registration, the
-                            index [sample,label] = 1.
-            
-            metricKeys : if we wish to save the loss and accuracy using the 
-                        contsrained method, provide key names in format 
-                        [lossKeyName, accKeyName] to save these values in a 
-                        dictionary
-                        
-        The Keras model requires one-hot arrays for evaluation of the model --
-        it does not accept multi-valued integer vectors.
-        """
-
-        self.mappings = mappings
-        self.x_val = x_val
-        
-        self.y_true = y_true
-        self.y_OHL = y_OHL
-        
-        self.metricKeys = metricKeys
-        
-        self.metrics = {k: [] for k in metricKeys}
-
-    def on_epoch_end(self, epoch, logs={}):
-        
-        x = self.x_val
-        y_true = np.squeeze(self.y_true)
-        y_OHL = self.y_OHL
-        mappings = self.mappings
-
-        # Compute the prediction probability of samples
-        predProb = self.model.predict_proba(x)
-
-        # Contrain prediction probabilities to surface registration results
-        threshed = mappings*(predProb[:,1:]);
-        
-        # Maximum-probability classification
-        y_pred = np.squeeze(np.argmax(threshed,axis=1))
-        y_pred = np.squeeze(y_pred + 1)
-
-        # Evalute the loss and accuracy of the model
-        loss,_ = self.model.evaluate(x, y_OHL, verbose=0)
-        acc = np.mean(y_true == y_pred)
-        
-        self.metrics[self.metricKeys[0]].append(loss)
-        self.metrics[self.metricKeys[1]].append(acc)
-        
-        print('\n{}: {}, {}: {}\n'.format(self.metricKeys[0],loss,self.metricKeys[1],acc))

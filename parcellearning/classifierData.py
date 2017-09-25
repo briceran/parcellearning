@@ -7,11 +7,12 @@ Created on Sun Sep 10 21:16:08 2017
 """
 
 import classifierUtilities as cu
+import dataUtilities as du
+
 import loaded as ld
 import matchingLibraries as lb
 
 import inspect
-import json
 
 import copy
 import h5py
@@ -43,7 +44,13 @@ class Prepare():
         if not features and not isinstance(features,list):
             raise ValueError('Features cannot be empty.  Must be a list.')
         else:
-            self.features = features
+            
+            noLabel = []
+            for f in features:
+                if f != 'label':
+                    noLabel.append(f)
+
+            self.features = noLabel
             
         if 'object' not in dataMap.keys():
             raise ValueError('No valid object directory specified.')
@@ -148,21 +155,15 @@ class Prepare():
         # For each subject, merge the unique feature arrays into an single
         # array, where ordering of the columns is determined by ordering 
         # of names in the features variable.
-        
-        supraData = []
-        supraLabels = []
-        
+
         for subj in dataDictionary.keys():
-            mergedData[subj] = cu.mergeFeatures(dataDictionary[subj],nf)
-            mergedLabels[subj] = cu.mergeFeatures(dataDictionary[subj],['label'])
+            mergedData[subj] = du.mergeFeatures(dataDictionary[subj],nf)
+            mergedLabels[subj] = du.mergeFeatures(dataDictionary[subj],['label'])
             
-            supraData.append(mergedData[subj])
-            supraLabels.append(mergedLabels[subj])
-        
-        supraData = np.squeeze(np.row_stack(supraData))
-        supraLabels = np.squeeze(np.concatenate(supraLabels))
-        
-        labInds = np.where(supraLabels > 0)[0]
+        supraData = du.mergeValueArrays(mergedData)
+        supraLabels = du.mergeValueLists(mergedLabels)
+
+        labInds = np.where(supraLabels != 0)[0]
 
         # Apply zero-mean, unit-variance scaling
         if self.scale:
@@ -174,7 +175,7 @@ class Prepare():
             self.scaler = scaler
         
         for subj in mergedData.keys():
-            tempInds = np.where(mergedLabels[subj] != 0)[0]
+            tempInds = np.where(mergedLabels[subj] > 0)[0]
             
             mergedData[subj][tempInds,:] = scaler.transform(mergedData[subj][tempInds,:])
 
@@ -316,83 +317,3 @@ def loadData(subjectList,dataMap,features,hemi):
             matches[s] = match
 
     return [data,matches]
-
-def neighborhoodMaps(neighborhoodMap,neighborhoodType,distance):
-    
-    """
-    Construct the neighborhood mapping information for the training data.
-    Specifically, when we are building a classifier to distinguish neighboring 
-    regions from one another, we want to determine which regions get confused
-    most often.
-    
-    We consider either the results of the train-train matchings, or we simply
-    use the label-label distance matrix.
-    
-    Parameters:
-    - - - - -
-        neighborhoodMap : neighborhood map file (Dijkstra distance file, or 
-                            MergedMaps file)
-        
-        neighborhoodType : 'adjacency' (Dijkstra) or 'confusion' (MergedMaps)
-        
-        distance : threshold (hops for Dijkstra, frequency for MergedMaps)
-    """
-    
-    if not os.path.isfile(neighborhoodMap):
-        raise ValueError('Neighborhood map does not exist.')
-    
-    if neighborhoodType not in ['adjacency','confusion']:
-        raise ValueError('Incorrect neighborhood type.')
-    
-    # load and prepare neighborhoodMap
-    neighborhoodMap = ld.loadPick(neighborhoodMap)
-    
-    if neighborhoodType == 'adjacency':
-        boundary = 'inside'
-        threshold = 1
-    else:
-        boundary = 'outside'
-        threshold = 0.05
-        neighborhoodMap = lb.mappingFrequency(neighborhoodMap)
-    
-    neighbors = lb.mappingThreshold(neighborhoodMap,threshold,boundary)
-    
-    return neighbors
-
-def parseJSON(templateFile):
-    
-    DATA_PARAMETERS = ['features','training','hemisphere',
-                       'dataMap','downsample']
-    
-    CLASSIFIER_PARAMETERS = {'RandomForest': ['max_depth','n_estimators',
-                                              'power'],
-                            'MALP': ['atlases','atlas_size'],
-                            'NeuralNetwork': ['eval_factor','layers',
-                                              'node_structure','epochs',
-                                              'batch_size','rate']
-                            }
-    
-    assert os.path.isfile(templateFile)
-    
-    with open(templateFile,'r') as template:
-        template = json.load(template)
-        
-    data = template['data']
-    
-    dataMap = data['dataMap']
-    hemisphere = data['hemisphere']
-    features = str(data['features']).split(',')
-    
-    #classifier = template['classifier']
-
-    Prep = Prepare(dataMap,hemisphere,features)
-    
-    return Prep
-    
-    
-    
-    
-    
-    
-        
-    
