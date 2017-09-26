@@ -8,107 +8,155 @@ Created on Mon Sep 25 14:07:37 2017
 
 import copy
 import numpy as np
+import sys
 
-def downsampleByCore(trainingData,trainingLabels,trainingMatches,labelSet):
+from classifierUtilities import mapLabelsToData
+from dataUtilities import buildResponseVector
+
+def byCore(data,response,matches,labels,fraction=0.7):
     
     """
     Downsample the training data for each subject, for each label, by
-    selecting the core vertices for each label.  We can follow this up by
-    downsampling by the minimum label size, or we can concatenate the data 
-    into a single array and feed this into a neural network.
-    
-    Likewise, we can partition this data by label, and feed the partitioned
-    data into a Random Forest, GMM, or MALP classifier.
-    
+    selecting the core vertices for each label.
+
     Parameters:
     - - - - -
-        trainingData : dictionary of training data, where keys are subjects
+        data : dictionary of training data, where keys are subjects
                         and values are the vertex-wise data arrays
-        trainingLabels : dictionary of training labels, where keys are subjects
+        response : dictionary of training labels, where keys are subjects
                             and values are vertex-wise label assignments
-        trainingMatches : dictionary of matches, where keys are subjects, and
+        matches : dictionary of matches, where keys are subjects, and
                             values are vertex-to-label frequency arrays
-        labelSet : set of unique labels across all training subjects
+        labels : set of unique labels across all training subjects
     Returns:
     - - - -
-        data : downsampled data array
-        labels : downsampled response vectors
-        matches : downsampled matches
+        x : downsampled data array dictionaries
+        y : downsampled response vector dictionaries
+        m : downsampled match array dictionaries
         coreMaps : indices of "good" vertices, per subject, per label
     """
     
-    assert trainingData.keys() == trainingLabels.keys()
+    assert data.keys() == labels.keys()
     
-    data = copy.deepcopy(trainingData)
-    labels = copy.deepcopy(trainingLabels)
-    matches = copy.deepcopy(trainingMatches)
+    x = copy.deepcopy(data)
+    y = copy.deepcopy(labels)
+    m = copy.deepcopy(matches)
     
-    subjects = trainingData.keys()
+    subjects = x.keys()
     coreMaps = {}.fromkeys(subjects)
 
-    for subj in trainingData.keys():
+    for subj in x.keys():
         
-        tempData = trainingData[subj]
-        tempLabel = trainingLabels[subj]
-        tempMatch = trainingMatches[subj]
+        tempData = x[subj]
+        tempLabel = y[subj]
+        tempMatch = m[subj]
 
-        print 'Matching shape: {}'.format(tempMatch.shape)
-        print 'Training data shape: {}'.format(tempData.shape)
-
-        cores = labelCores(tempMatch,0.7)
+        cores = getCores(tempMatch,fraction)
         coreMaps[subj] = cores
         
         cores = np.squeeze(np.concatenate(cores.values())).astype(np.int32)
         cores = np.sort(cores)
 
-        data[subj] = tempData[cores,:]
-        labels[subj] = tempLabel[cores,:]
-        matches[subj] = tempMatch[cores,:]
+        x[subj] = tempData[cores,:]
+        y[subj] = tempLabel[cores,:]
+        m[subj] = tempMatch[cores,:]
         
-    return [data,labels,matches,coreMaps]
+    return [x,y,m,coreMaps]
 
-def labelCores(matchingMatrix,threshold):
+
+def getCores(matches,fraction):
     
     """
-    Method to downsample the trainng data set, based on those vertices that map
-    most frequently to any given label.
-    
-    Originally, we'd thought to threshold the matchingMatrix itself, and choose
-    only those vertices with maximum frequencies above a given threshold. This 
-    resulted in a situation where some region classes were not represented in
-    the training data at all because their maximum mapping frequencies were
-    considerably lower than this threshold.
+    Computes core vertices for each label, based on the frequency with which
+    vertices map to a label.
     
     Parameters:
     - - - - -
         matchingMatrix : matrix containing mapping frequency information
                         for each vertex in a training brain
-        threshold : percentage of vertces to keep
+        fraction : fraction of vertces to keep
     """
-
-    matches = matchingMatrix
-
-    maxF = np.max(matches,axis=1)
-    zeroInds = maxF > 0
-    maxFLabel = np.argmax(matches,axis=1)+1
-    maxFLabel = maxFLabel*zeroInds
     
-    N = 180
+    # compute max mapping frequency for each vertex
+    maxF = np.max(matches,axis=1)
+    # find vertices with only frequencies
+    posInds = maxF > 0
+    
+    # compute maximum frequency labels
+    maxFLabel = np.argmax(matches,axis=1)+1
+    # mask labels by pos frequencies
+    maxFLabel = maxFLabel*posInds
+    
+    N = matches.shape[1]-1
     labels = np.arange(1,N+1)
     
     highestMaps = {}.fromkeys(labels)
     
-    for L in labels:
+    for lab in labels:
         
-        indices = np.where(maxFLabel == L)[0]
+        # get indices of vertex with maxiumum frequency label == L
+        indices = np.where(maxFLabel == lab)[0]
         maxFL = maxF[indices]
         
+        # sort these vertices' frequencies from high to low
         sortedCoords = np.flip(np.argsort(maxFL),axis=0)
         sortedInds = indices[sortedCoords]
         
-        upper = int(np.ceil(threshold*len(sortedInds)))
+        # select highest fraction of these
+        upper = int(np.ceil(fraction*len(sortedInds)))
         
+        # sort and return indices
         acceptedInds = sorted(sortedInds[0:upper])
-        highestMaps[L] = list(acceptedInds)
+        highestMaps[lab] = list(acceptedInds)
     
     return highestMaps
+
+
+def byMinimum(data,response,matches,labels):
+    
+    """
+    Downsamples the training data to match size of smallest-sample label.
+    
+    Parameters:
+    - - - - -
+        data : dictionary of training data, where keys are subjects
+                        and values are the vertex-wise data arrays
+        labels : dictionary of training labels, where keys are subjects
+                            and values are vertex-wise label assignments
+        matches : dictionary of matches, where keys are subjects, and
+                            values are vertex-to-label frequency arrays
+        labels : set of unique labels across all training subjects
+    Returns:
+    - - - -
+        pData : downsampled data array
+        pLabels : downsampled response vectors
+        pMatches : downsampled matches
+    """
+    
+    minSize = sys.maxint
+    
+    pData = mapLabelsToData(data,response,labels)
+    pMatches = mapLabelsToData(matches,response,labels)
+    
+    pLabels = buildResponseVector(pData)
+    
+    # compute minimum size sample array
+    for lab in labels:
+        
+        tempData = pData[lab]
+        minSize = min(minSize,tempData.shape[0])
+    
+    # downsample remaining arrays
+    for lab in labels:
+        
+        tempData = pData[lab]
+        tempMatches = pMatches[lab]
+        tempLabels = pLabels[lab]
+        
+        inds = np.random.choice(np.arange(tempData.shape[0],size=minSize,
+                                          replace=False))
+        pData[lab] = tempData[inds,:]
+        pMatches[lab] = tempMatches[inds,:]
+        pLabels[lab] = tempLabels[inds,:]
+        
+    return [pData,pLabels,pMatches]

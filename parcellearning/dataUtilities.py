@@ -11,7 +11,6 @@ Methods related to downsampling.
 """
 
 import numpy as np
-import os
 
 def subselectDictionary(keys,dictList):
     
@@ -58,26 +57,32 @@ def mergeFeatures(dataDict,keyList):
     
     return data
 
-def mergeValueArrays(inDict):
+def mergeValueArrays(inDict,keys=None):
     
     """
     Method to aggregate the values of a dictionary, where the values are assumed
     to be 2-D numpy arrays.
     """
     
-    data = [inDict[k] for k in inDict.keys()]
+    if not keys:
+        keys = inDict.keys()
+    
+    data = [inDict[k] for k in keys]
     data = np.squeeze(np.row_stack(data))
     
     return data
 
-def mergeValueLists(inDict):
+def mergeValueLists(inDict,keys=None):
     
     """
     Method to aggregate values of dictionary, where values are assumed to be
     1D lists.
     """
     
-    data = [inDict[k] for k in inDict.keys()]
+    if not keys:
+        keys = inDict.keys()
+    
+    data = [inDict[k] for k in keys]
     data = np.squeeze(np.concatenate(data))
     
     return data
