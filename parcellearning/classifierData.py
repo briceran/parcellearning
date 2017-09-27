@@ -10,12 +10,10 @@ import classifierUtilities as cu
 import dataUtilities as du
 
 import loaded as ld
-import matchingLibraries as lb
 
 import inspect
 
 import copy
-import h5py
 import os
 import numpy as np
 import sklearn
@@ -44,12 +42,10 @@ class Prepare():
         if not features and not isinstance(features,list):
             raise ValueError('Features cannot be empty.  Must be a list.')
         else:
-            
             noLabel = []
             for f in features:
                 if f != 'label':
                     noLabel.append(f)
-
             self.features = noLabel
             
         if 'object' not in dataMap.keys():
@@ -111,15 +107,10 @@ class Prepare():
         features = self.features
         hemisphere = self.hemisphere
         dataMap = self.dataMap
-        
-        nf = []
-        for f in features:
-            if f != 'label':
-                nf.append(f)
-                
-        loadingFeatures = copy.deepcopy(nf)
+
+        loading = copy.deepcopy(features)
         if training:
-            loadingFeatures.append('label')
+            loading.append('label')
         
         # Check subject list
         if not subjects and not isinstance(subjects,list):
@@ -131,23 +122,20 @@ class Prepare():
         # dataDictionary will be a dictionary of sub-dictionaries.
         # Super keys are subject names. For each sub-dictionary (super value),
         # keys are feature names, and values are data arrays.
-        print 'Training data columns (in order): {}'.format(nf)
-        [dataDictionary,matchDictionary] = loadData(subjects,dataMap,loadingFeatures,hemisphere)
+        print 'Training data columns (in order): {}'.format(loading)
+        [dataDict,matchDict] = cu.loadData(subjects,dataMap,loading,hemisphere)
 
-        if not dataDictionary:
+        if not dataDict:
             raise ValueError('Data dictionary cannot be empty.')
         else:
-            parseFeatures = copy.deepcopy(nf)
-            parseFeatures.append('label')
-    
-            parsedData = ld.parseH5(dataDictionary,parseFeatures)
-            dataDictionary = parsedData
+            parsedData = ld.parseH5(dataDict,loading)
+            dataDict = parsedData
             
         ### At this point, data has been loaded.
         ### It exists as a dictionary of dictionaries
         
         # get subject IDs in training data
-        subjects = dataDictionary.keys()
+        subjects = dataDict.keys()
 
         mergedData = {}.fromkeys(subjects)
         mergedLabels = {}.fromkeys(subjects)
@@ -156,9 +144,9 @@ class Prepare():
         # array, where ordering of the columns is determined by ordering 
         # of names in the features variable.
 
-        for subj in dataDictionary.keys():
-            mergedData[subj] = du.mergeFeatures(dataDictionary[subj],nf)
-            mergedLabels[subj] = du.mergeFeatures(dataDictionary[subj],['label'])
+        for subj in dataDict.keys():
+            mergedData[subj] = du.mergeFeatures(dataDict[subj],loading)
+            mergedLabels[subj] = du.mergeFeatures(dataDict[subj],['label'])
             
         supraData = du.mergeValueArrays(mergedData)
         supraLabels = du.mergeValueLists(mergedLabels)
@@ -179,7 +167,7 @@ class Prepare():
             
             mergedData[subj][tempInds,:] = scaler.transform(mergedData[subj][tempInds,:])
 
-        return [mergedData,mergedLabels,matchDictionary]
+        return [mergedData,mergedLabels,matchDict]
     
     
     def testing(self,subject):
@@ -194,9 +182,9 @@ class Prepare():
                         training data, so file format must be the same.
         Returns:
         - - - -
+            x_test : test data for subject
             matchingMatrix : thresholded matching matrix for subject.  
                                 The threshold is set to a minimum of 0.05.
-            x_test : test data for subject
             ltvm : label-to-vertex mapping dictionary.  Keys are label IDs,
                     and values are lists of vertices that map to this label.
         """
@@ -204,13 +192,8 @@ class Prepare():
         features = self.features
         hemisphere = self.hemisphere
         scaler = self.scaler
-        
-        nf = []
-        for f in features:
-            if f != 'label':
-                nf.append(f)
-        
-        print 'Test data columns (in order): {}'.format(nf)
+
+        print 'Test data columns (in order): {}'.format(features)
         
         objDict = self.dataMap['object'].items()
         objDir = objDict[0][0]
@@ -227,11 +210,11 @@ class Prepare():
         rawTestData = ld.loadH5(dataObject,*['full'])
         ID = rawTestData.attrs['ID']
         
-        parsedData = ld.parseH5(rawTestData,nf)
+        parsedData = ld.parseH5(rawTestData,features)
         rawTestData.close()
 
         testData = parsedData[ID]
-        testData = cu.mergeFeatures(testData,nf)
+        testData = cu.mergeFeatures(testData,features)
 
         if self.scale:
             scaler = self.scaler
@@ -241,79 +224,4 @@ class Prepare():
 
         ltvm = cu.vertexMemberships(matchingMatrix,180)
 
-        # matchingMatrix : constrained matching matrix
-        # x_test : merged test data array
-        # ltvm : label-to-vertex maps
-        
         return [x_test,matchingMatrix,ltvm]
-
-
-def loadData(subjectList,dataMap,features,hemi):
-    
-    """
-    Generates the training data from a list of subjects.
-    
-    Parameters:
-    - - - - -
-        subjectList : list of subjects to include in training set
-        dataDir : main directory where data exists -- individual features
-                    will exist in sub-directories here
-        features : list of features to include
-        hemi : hemisphere to process
-    """
-
-    objDict = dataMap['object'].items()
-    objDir = objDict[0][0]
-    objExt = objDict[0][1]
-
-    midDict = dataMap['midline'].items()
-    midDir = midDict[0][0]
-    midExt = midDict[0][1]
-
-    matDict = dataMap['matching'].items()
-    matDir = matDict[0][0]
-    matExt = matDict[0][1]
-
-    data = {}
-    matches = {}
-
-    for s in subjectList:
-
-        # Training data
-        trainObject = '{}{}.{}.{}'.format(objDir,s,hemi,objExt)
-        midObject = '{}{}.{}.{}'.format(midDir,s,hemi,midExt)
-        matObject = '{}{}.{}.{}'.format(matDir,s,hemi,matExt)
-
-        # Check to make sure all 3 files exist
-        if os.path.isfile(trainObject) and os.path.isfile(midObject) and os.path.isfile(matObject):
-
-            # Load midline indices
-            # Subtract 1 for differece between Matlab and Python indexing
-            mids = ld.loadMat(midObject)-1
-            mids = set(mids)
-            
-            match = ld.loadMat(matObject)
-
-            # Load training data and training labels
-            trainH5 = h5py.File(trainObject,mode='r')
-
-            # Get data corresponding to features of interest
-            subjData = ld.parseH5(trainH5,features)
-            trainH5.close()
-            
-            nSamples = set(np.arange(subjData[s][features[0]].shape[0]))
-            coords = np.asarray(list(nSamples.difference(mids)))
-            
-            for f in subjData[s].keys():
-                tempData = subjData[s][f]
-                if tempData.ndim == 1:
-                    tempData.shape+=(1,)
-
-                subjData[s][f] = np.squeeze(tempData[coords,:])
-                
-            match = match[coords,:]
-            
-            data[s] = subjData[s]
-            matches[s] = match
-
-    return [data,matches]

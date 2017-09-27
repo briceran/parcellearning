@@ -8,17 +8,15 @@ Created on Sat Sep 16 15:57:12 2017
 
 import numpy as np
 import pickle
-import sklearn
 
 import inspect
 
 import classifierUtilities as cu
-import dataUtilities as du
 import NeuralNetorkCallbacks as nnc
 
-from keras import callbacks, optimizers
+from keras import optimizers
 from keras.models import Sequential
-from keras.layers import Dense,normalization,Activation
+from keras.layers import Activation, Dense, normalization
 from keras.utils import to_categorical
 
 class Network(object):
@@ -58,13 +56,14 @@ class Network(object):
         """
         
         if eval_factor > 1 or eval_factor < 0:
-            raise ValueError('Evaluation size is outside of accepted bounds.')
+            raise ValueError('Eval factor must be between 0 and 1.')
         else:
             self.eval_factor = eval_factor
         
         if layers < 0:
             raise ValueError('Number of layers must be at least 0.')
-        self.layers = layers
+        else:
+            self.layers = layers
         
         if isinstance(node_structure,list):
             if len(node_structure) != layers:
@@ -113,17 +112,17 @@ class Network(object):
                 if key in args:
                     setattr(self,key,params[key])
             
-    def build(self,input_dimension,output_dimension):
+    def build(self,input_dim,output_dim):
         
         """
         Build the network using the initialized parameters.
         """
         
-        input_dimension = self.input_dim
-        output_dimension = self.output_dim
+        self.input_dim = input_dim
+        self.output_dim = output_dim
 
         model = Sequential()
-        model.add(Dense(128,input_dim=input_dimension,init='uniform'))
+        model.add(Dense(128,input_dim=input_dim,init='uniform'))
         model.add(normalization.BatchNormalization())
         model.add(Activation('relu'))
         
@@ -134,7 +133,7 @@ class Network(object):
             model.add(Activation('relu'))
 
         # we can think of this chunk as the output layer
-        model.add(Dense(output_dimension+1, init='uniform'))
+        model.add(Dense(output_dim+1, init='uniform'))
         model.add(normalization.BatchNormalization())
         model.add(Activation('softmax'))
         
@@ -143,31 +142,31 @@ class Network(object):
         
         self.model = model
         
-    def fit(self,x_train,y_train,m_train,labelSet):
+    def fit(self,x_train,y_train,m_train,L=180): 
         
         """
         Fit the model on the training data, after processing the validation
-        data from the training set.  The validation data is used to monitor
-        the performance of the model, as the model is trained.  It is expected,
-        and good form, to withold the validation data from the test data as
-        well.  The validation is used merely to inform parameter selection.
+        data from the training set.
         
         Parameters:
         - - - - -
             x_train : training set of features
             y_train : training set of labels
             m_train : training set of matches
+            labelSet : set of labels in training data
         """
 
         epochs = self.epochs
         batch_size = self.batch_size
-
-        [training,validation] = self.extractValidation(x_train,y_train,m_train)
+        eval_factor = self.eval_factor
         
-        # get dimensions of training data
+        
+        [training,validation] = cu.extractValidation(x_train,y_train,
+                                    m_train,eval_factor)
+        
         input_dim = training[0].shape[1]
-        output_dim = len(labelSet)
-        
+        output_dim = L
+
         # construct the network
         self.build(input_dim,output_dim)
 
@@ -194,13 +193,13 @@ class Network(object):
     def predict(self,x_test,match,power=1):
     
         """
-        Method to predict neural network model cortical map.
+        Method to predict cortical map.
         
         Parameters:
         - - - - -
             x_test : member test data in numpy array format
             match : matching matrix (binary or frequency)
-            kwargs : optional parameter arguments
+            power : power to raise matching data to
             
         Returns:
         - - - -
@@ -211,16 +210,11 @@ class Network(object):
             predicted : prediction vector of test samples
             power : power to raise mapping frequency to
         """
+        
+        model = self.model
+        match = cu.matchingPower(match,power)
 
-        if power == None:
-            match = np.power(match,0)
-        elif power == 0:
-            nz = np.nonzero(match)
-            match[nz] = 1
-        else:
-            match = np.power(match,power)
-
-        baseline = self.model.predict(x_test,verbose=0)
+        baseline = model.predict(x_test,verbose=0)
         thresholded = match*baseline[:,1:]
         predicted = np.argmax(thresholded,axis=1)+1
         
@@ -250,56 +244,3 @@ class Network(object):
         with open(outHistory,'w') as outWrite:
             pickle.dump(fullHistory,outWrite,-1)
     
-    def extractValidation(self,x_train,y_train,m_train):
-        
-        """
-        Processing the validation data from the training set.  The validation 
-        data is used to monitor the performance of the model, as the model is 
-        trained.  It is expected, and good form, to withold the validation data 
-        from the test data as well.  The validation is used merely to inform 
-        parameter selection.
-        
-        Parameters:
-        - - - - -
-            x_train : training set of features
-            y_train : training set of labels
-            m_train : training set of matches
-        """
-        
-        eval_factor = self.eval_factor
-        subjects = x_train.keys()
-        
-        # By default, will select at least 1 validation subject from
-        # the training list
-        full = len(subjects)
-        val = max(1,int(np.floor(eval_factor*full)))
-        
-        # subject lists for training and validation sets
-        train = list(np.random.choice(subjects,size=(full-val),replace=False))
-        valid = list(set(subjects).difference(set(train)))
-        
-        print '{} training subjects.'.format(len(train))
-        print '{} validation subjects.'.format(len(valid))
-        
-        training = du.subselectDictionary(train,[x_train,y_train,m_train])
-        validation = du.subselectDictionary(valid,[x_train,y_train,m_train])
-
-        mgTD = cu.mergeValues(training[0])
-        mgTL = cu.mergeValues(training[1])
-        mgTM = cu.mergeValues(training[2])
-        
-        mgVD = cu.mergeValues(validation[0])
-        mgVL = np.squeeze(cu.mergeValues(validation[1]).astype(np.int32))
-        mgVM = cu.mergeValues(validation[2])
-        
-        N = mgTD.shape[0]
-        N = sklearn.utils.shuffle(np.arange(N))
-        
-        mgTD = mgTD[N,:]
-        mgTL = np.squeeze(mgTL[N,:].astype(np.int32))
-        mgTM = mgTM[N,:]
-        
-        training = [mgTD,mgTL,mgTM]
-        validation = [mgVD,mgVL,mgVM]
-        
-        return [training,validation]

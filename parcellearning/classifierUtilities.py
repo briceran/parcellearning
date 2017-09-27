@@ -7,8 +7,13 @@ Created on Tue May  9 18:22:13 2017
 """
 
 import copy
+import h5py
 import numpy as np
+import os
+import sklearn
+
 import dataUtilities as du
+import loaded as ld
 
 
 """
@@ -16,8 +21,102 @@ import dataUtilities as du
 
 Below, we have methods to prepare data for classifiers.
 
+Most of the time, this data will include the feature data, the "true" 
+cortical maps, and surface registration information.
+
+We prune the training features to exclude vertices at the midline -- these
+vertices do not have any resting-state data association with them.
+
 ##########
 """
+
+def loadData(subjectList,dataMap,features,hemi):
+    
+    """
+    Generates the training data from a list of subjects.
+    
+    Parameters:
+    - - - - -
+        subjectList : list of subjects to include in training set
+        dataDir : main directory where data exists -- individual features
+                    will exist in sub-directories here
+        features : list of features to include
+        hemi : hemisphere to process
+    """
+
+    objDict = dataMap['object'].items()
+    objDir = objDict[0][0]
+    objExt = objDict[0][1]
+
+    midDict = dataMap['midline'].items()
+    midDir = midDict[0][0]
+    midExt = midDict[0][1]
+
+    matDict = dataMap['matching'].items()
+    matDir = matDict[0][0]
+    matExt = matDict[0][1]
+
+    data = {}
+    matches = {}
+
+    for s in subjectList:
+
+        # Training data
+        trainObject = '{}{}.{}.{}'.format(objDir,s,hemi,objExt)
+        midObject = '{}{}.{}.{}'.format(midDir,s,hemi,midExt)
+        matObject = '{}{}.{}.{}'.format(matDir,s,hemi,matExt)
+
+        # Check to make sure all 3 files exist
+        if os.path.isfile(trainObject) and os.path.isfile(midObject) and os.path.isfile(matObject):
+
+            # Load midline indices
+            # Subtract 1 for differece between Matlab and Python indexing
+            mids = ld.loadMat(midObject)-1
+            mids = set(mids)
+            
+            match = ld.loadMat(matObject)
+
+            # Load training data and training labels
+            trainH5 = h5py.File(trainObject,mode='r')
+
+            # Get data corresponding to features of interest
+            subjData = ld.parseH5(trainH5,features)
+            trainH5.close()
+            
+            nSamples = set(np.arange(subjData[s][features[0]].shape[0]))
+            coords = np.asarray(list(nSamples.difference(mids)))
+            
+            for f in subjData[s].keys():
+                tempData = subjData[s][f]
+                if tempData.ndim == 1:
+                    tempData.shape+=(1,)
+
+                subjData[s][f] = np.squeeze(tempData[coords,:])
+                
+            match = match[coords,:]
+            
+            data[s] = subjData[s]
+            matches[s] = match
+
+    return [data,matches]
+
+
+def loadUnitaryFeatures(trainingObject):
+    
+    """
+    Load single subject training object.
+    
+    Parameters:
+    - - - - -
+        trainingObject : single subject training object
+    """
+
+    ID = trainingObject.attrs['ID']
+
+    training = {}
+    training[ID] = trainingObject.data
+    
+    return training
 
 
 def mapLabelsToData(dataDict,labelDict,labelSet):
@@ -44,6 +143,7 @@ def mapLabelsToData(dataDict,labelDict,labelSet):
     partData = du.splitArrayByResponse(mData,mLabels,labelSet)
 
     return partData
+
 
 def parseKwargs(acceptable,kwargs):
     
@@ -74,38 +174,15 @@ def parseKwargs(acceptable,kwargs):
     return output
 
 
-def prepareUnitaryFeatures(trainingObject):
-    
-    """
-    Parameters:
-    - - - - -
-        trainingObject : single subject training object
-    """
-
-    ID = trainingObject.attrs['ID']
-
-    training = {}
-    training[ID] = trainingObject.data
-    
-    return training
-
-
-def vertexMemberships(matchingMatrix,R):
+def vertexMemberships(matchingMatrix,R=180):
         
     """
     Method to partition vertices based on which labels each
-    vertex maps to in the training brains.  As more training brains are
-    included in the **MatchingFeaturesTest** object, a vertex might map
-    to an increasing variety of labels.
-    
-    We do this so we can apply a classifier to multiple vertices at the same
-    time, rather than looping through each vertex, through all classifiers.
-    
+    vertex maps to in the training brains.
     Parameters:
     - - - - - 
         matchingMatrix : binary matrix with 1 if 0 maps to vertex, 0 otherwise
         R : number of regions
-        
     Returns:
     - - - - 
         labelVerts : dictionary that maps labels to sets of vertices that 
@@ -130,6 +207,77 @@ def vertexMemberships(matchingMatrix,R):
         labelVerts[L] = inds
         
     return labelVerts
+
+
+def matchingPower(match,power):
+    
+    """
+    Raise entries of matching matrix to power.
+    """
+    
+    if power == None:
+        match = np.power(match,0)
+    elif power == 0:
+        nz = np.nonzero(match)
+        match[nz] = 1
+    else:
+        match = np.power(match,power)
+        
+    return match
+
+
+def validation(x_train,y_train,m_train,eval_factor):
+    
+    """
+    Processing the validation data from the training set.  The validation 
+    data is used to monitor the performance of the model, as the model is 
+    trained.  It is expected to withold the validation data 
+    from the test data.  The validation is used merely to inform 
+    parameter selection.
+    
+    Parameters:
+    - - - - -
+        x_train : training set of features
+        y_train : training set of labels
+        m_train : training set of matches
+        eval_size : fraction of training size to use as validation set
+    """
+
+    subjects = x_train.keys()
+    
+    # By default, will select at least 1 validation subject from list
+    full = len(subjects)
+    val = max(1,int(np.floor(eval_factor*full)))
+    
+    # subject lists for training and validation sets
+    train = list(np.random.choice(subjects,size=(full-val),replace=False))
+    valid = list(set(subjects).difference(set(train)))
+    
+    print '{} training subjects.'.format(len(train))
+    print '{} validation subjects.'.format(len(valid))
+    
+    training = du.subselectDictionary(train,[x_train,y_train,m_train])
+    validation = du.subselectDictionary(valid,[x_train,y_train,m_train])
+
+    mgTD = du.mergeValueArrays(training[0])
+    mgTL = du.mergeValueLists(training[1])
+    mgTM = du.mergeValueArrays(training[2])
+    
+    mgVD = du.mergeValueArrays(validation[0])
+    mgVL = du.mergeValueLists(validation[1])
+    mgVM = du.mergeValueArrays(validation[2])
+    
+    N = mgTD.shape[0]
+    N = sklearn.utils.shuffle(np.arange(N))
+    
+    mgTD = mgTD[N,:]
+    mgTL = mgTL[N,:]
+    mgTM = mgTM[N,:]
+    
+    training = [mgTD,mgTL,mgTM]
+    validation = [mgVD,mgVL,mgVM]
+    
+    return [training,validation]
 
 
 """

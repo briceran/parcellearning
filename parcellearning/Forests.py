@@ -126,7 +126,7 @@ class Forest(object):
 
         self.models = models
 
-    def predict(self,x_test,match,ltvm,softmax_type = 'BASE',power=1):
+    def predict(self,x_test,match,ltvm,softmax_type='BASE',power=1):
         
         """
         Method to predict labels of test data.
@@ -158,15 +158,7 @@ class Forest(object):
 
         # initialize prediction dictionary
         baseline = np.zeros((test_samples,R+1))
-
-
-        if power == None:
-            match = np.power(match,0)
-        elif power == 0:
-            nz = np.nonzero(match)
-            match[nz] = 1
-        else:
-            match = np.power(match,power)
+        match = cu.matchingPower(match,power)
 
         for lab in labels:
             if lab in neighbors.keys():

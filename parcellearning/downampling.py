@@ -11,7 +11,7 @@ import numpy as np
 import sys
 
 from classifierUtilities import mapLabelsToData
-from dataUtilities import buildResponseVector
+import dataUtilities as du
 
 def byCore(data,response,matches,labels,fraction=0.7):
     
@@ -160,3 +160,22 @@ def byMinimum(data,response,matches,labels):
         pLabels[lab] = tempLabels[inds,:]
         
     return [pData,pLabels,pMatches]
+
+
+def dbscan(data,labels,labelset):
+    
+    """
+    Downsample data corresponding to each label by choosing the central "core"
+    of each distribution.
+    """
+    
+    data = du.mergeValueArrays(data)
+    labels = du.mergeValueLists(labels)
+    
+    partitioned = du.splitArrayByResponse(data,labels,labelset)
+    
+    for lab in labelset:
+        
+        tempData = partitioned[lab]
+    
+def dbscanCore()

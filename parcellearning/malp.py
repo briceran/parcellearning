@@ -6,19 +6,15 @@ Created on Mon Sep 25 17:02:25 2017
 @author: kristianeschenburg
 """
 
-import classifierUtilities as cu
-from dataUtilities import mergeValueArrays,mergeValueLists
 from Forests import Forest
 
 import copy
-import inspect
 import numpy as np
 
 from joblib import Parallel, delayed
 import multiprocessing
 
 NUM_CORES = multiprocessing.cpu_count()
-
 
 
 def prepareAtlasData(x_train,y_train,atlases=None,atlas_size=1):
@@ -148,17 +144,13 @@ def parallelPredicting(models,x_test,match,**kwargs):
     
     return predictedLabels
 
-def atlasPredict(mod,yObject,yMatch,yMids):
+def atlasPredict(model,x_test,match):
     
     """
     Single model prediction step.
     """
+
+    model.predict(x_test,match,softmax_type='FORESTS')
     
-    #args,_,_,_ = inspect.getargspec(model.__init__)
-    #modelArgs = cu.parseKwargs(args,kwargs)
-    #mod.set_params(**modelArgs)
-    
-    mod.predict(yObject,yMatch,yMids,softmax_type='FORESTS')
-    
-    return mod.predicted
+    return model.predicted
 
