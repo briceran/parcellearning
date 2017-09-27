@@ -13,6 +13,7 @@ import os
 import sklearn
 
 import dataUtilities as du
+import downsampling as ds
 import loaded as ld
 
 
@@ -29,6 +30,50 @@ vertices do not have any resting-state data association with them.
 
 ##########
 """
+
+def buildDataMap(dataDir):
+    
+    """
+    Wrapper to construct data map.
+    """
+    
+    dataMap = {}
+    dataMap['object'] = {'{}TrainingObjects/FreeSurfer/'.format(dataDir) : 
+        'TrainingObject.aparc.a2009s.h5'}
+    dataMap['midline'] = {'{}Midlines/'.format(dataDir) : 
+        'Midline_Indices.mat'}
+    dataMap['matching'] = {'{}MatchingLibraries/Test/MatchingMatrices/'.format(dataDir) : 
+        'MatchingMatrix.0.05.Frequencies.mat'}
+        
+    return dataMap
+
+
+def downsample(inputData,method,L = None):
+    
+    """
+    Wrapper to downsample training data.
+    """
+    
+    methodFuncs = {'equal': ds.byMinimum,
+                   'core': ds.byCore}
+    
+    if not L:
+        L = np.arange(1,181)
+    else:
+        L = np.arange(1,L+1)
+
+    x = inputData[0]
+    y = inputData[1]
+    m = inputData[2]
+    
+    [x,y,m] = methodFuncs[method](x,y,m,L)
+    
+    x = du.mergeValueArrays(x)
+    y = du.mergeValueLists(y)
+    m = du.mergeValueArrays(m)
+    
+    return [x,y,m]
+
 
 def loadData(subjectList,dataMap,features,hemi):
     
@@ -130,6 +175,7 @@ def loadUnitaryFeatures(trainingObject):
     training[ID] = trainingObject.data
     
     return training
+
 
 
 def mapLabelsToData(dataDict,labelDict,labelSet):

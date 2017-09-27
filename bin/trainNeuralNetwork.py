@@ -10,67 +10,53 @@ import argparse
 import sys
 sys.path.append('..')
 
-import numpy as np
+import inspect
+import pickle
 
 import parcellearning.classifierUtilities as pcu
-import parcellearning.dataUtilities as pdu
-import parcellearning.classifierData as pcd
-import parcellearning.downsampling as pds
-
+import parcellearning.classifierData as pcld
 import parcellearning.NeuralNetwork as pNN
 
-def buildDataMap(dataDir):
-    
-    """
-    Method to construct data map for loading of training data.
-    """
-    
-    dataMap = {}
-    dataMap['object'] = {'{}TrainingObjects/FreeSurfer/'.format(dataDir) : 
-        'TrainingObject.aparc.a2009s.h5'}
-    dataMap['midline'] = {'{}Midlines/'.format(dataDir) : 
-        'Midline_Indices.mat'}
-    dataMap['matching'] = {'{}MatchingLibraries/Test/MatchingMatrices/'.format(dataDir) : 
-        'MatchingMatrix.0.05.Frequencies.mat'}
-        
-    return dataMap
 
-def downsample(inputData,method,L = None):
+def save(outputDir,extension,network):
     
     """
-    Wrapper to downsample training data.
+    Wrapper to save model and model history.
     """
     
-    methodFuncs = {'equal': pds.byMinimum,
-                   'core': pds.byCore}
+    hs = network.history.history
+    te = network.teConstraint
+    tr = network.trConstraint
     
-    if not L:
-        L = np.arange(1,181)
-    else:
-        L = np.arange(1,L+1)
-
-    x = inputData[0]
-    y = inputData[1]
-    m = inputData[2]
+    full = dict(hs.items() + te.metrics.items() + tr.metrics.items())
     
-    [x,y,m] = methodFuncs[method](x,y,m,L)
+    base = '.'
+    params,_,_,vals = inspect.getargspec(network.__init__)
+    for (k,v) in zip(params[1:],vals):
+        base = ''.join([base,'{}.{}.'.format(k,v)])
     
-    x = pdu.mergeValueArrays(x)
-    y = pdu.mergeValueLists(y)
-    m = pdu.mergeValueArrays(m)
+    model = network.model
     
-    return [x,y,m]
-
+    outModel = '{}{}{}.h5'.format(outputDir,base,extension)
+    outHistr = '{}{}{}.History.p'.format(outputDir,base,extension)
+    
+    model.save(outModel)
+    with open(outHistr,'w') as OH:
+        pickle.dump(full,OH,-1)
+    
+    
+    
 parser = argparse.ArgumentParser()
 
 # Parameters for input data
 parser.add_argument('--dataDirectory',help='Directory where data exists.',required=True)
 parser.add_argument('--features',help='Features to include in model.',required=True)
-parser.add_argument('--training',help='Subjects to train model on.',required=True)
+parser.add_argument('--train',help='Subjects to train model on.',required=True)
 parser.add_argument('--hemisphere',help='Hemisphere to proces.',required=True)
-parser.add_argument('--output',help='Name of file storing training model',required=True)
+parser.add_argument('--out',help='Output directory and extension (string, separate by comma)',
+                    required=True)
 
-parser.add_argument('--testing',help='Subject to test model on.',required=False)
+parser.add_argument('--test',help='Subject to test model on.',required=False)
 parser.add_argument('--downsample',help='Type of downsampling to perform.',default='none',
                     choices=['none','equal','core'],required=False)
 
@@ -105,15 +91,15 @@ try:
 except:
     pass
 
-dataMap = buildDataMap(args.dataDirectory)
+dataMap = pcu.buildDataMap(args.dataDirectory)
 features = args.features.split(',')
 
-P = pcd.Prepare(dataMap,args.hemisphere,features)
+P = pcld.Prepare(dataMap,args.hemisphere,features)
 trainData = P.training(trainList)
 [trainData,valData] = pcu.validation(trainData,args.eval)
 
 if args.downsample:
-    trainData = downsample(trainData,args.downsample)
+    trainData = pcu.downsample(trainData,args.downsample)
 
 trainData = pcu.shuffle(trainData)
     

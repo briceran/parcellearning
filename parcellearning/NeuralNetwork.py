@@ -209,37 +209,3 @@ class Network(object):
         predicted = np.argmax(thresholded,axis=1)+1
         
         return [baseline,thresholded,predicted]
-    
-    def save(self,extension,baseOutput=None):
-        
-        """
-        Save model and history to files.
-        
-        Parameters:
-        - - - - -
-            baseOutput : output file base name (without extension)
-        """
-        
-        if not baseOutput:
-            baseOutput = '.'
-            params,_,_,vals = inspect.getargspec(self.__init__)
-            for (k,v) in zip(params[1:],vals):
-                baseOutput = ''.join([baseOutput,'{}.{}.'.format(k,v)])
-        
-        baseOutput = ''.join([baseOutput,extension,'.'])
-        
-        
-        outModel = 'Network'.join([baseOutput,'h5'])
-        outHistory = 'Network'.join([baseOutput,'History.p'])
-        
-        self.model.save(outModel)
-        
-        history = self.history.history
-        teConstraint = self.teConstraint
-        trConstraint = self.trConstraint
-        
-        fullHistory = dict(history.items() + teConstraint.metrics.items() + trConstraint.metrics.items())
-        
-        with open(outHistory,'w') as outWrite:
-            pickle.dump(fullHistory,outWrite,-1)
-    
