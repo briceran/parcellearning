@@ -8,15 +8,13 @@ Created on Sun Sep 10 21:16:08 2017
 
 import classifierUtilities as cu
 import dataUtilities as du
-
 import loaded as ld
 
-import inspect
 
 import copy
+import inspect
 import os
 import numpy as np
-
 from sklearn import preprocessing
 
 class Prepare():
@@ -111,7 +109,6 @@ class Prepare():
         loading = copy.deepcopy(features)
         if training:
             loading.append('label')
-            print loading
         
         # Check subject list
         if not subjects and not isinstance(subjects,list):

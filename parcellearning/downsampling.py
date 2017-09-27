@@ -10,7 +10,6 @@ import copy
 import numpy as np
 import sys
 
-from classifierUtilities import mapLabelsToData
 import dataUtilities as du
 
 def byCore(data,response,matches,labels,fraction=0.7):
@@ -135,8 +134,8 @@ def byMinimum(data,response,matches,labels):
     
     minSize = sys.maxint
     
-    pData = mapLabelsToData(data,response,labels)
-    pMatches = mapLabelsToData(matches,response,labels)
+    pData = du.splitArrayByResponse(data,response,labels)
+    pMatches = du.splitArrayByResponse(matches,response,labels)
     
     pLabels = du.buildResponseVector(pData)
     

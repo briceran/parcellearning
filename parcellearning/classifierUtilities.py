@@ -10,7 +10,6 @@ import copy
 import h5py
 import numpy as np
 import os
-import sklearn
 
 import dataUtilities as du
 import downsampling as ds
@@ -110,10 +109,6 @@ def loadData(subjectList,dataMap,features,hemi):
         trainObject = '{}{}.{}.{}'.format(objDir,s,hemi,objExt)
         midObject = '{}{}.{}.{}'.format(midDir,s,hemi,midExt)
         matObject = '{}{}.{}.{}'.format(matDir,s,hemi,matExt)
-        
-        print trainObject
-        print midObject
-        print matObject
 
         # Check to make sure all 3 files exist
         if os.path.isfile(trainObject) and os.path.isfile(midObject) and os.path.isfile(matObject):
@@ -131,7 +126,7 @@ def loadData(subjectList,dataMap,features,hemi):
             # Get data corresponding to features of interest
             subjData = ld.parseH5(trainH5,features)
             trainH5.close()
-            
+
             nSamples = set(np.arange(subjData[s][features[0]].shape[0]))
             coords = np.asarray(list(nSamples.difference(mids)))
             
@@ -289,10 +284,10 @@ def shuffle(inputData):
     """
     Given a list of data dictionaries, merge and shuffle the arrays.
     """
-    
-    x = du.mergeValueArrays(inputData[0])
-    y = du.mergeValueLists(inputData[1])
-    m = du.mergeValueArrays(inputData[2])
+
+    x = inputData[0]
+    y = inputData[1]
+    m = inputData[2]
     
     N = np.arange(0,x.shape[0])
     np.random.shuffle(N)
@@ -329,6 +324,8 @@ def validation(inputData,eval_factor):
     full = len(subjects)
     val = max(1,int(np.floor(eval_factor*full)))
     
+    print 'Total training subjects: {}'.format(full)
+    
     # subject lists for training and validation sets
     train = list(np.random.choice(subjects,size=(full-val),replace=False))
     valid = list(set(subjects).difference(set(train)))
@@ -336,7 +333,6 @@ def validation(inputData,eval_factor):
     print '{} training subjects.'.format(len(train))
     print '{} validation subjects.'.format(len(valid))
     
-
     training = du.subselectDictionary(train,[data,labels,matches])
     validation = du.subselectDictionary(valid,[data,labels,matches])
     

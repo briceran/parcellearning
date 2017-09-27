@@ -4,12 +4,10 @@
 Created on Sat Sep 16 15:57:12 2017
 
 @author: kristianeschenburg
+
 """
-
-import numpy as np
-import pickle
-
 import inspect
+import numpy as np
 
 import classifierUtilities as cu
 import NeuralNetworkCallbacks as nnc
