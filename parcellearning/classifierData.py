@@ -16,8 +16,8 @@ import inspect
 import copy
 import os
 import numpy as np
-import sklearn
 
+from sklearn import preprocessing
 
 class Prepare():
     
@@ -111,6 +111,7 @@ class Prepare():
         loading = copy.deepcopy(features)
         if training:
             loading.append('label')
+            print loading
         
         # Check subject list
         if not subjects and not isinstance(subjects,list):
@@ -157,7 +158,7 @@ class Prepare():
         if self.scale:
             
             print 'Standardizing samples.'
-            scaler = sklearn.preprocessing.StandardScaler(with_mean=True,
+            scaler = preprocessing.StandardScaler(with_mean=True,
                                                           with_std=True)
             scaler.fit(supraData[labInds,:])
             self.scaler = scaler

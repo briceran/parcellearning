@@ -65,6 +65,10 @@ def loadData(subjectList,dataMap,features,hemi):
         trainObject = '{}{}.{}.{}'.format(objDir,s,hemi,objExt)
         midObject = '{}{}.{}.{}'.format(midDir,s,hemi,midExt)
         matObject = '{}{}.{}.{}'.format(matDir,s,hemi,matExt)
+        
+        print trainObject
+        print midObject
+        print matObject
 
         # Check to make sure all 3 files exist
         if os.path.isfile(trainObject) and os.path.isfile(midObject) and os.path.isfile(matObject):
@@ -99,6 +103,15 @@ def loadData(subjectList,dataMap,features,hemi):
             matches[s] = match
 
     return [data,matches]
+
+
+def loadList(subjectFile):
+    
+    with open(subjectFile,'r') as inFile:
+        subjects = inFile.readlines()
+    subjects = [x.strip() for x in subjects]
+    
+    return subjects
 
 
 def loadUnitaryFeatures(trainingObject):
@@ -226,7 +239,7 @@ def matchingPower(match,power):
     return match
 
 
-def validation(x_train,y_train,m_train,eval_factor):
+def validation(inputData,eval_factor):
     
     """
     Processing the validation data from the training set.  The validation 
@@ -237,13 +250,15 @@ def validation(x_train,y_train,m_train,eval_factor):
     
     Parameters:
     - - - - -
-        x_train : training set of features
-        y_train : training set of labels
-        m_train : training set of matches
+        training : list of 3 dictionaries (0 = features, 1 = labels, 2 = matches)
         eval_size : fraction of training size to use as validation set
     """
+    
+    data = inputData[0]
+    labels = inputData[1]
+    matches = inputData[2]
 
-    subjects = x_train.keys()
+    subjects = data.keys()
     
     # By default, will select at least 1 validation subject from list
     full = len(subjects)
@@ -256,8 +271,9 @@ def validation(x_train,y_train,m_train,eval_factor):
     print '{} training subjects.'.format(len(train))
     print '{} validation subjects.'.format(len(valid))
     
-    training = du.subselectDictionary(train,[x_train,y_train,m_train])
-    validation = du.subselectDictionary(valid,[x_train,y_train,m_train])
+
+    training = du.subselectDictionary(train,[data,labels,matches])
+    validation = du.subselectDictionary(valid,[data,labels,matches])
 
     mgTD = du.mergeValueArrays(training[0])
     mgTL = du.mergeValueLists(training[1])
@@ -266,14 +282,7 @@ def validation(x_train,y_train,m_train,eval_factor):
     mgVD = du.mergeValueArrays(validation[0])
     mgVL = du.mergeValueLists(validation[1])
     mgVM = du.mergeValueArrays(validation[2])
-    
-    N = mgTD.shape[0]
-    N = sklearn.utils.shuffle(np.arange(N))
-    
-    mgTD = mgTD[N,:]
-    mgTL = mgTL[N,:]
-    mgTM = mgTM[N,:]
-    
+
     training = [mgTD,mgTL,mgTM]
     validation = [mgVD,mgVL,mgVM]
     

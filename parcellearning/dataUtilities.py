@@ -137,3 +137,24 @@ def buildResponseVector(responseMap):
         responseVector[r] = tempResponse
     
     return responseVector
+
+def shuffle3Dicts(data):
+    
+    """
+    Starting with list of dicts, aggregate and shuffle each dictionary in the 
+    list according to the same new ordering.
+    """
+    
+    # number of dictionaries in list
+    d = mergeValueArrays(data[0])
+    l = mergeValueLists(data[1])
+    m = mergeValueArrays(data[2])
+    
+    N = np.arange(d.shape[0])
+    np.random.shuffle(N)
+    
+    d = d[N,:]
+    l = l[N,:]
+    m = m[N,:]
+    
+    return [d,l,m]

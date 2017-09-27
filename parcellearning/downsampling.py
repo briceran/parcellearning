@@ -61,7 +61,7 @@ def byCore(data,response,matches,labels,fraction=0.7):
         y[subj] = tempLabel[cores,:]
         m[subj] = tempMatch[cores,:]
         
-    return [x,y,m,coreMaps]
+    return [x,y,m]
 
 
 def getCores(matches,fraction):

@@ -25,25 +25,22 @@ class Network(object):
     Class to build, fit, and predict using a feed-forward neural network.
     """
     
-    def __init__(self,layers,node_structure,eval_factor=0.1,epochs=50,
-                 batch_size=256,rate=0.001,optimizer='rmsprop'):
+    def __init__(self,layers=2,nodes=25,epochs=50,batch=256,
+                 rate=0.001,optimizer='rmsprop'):
         
         """
         Parameters:
         - - - - -
-            eval_factor : percentage of training data to use as validation
-                            data (will default to 1 if percentage is too high
-                            or too low in relation to training size)
-            
+
             layers : number of layers in the network
             
-            node_structure : (int,list) specifies the number of nodes per layer
+            nodes : (int,list) specifies the number of nodes per layer
                                 if integer is provided, will generate same
                                 number of nodes per layer.  If a list is
                                 provided, will compare length of list to
                                 number of layers.  If they match, will add
-                                number of nodes, node_structure[i] to layer[i].
-                                If they don't match, will add node_structure[1]
+                                number of nodes, nodes[i] to layer[i].
+                                If they don't match, will add nodes[1]
                                 nodes per layer.
                                 
             input_dim : number of features in training data
@@ -54,34 +51,26 @@ class Network(object):
             rate : gradient step size
             optimizer : optimization scheme (rmsprop,sgd)
         """
-        
-        if eval_factor > 1 or eval_factor < 0:
-            raise ValueError('Eval factor must be between 0 and 1.')
-        else:
-            self.eval_factor = eval_factor
-        
+
         if layers < 0:
             raise ValueError('Number of layers must be at least 0.')
         else:
             self.layers = layers
-        
-        if isinstance(node_structure,list):
-            if len(node_structure) != layers:
-                node_structure = node_structure[0]
-        if isinstance(node_structure,int):
-            node_structure = list(np.repeat(node_structure,layers))
-        
-        self.node_structure = node_structure
-        
+            
+        if not isinstance(nodes,int):
+            raise ValueError('Nodes must be a positive integer.')
+        else:
+            self.nodes = nodes
+
         if epochs < 1:
             raise ValueError('The number of epochs must be at least 1.')
         else:
             self.epochs = epochs
         
-        if not isinstance(batch_size,int):
+        if not isinstance(batch,int):
             raise ValueError('Batch size must be an integer value.')
         else:
-            self.batch_size = batch_size
+            self.batch = batch
         
         if rate <= 0:
             raise ValueError('Invalid rate parameter.')
@@ -92,12 +81,7 @@ class Network(object):
             raise ValueError('Invalid optimization function.')
         else:
             self.optimizer = optimizer
-            
-        if optimizer == 'rmsprop':
-            opt = optimizers.RMSprop(lr=rate, rho=0.9, epsilon=1e-08, decay=0.0)
-        else:
-            opt = optimizers.SGD(lr=rate, decay=1e-6, momentum=0.9, nesterov=True)
-        self.opt_object = opt
+
         
     def set_params(self,**params):
         
@@ -120,6 +104,8 @@ class Network(object):
         
         self.input_dim = input_dim
         self.output_dim = output_dim
+        optimizer = self.optimizer
+        rate = self.rate
 
         model = Sequential()
         model.add(Dense(128,input_dim=input_dim,init='uniform'))
@@ -128,7 +114,7 @@ class Network(object):
         
         for i,l in enumerate(np.arange(self.layers)):
             
-            model.add(Dense(self.node_structure[i],init='uniform'))
+            model.add(Dense(self.nodes,init='uniform'))
             model.add(normalization.BatchNormalization())
             model.add(Activation('relu'))
 
@@ -137,12 +123,17 @@ class Network(object):
         model.add(normalization.BatchNormalization())
         model.add(Activation('softmax'))
         
-        model.compile(loss='categorical_crossentropy',optimizer=self.opt_object,
+        if optimizer == 'rmsprop':
+            opt = optimizers.RMSprop(lr=rate, rho=0.9, epsilon=1e-08, decay=0.0)
+        else:
+            opt = optimizers.SGD(lr=rate, decay=1e-6, momentum=0.9, nesterov=True)
+        
+        model.compile(loss='categorical_crossentropy',optimizer=opt,
                       metrics=['accuracy'])
         
         self.model = model
         
-    def fit(self,x_train,y_train,m_train,L=180): 
+    def fit(self,training,validation,L=None): 
         
         """
         Fit the model on the training data, after processing the validation
@@ -155,17 +146,16 @@ class Network(object):
             m_train : training set of matches
             labelSet : set of labels in training data
         """
-
+        
         epochs = self.epochs
-        batch_size = self.batch_size
-        eval_factor = self.eval_factor
+        batch = self.batch
         
-        
-        [training,validation] = cu.extractValidation(x_train,y_train,
-                                    m_train,eval_factor)
-        
+        if not L:
+            output_dim = 180
+        else:
+            output_dim = L
+
         input_dim = training[0].shape[1]
-        output_dim = L
 
         # construct the network
         self.build(input_dim,output_dim)
@@ -183,7 +173,7 @@ class Network(object):
         
         # fit model, save the accuracy and loss after each epoch
         history = self.model.fit(training[0], train_OHL, epochs=epochs,
-                            batch_size=batch_size,verbose=0,shuffle=True,
+                            batch_size=batch,verbose=0,shuffle=True,
                             callbacks=[teConstraint,trConstraint])
         
         self.history = history
@@ -220,7 +210,7 @@ class Network(object):
         
         return [baseline,thresholded,predicted]
     
-    def save(self,baseOutput):
+    def save(self,extension,baseOutput=None):
         
         """
         Save model and history to files.
@@ -230,8 +220,17 @@ class Network(object):
             baseOutput : output file base name (without extension)
         """
         
-        outModel = ''.join([baseOutput,'.h5'])
-        outHistory = ''.join([baseOutput,'.History.p'])
+        if not baseOutput:
+            baseOutput = '.'
+            params,_,_,vals = inspect.getargspec(self.__init__)
+            for (k,v) in zip(params[1:],vals):
+                baseOutput = ''.join([baseOutput,'{}.{}.'.format(k,v)])
+        
+        baseOutput = ''.join([baseOutput,extension,'.'])
+        
+        
+        outModel = 'Network'.join([baseOutput,'h5'])
+        outHistory = 'Network'.join([baseOutput,'History.p'])
         
         self.model.save(outModel)
         
