@@ -141,8 +141,8 @@ class Network(object):
         
         Parameters:
         - - - - -
-            x_train : training set of features
-            y_train : training set of labels
+            training : list of training data
+            validation : list of validation data
             m_train : training set of matches
             labelSet : set of labels in training data
         """

@@ -26,7 +26,7 @@ def buildDataMap(dataDir):
     """
     
     dataMap = {}
-    dataMap['object'] = {'{}TrainingObjects/FreeSurfer'.format(dataDir) : 
+    dataMap['object'] = {'{}TrainingObjects/FreeSurfer/'.format(dataDir) : 
         'TrainingObject.aparc.a2009s.h5'}
     dataMap['midline'] = {'{}Midlines/'.format(dataDir) : 
         'Midline_Indices.mat'}
@@ -93,7 +93,7 @@ parser.add_argument('--rate',help='Learning rate.',type=float,
 args = parser.parse_args()
 params = vars(args)
 
-raise 
+
 
 try:
     trainList = pcu.loadList(args.training)
@@ -114,6 +114,8 @@ trainData = P.training(trainList)
 
 if args.downsample:
     trainData = downsample(trainData,args.downsample)
+
+trainData = pcu.shuffle(trainData)
     
 N = pNN.Network()
 N.set_params(**params)

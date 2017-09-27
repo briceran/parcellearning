@@ -238,6 +238,25 @@ def matchingPower(match,power):
         
     return match
 
+def shuffle(inputData):
+    
+    """
+    Given a list of data dictionaries, merge and shuffle the arrays.
+    """
+    
+    x = du.mergeValueArrays(inputData[0])
+    y = du.mergeValueLists(inputData[1])
+    m = du.mergeValueArrays(inputData[2])
+    
+    N = np.arange(0,x.shape[0])
+    np.random.shuffle(N)
+    
+    x = x[N,:]
+    y = y[N]
+    m = m[N,:]
+    
+    return [x,y,m]
+    
 
 def validation(inputData,eval_factor):
     
@@ -274,18 +293,11 @@ def validation(inputData,eval_factor):
 
     training = du.subselectDictionary(train,[data,labels,matches])
     validation = du.subselectDictionary(valid,[data,labels,matches])
-
-    mgTD = du.mergeValueArrays(training[0])
-    mgTL = du.mergeValueLists(training[1])
-    mgTM = du.mergeValueArrays(training[2])
     
-    mgVD = du.mergeValueArrays(validation[0])
-    mgVL = du.mergeValueLists(validation[1])
-    mgVM = du.mergeValueArrays(validation[2])
+    validation[0] = du.mergeValueArrays(validation[0])
+    validation[1] = du.mergeValueLists(validation[1])
+    validation[2] = du.mergeValueArrays(validation[2])
 
-    training = [mgTD,mgTL,mgTM]
-    validation = [mgVD,mgVL,mgVM]
-    
     return [training,validation]
 
 

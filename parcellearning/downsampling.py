@@ -36,10 +36,10 @@ def byCore(data,response,matches,labels,fraction=0.7):
         coreMaps : indices of "good" vertices, per subject, per label
     """
     
-    assert data.keys() == labels.keys()
+    assert data.keys() == response.keys()
     
     x = copy.deepcopy(data)
-    y = copy.deepcopy(labels)
+    y = copy.deepcopy(response)
     m = copy.deepcopy(matches)
     
     subjects = x.keys()
@@ -138,7 +138,7 @@ def byMinimum(data,response,matches,labels):
     pData = mapLabelsToData(data,response,labels)
     pMatches = mapLabelsToData(matches,response,labels)
     
-    pLabels = buildResponseVector(pData)
+    pLabels = du.buildResponseVector(pData)
     
     # compute minimum size sample array
     for lab in labels:
@@ -160,22 +160,3 @@ def byMinimum(data,response,matches,labels):
         pLabels[lab] = tempLabels[inds,:]
         
     return [pData,pLabels,pMatches]
-
-
-def dbscan(data,labels,labelset):
-    
-    """
-    Downsample data corresponding to each label by choosing the central "core"
-    of each distribution.
-    """
-    
-    data = du.mergeValueArrays(data)
-    labels = du.mergeValueLists(labels)
-    
-    partitioned = du.splitArrayByResponse(data,labels,labelset)
-    
-    for lab in labelset:
-        
-        tempData = partitioned[lab]
-    
-def dbscanCore()
