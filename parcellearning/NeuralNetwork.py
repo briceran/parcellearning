@@ -12,7 +12,7 @@ import pickle
 import inspect
 
 import classifierUtilities as cu
-import NeuralNetorkCallbacks as nnc
+import NeuralNetworkCallbacks as nnc
 
 from keras import optimizers
 from keras.models import Sequential
