@@ -88,7 +88,7 @@ model = ''.join([dr,'Models/TestReTest/',modelBase])
 print model
 
 assert os.path.isfile(prep)
-assert os.ath.isfile(model)
+assert os.path.isfile(model)
 
 """
 with open(prep,'r') as inP:
