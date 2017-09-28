@@ -86,11 +86,11 @@ model = ''.join([dr,'Models/TestReTest/',modelBase])
 assert os.path.isfile(prep)
 assert os.path.isfile(model)
 
-"""
+
 with open(prep,'r') as inP:
     P = pickle.load(inP)
 model = load_model(model)
-"""
+
 
 for ts in testList:
     
