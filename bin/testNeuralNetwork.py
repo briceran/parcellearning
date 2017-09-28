@@ -75,6 +75,7 @@ pw = args.power
 
 prepBase = 'Prepared.{}.{}.{}.p'.format(hm,dt,ext)
 prep = ''.join([dr,'Models/TestReTest/{}/'.format(args.downsample),prepBase])
+print prep
 
 mxly = 'Layers.{}.Nodes.{}'.format(ly,nd)
 mxep = 'Epochs.{}.Batch.{}.Rate.{}'.format(ep,bt,rt)
@@ -83,6 +84,7 @@ mxt = '{}.{}'.format(dt,ext)
 
 modelBase = 'NeuralNetwork.{}.{}.{}.{}.{}.h5'.format(hm,mxly.lower(),mxep.lower(),mxopt.lower(),mxt)
 model = ''.join([dr,'Models/TestReTest/{}/'.format(args.downsample),modelBase])
+print model
 
 assert os.path.isfile(prep)
 assert os.path.isfile(model)
