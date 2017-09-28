@@ -50,6 +50,6 @@ elif [ $hemisphere = 'Right' ]; then
 fi
 
 downSample='core'
-logFile = logFile.${layers}.${nodes}.${H}.${kind}.${suffix}.log
+logFile=logFile.${layers}.${nodes}.${H}.${kind}.${suffix}.log
 
 nohup ${PYTHON} ${script} --directory ${dataDir} --datatype ${ext} --features ${feats} --train ${subjectList} --hemisphere ${H} --extension ${suffix} --downsample ${downSample} --layers ${layers} --nodes ${nodes} >& ${logFile} 2>&1&
