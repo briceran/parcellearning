@@ -19,55 +19,54 @@ import parcellearning.classifierData as pcld
 import parcellearning.NeuralNetwork as pNN
 
 
-def save(outputDir,extension,network):
+def save(pref,suff,network):
     
     """
     Wrapper to save model and model history.
     """
     
-    hs = network.history.history
+    args,_,_,_ = inspect.getargspec(network.__init__)
+    params = vars(N)
+    
+    base = '.'
+    for a in args[1:]:
+        base = ''.join([base,'{}.{}.'.format(a,params[a])])
+        
+    modelHistory =  network.history.history
     te = network.teConstraint
     tr = network.trConstraint
     
-    full = dict(hs.items() + te.metrics.items() + tr.metrics.items())
+    full = dict(modelHistory.items() + te.metrics.items() + tr.metrics.items())
+
+    outNetwk = ''.join([pref,base,suff,'.h5'])
+    outHistr = ''.join([pref,base,suff,'.History.p'])
     
-    base = '.'
-    params,_,_,vals = inspect.getargspec(network.__init__)
-    for (k,v) in zip(params[1:],vals):
-        base = ''.join([base,'{}.{}.'.format(k,v)])
+    network.model.save(outNetwk)
     
-    model = network.model
-    
-    outModel = '{}{}{}.h5'.format(outputDir,base,extension)
-    outHistr = '{}{}{}.History.p'.format(outputDir,base,extension)
-    
-    model.save(outModel)
-    with open(outHistr,'w') as OH:
-        pickle.dump(full,OH,-1)
-    
-    
-    
+    with open(outHistr,'w') as outH:
+        pickle.dump(full,outH,-1)
+
 parser = argparse.ArgumentParser()
 
 # Parameters for input data
-parser.add_argument('--dataDirectory',help='Directory where data exists.',
+parser.add_argument('--directory',help='Directory where data exists.',
                     type=str,required=True)
+parser.add_argument('--datatype',help='Type of input data.',
+                    choices=['Full','RestingState','ProbTrackX2'],type=str,
+                    required=True)
 parser.add_argument('--features',help='Features to include in model.',
                     type=str,required=True)
 parser.add_argument('--train',help='Subjects to train model on.',
                     type=str,required=True)
 parser.add_argument('--hemisphere',help='Hemisphere to proces.',
                     type=str,required=True)
-parser.add_argument('--out',help='Output directory and extension (string, separate by comma)',
+parser.add_argument('--extension',help='Output directory and extension (string, separate by comma)',
                     type=str,required=True)
 
-parser.add_argument('--test',help='Subject to test model on.',required=False)
-parser.add_argument('--downsample',help='Type of downsampling to perform.',default='none',
+parser.add_argument('--downsample',help='Type of downsampling to perform.',default='core',
                     choices=['none','equal','core'],required=False)
-
 parser.add_argument('--eval',help='Evaluation dataset size.',
                     type=float,default=0.1,required=False)
-
 
 # Parameters for network architecture
 parser.add_argument('--layers', help='Layers in network.',type=int,required=False)
@@ -97,21 +96,46 @@ try:
 except:
     pass
 
-dataMap = pcu.buildDataMap(args.dataDirectory)
-features = args.features.split(',')
-outs = args.out.split(',')
+dataMap = pcu.buildDataMap(args.directory)
 
-P = pcld.Prepare(dataMap,args.hemisphere,features)
+features = args.features.split(',')
+hemi = args.hemisphere
+datatype = args.datatype
+
+modelDir = ''.join([args.directory,'Models/TestReTest/'])
+if not os.path.isdir(modelDir):
+    os.makedirs(modelDir)
+extension = args.extension
+
+# Load the training data
+P = pcld.Prepare(dataMap,hemi,features)
 trainData = P.training(trainList)
+
+# Save the Prepare object -- contains scaling transformation for new subjects
+# as well as feature names for loading
+outPrep = '{}Prepared.{}.{}.{}.p'.format(modelDir,hemi,datatype,extension)
+if not os.path.isfile(outPrep):
+    with open(outPrep,'w') as outP:
+        pickle.dump(P,outP,-1)
+        
+# Generate training and validation data
 [trainData,valData] = pcu.validation(trainData,args.eval)
 
+# Downsample the training data
 if args.downsample:
     trainData = pcu.downsample(trainData,args.downsample)
 
+# Shuffle the training data
 trainData = pcu.shuffle(trainData)
     
+# Construct network and update parameters
 N = pNN.Network()
 N.set_params(**params)
 
+# Fit model
 N.fit(trainData,valData)
-save(outs[0],outs[1],N)
+
+# Save model
+prefix = ''.join([modelDir,'NeuralNetwork.{}'.format(hemi)])
+suffix = ''.join([datatype,'.{}'.format(extension)])
+save(prefix,suffix,N)
