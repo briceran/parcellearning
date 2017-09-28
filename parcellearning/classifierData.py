@@ -105,8 +105,13 @@ class Prepare():
         features = self.features
         hemisphere = self.hemisphere
         dataMap = self.dataMap
+        
+        nf = []
+        for f in features:
+            if f != 'label':
+                nf.append(f)
 
-        loading = copy.deepcopy(features)
+        loading = copy.deepcopy(nf)
         if training:
             loading.append('label')
         
@@ -143,7 +148,7 @@ class Prepare():
         # of names in the features variable.
 
         for subj in dataDict.keys():
-            mergedData[subj] = du.mergeFeatures(dataDict[subj],loading)
+            mergedData[subj] = du.mergeFeatures(dataDict[subj],nf)
             mergedLabels[subj] = du.mergeFeatures(dataDict[subj],['label'])
             
         supraData = du.mergeValueArrays(mergedData)
@@ -212,7 +217,7 @@ class Prepare():
         rawTestData.close()
 
         testData = parsedData[ID]
-        testData = cu.mergeFeatures(testData,features)
+        testData = du.mergeFeatures(testData,features)
 
         if self.scale:
             scaler = self.scaler

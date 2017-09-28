@@ -330,8 +330,9 @@ def validation(inputData,eval_factor):
     train = list(np.random.choice(subjects,size=(full-val),replace=False))
     valid = list(set(subjects).difference(set(train)))
     
-    print '{} training subjects.'.format(len(train))
-    print '{} validation subjects.'.format(len(valid))
+    inter = set(train).intersection(set(valid))
+    print '{} training, {} validation.'.format(len(train),len(valid))
+    print '{} overlap between groups.'.format(len(inter))
     
     training = du.subselectDictionary(train,[data,labels,matches])
     validation = du.subselectDictionary(valid,[data,labels,matches])

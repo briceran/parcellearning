@@ -6,7 +6,11 @@ Created on Thu Sep 21 12:35:45 2017
 @author: kristianeschenburg
 """
 
+import sys
+sys.path.append('..')
 import numpy as np
+
+import classifierUtilities as cu
 
 from keras import callbacks, optimizers
 from keras.models import Sequential
@@ -78,3 +82,32 @@ class ConstrainedCallback(callbacks.Callback):
         self.metrics[self.metricKeys[1]].append(acc)
         
         print('\n{}: {}, {}: {}\n'.format(self.metricKeys[0],loss,self.metricKeys[1],acc))
+        
+def predict(x_test,match,model,power=1):
+    
+        """
+        Method to predict cortical map.
+        
+        Parameters:
+        - - - - -
+            x_test : member test data in numpy array format
+            match : matching matrix (binary or frequency)
+            power : power to raise matching data to
+            
+        Returns:
+        - - - -
+            baseline : prediction probability of each test sample, for each
+                        training class
+            thresholded : prediction probabilities, constrained (and
+                            possibly weighted) by matches
+            predicted : prediction vector of test samples
+            power : power to raise mapping frequency to
+        """
+        
+        match = cu.matchingPower(match,power)
+
+        baseline = model.predict(x_test,verbose=0)
+        thresholded = match*baseline[:,1:]
+        predicted = np.argmax(thresholded,axis=1)+1
+        
+        return [baseline,thresholded,predicted]
