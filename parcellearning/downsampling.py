@@ -156,8 +156,8 @@ def byMinimum(data,response,matches,labels):
         tempMatches = pMatches[lab]
         tempLabels = pLabels[lab]
         
-        inds = np.random.choice(np.arange(tempData.shape[0],size=minSize,
-                                          replace=False))
+        inds = np.random.choice(np.arange(tempData.shape[0]),size=minSize,
+                                          replace=False)
         pData[lab] = tempData[inds,:]
         pMatches[lab] = tempMatches[inds,:]
         pLabels[lab] = tempLabels[inds,:]
