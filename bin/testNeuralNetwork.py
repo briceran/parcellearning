@@ -65,7 +65,7 @@ ext = args.extension
 # Network architecture parameters
 ly = args.layers
 ep = args.epochs
-bt = args.batchSize
+bt = args.batch
 rt = args.rate
 nd = args.nodes
 
