@@ -44,7 +44,7 @@ elif [ $hemisphere = 'Right' ]; then
 	H='R'
 fi
 
-downSample='core'
+downSample='equal'
 logFile=${dataDir}Models/TestReTest/logFile.${layers}.${nodes}.${H}.${kind}.${suffix}.log
 
 nohup ${PYTHON} ${script} --directory ${dataDir} --datatype ${ext} --features ${feats} --train ${subjectList} --hemisphere ${H} --extension ${suffix} --downsample ${downSample} --layers ${layers} --nodes ${nodes} >& ${logFile} 2>&1&
