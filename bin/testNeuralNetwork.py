@@ -29,7 +29,7 @@ parser.add_argument('--power',help='Power to raise matching matrix to.',
                     type=float,required=False)
 
 parser.add_argument('--downsample',help='Type of downsampling to perform.',default='core',
-                    choices=['none','equal','core'],required=False)
+                    choices=['None','Equal','Core'],required=False)
 
 # Parameters for network architecture
 parser.add_argument('--layers', help='Layers in network.',type=int,required=True)
@@ -59,7 +59,7 @@ except:
 dr = args.directory
 dt = args.datatype
 hm = args.hemisphere
-sp = args.downsample
+sp = args.downsample.lower()
 opt = args.optimizer
 ext = args.extension
 
@@ -74,7 +74,7 @@ pw = args.power
 
 
 prepBase = 'Prepared.{}.{}.{}.p'.format(hm,dt,ext)
-prep = ''.join([dr,'Models/TestReTest/',prepBase])
+prep = ''.join([dr,'Models/TestReTest/{}/'.format(args.downsample),prepBase])
 
 mxly = 'Layers.{}.Nodes.{}'.format(ly,nd)
 mxep = 'Epochs.{}.Batch.{}.Rate.{}'.format(ep,bt,rt)
@@ -82,7 +82,7 @@ mxopt = 'optimizer.{}'.format(opt)
 mxt = '{}.{}'.format(dt,ext)
 
 modelBase = 'NeuralNetwork.{}.{}.{}.{}.{}.h5'.format(hm,mxly.lower(),mxep.lower(),mxopt.lower(),mxt)
-model = ''.join([dr,'Models/TestReTest/',modelBase])
+model = ''.join([dr,'Models/TestReTest/{}/'.format(args.downsample),modelBase])
 
 assert os.path.isfile(prep)
 assert os.path.isfile(model)
@@ -98,7 +98,7 @@ for ts in testList:
     print 'Test Subject: {}'.format(ts)
     
     od = '{}Predictions/TestReTest/NeuralNetwork/{}/'.format(dr,dt)
-    mxSamps = '{}.Sampling.{}.{}.Freq.{}.{}'.format(mxly,sp,mxep,pw,mxt)
+    mxSamps = '{}.Sampling.{}.{}.Freq.{}.{}'.format(mxly,args.downsample,mxep,pw,mxt)
     
     inFunc = '{}MyelinDensity/{}.{}.MyelinMap.32k_fs_LR.func.gii'.format(dr,ts,hm)
     outPre = '{}{}.{}.{}.func.gii'.format(od,ts,hm,mxSamps)
