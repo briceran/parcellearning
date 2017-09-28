@@ -106,11 +106,11 @@ class Network(object):
         rate = self.rate
 
         model = Sequential()
-        model.add(Dense(128,input_dim=input_dim,init='uniform'))
+        model.add(Dense(self.nodes,input_dim=input_dim,init='uniform'))
         model.add(normalization.BatchNormalization())
         model.add(Activation('relu'))
         
-        for i,l in enumerate(np.arange(self.layers)):
+        for i,l in enumerate(np.arange(self.layers-1)):
             
             model.add(Dense(self.nodes,init='uniform'))
             model.add(normalization.BatchNormalization())
