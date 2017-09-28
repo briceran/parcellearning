@@ -11,6 +11,7 @@ import sys
 sys.path.append('..')
 
 import inspect
+import os
 import pickle
 
 import parcellearning.classifierUtilities as pcu
@@ -49,12 +50,16 @@ def save(outputDir,extension,network):
 parser = argparse.ArgumentParser()
 
 # Parameters for input data
-parser.add_argument('--dataDirectory',help='Directory where data exists.',required=True)
-parser.add_argument('--features',help='Features to include in model.',required=True)
-parser.add_argument('--train',help='Subjects to train model on.',required=True)
-parser.add_argument('--hemisphere',help='Hemisphere to proces.',required=True)
+parser.add_argument('--dataDirectory',help='Directory where data exists.',
+                    type=str,required=True)
+parser.add_argument('--features',help='Features to include in model.',
+                    type=str,required=True)
+parser.add_argument('--train',help='Subjects to train model on.',
+                    type=str,required=True)
+parser.add_argument('--hemisphere',help='Hemisphere to proces.',
+                    type=str,required=True)
 parser.add_argument('--out',help='Output directory and extension (string, separate by comma)',
-                    required=True)
+                    type=str,required=True)
 
 parser.add_argument('--test',help='Subject to test model on.',required=False)
 parser.add_argument('--downsample',help='Type of downsampling to perform.',default='none',
@@ -78,21 +83,24 @@ parser.add_argument('--rate',help='Learning rate.',type=float,
 
 args = parser.parse_args()
 params = vars(args)
+params = {k: v for k,v in params.items() if v}
 
-
+assert os.path.isfile(args.train)
 
 try:
-    trainList = pcu.loadList(args.training)
+    trainList = pcu.loadList(args.train)
+    print trainList
 except:
     raise IOError('Training list does not exist.')
 
 try:
-    testList = pcu.loadList(args.testing)
+    testList = pcu.loadList(args.test)
 except:
     pass
 
 dataMap = pcu.buildDataMap(args.dataDirectory)
 features = args.features.split(',')
+outs = args.out.split(',')
 
 P = pcld.Prepare(dataMap,args.hemisphere,features)
 trainData = P.training(trainList)
@@ -106,4 +114,5 @@ trainData = pcu.shuffle(trainData)
 N = pNN.Network()
 N.set_params(**params)
 
-
+N.fit(trainData,valData)
+save(outs[0],outs[1],N)
