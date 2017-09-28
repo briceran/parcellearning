@@ -2,6 +2,7 @@ import argparse
 import sys
 sys.path.append('..')
 
+import parcellearning.loaded as ld
 import parcellearning.classifierUtilities as pcu
 import parcellearning.NeuralNetworkUtilities as nnu
 
@@ -82,7 +83,7 @@ mxt = '{}.{}'.format(dt,ext)
 
 modelBase = 'NeuralNetwork.{}.{}.{}.{}.{}.h5'.format(hm,mxly.lower(),mxep.lower(),mxopt.lower(),mxt)
 model = ''.join([dr,'Models/TestReTest/',modelBase])
-
+pp
 assert os.path.isfile(prep)
 assert os.path.isfile(model)
 
@@ -101,6 +102,9 @@ for ts in testList:
     
     inFunc = '{}MyelinDensity/{}.{}.MyelinMap.32k_fs_LR.func.gii'.format(dr,ts,hm)
     outPre = '{}{}.{}.{}.func.gii'.format(od,ts,hm,mxSamps)
+    
+    mids = '{}Midlines/{}.{}.Midline_Indices.mat'.format(dr,ts,hm)
+    mid = ld.loadMat(mids)-1
 
     assert os.path.isfile(inFunc)
     
@@ -108,6 +112,7 @@ for ts in testList:
 
     [data,match,ltvm] = P.testing(ts)
     [bl,th,pr] = nnu.predict(data,match,model,power=pw)
+    pr[mid]=0
     
     myl.darrays[0].data = pr.astype(np.float32)
     nb.save(myl,outPre)
