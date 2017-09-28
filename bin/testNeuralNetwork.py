@@ -82,7 +82,7 @@ mxep = 'Epochs.{}.Batch.{}.Rate.{}'.format(ep,bt,rt)
 mxopt = 'optimizer.{}'.format(opt)
 mxt = '{}.{}'.format(dt,ext)
 
-modelBase = 'NeuralNetwork.{}.{}.{}.{}.h5'.format(hm,mxly.lower(),mxep.lower(),mxopt.lower(),mxt)
+modelBase = 'NeuralNetwork.{}.{}.{}.{}.{}.h5'.format(hm,mxly.lower(),mxep.lower(),mxopt.lower(),mxt)
 model = ''.join([dr,'Models/TestReTest/',modelBase])
 
 print model
