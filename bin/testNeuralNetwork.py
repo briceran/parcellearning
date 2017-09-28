@@ -103,7 +103,7 @@ for ts in testList:
     od = '{}Predictions/TestReTest/NeuralNetwork/{}/'.format(dr,dt)
     mxSamps = '{}.Sampling.{}.{}.Freq.{}.{}'.format(mxly,sp,mxep,pw,mxt)
     
-    inFunc = '{}MyelinDensity/{}.{}.MyelinMap.32k_fs_LR.func.gii'.format(od,ts,hm)
+    inFunc = '{}MyelinDensity/{}.{}.MyelinMap.32k_fs_LR.func.gii'.format(dr,ts,hm)
     outPre = '{}{}.{}.{}.func.gii'.format(od,ts,hm,mxSamps)
     
     print inFunc
