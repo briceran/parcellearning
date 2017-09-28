@@ -132,6 +132,10 @@ def byMinimum(data,response,matches,labels):
         pMatches : downsampled matches
     """
     
+    data = du.mergeValueArrays(data)
+    response = du.mergeValueLists(response)
+    matches = du.mergeValueArrays(matches)
+    
     minSize = sys.maxint
     
     pData = du.splitArrayByResponse(data,response,labels)
