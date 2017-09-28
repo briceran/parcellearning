@@ -103,16 +103,18 @@ for ts in testList:
     inFunc = '{}MyelinDensity/{}.{}.MyelinMap.32k_fs_LR.func.gii'.format(dr,ts,hm)
     outPre = '{}{}.{}.{}.func.gii'.format(od,ts,hm,mxSamps)
     
-    mids = '{}Midlines/{}.{}.Midline_Indices.mat'.format(dr,ts,hm)
-    mid = ld.loadMat(mids)-1
-
-    assert os.path.isfile(inFunc)
+    if not os.path.isfile(outPre):
     
-    myl = nb.load(inFunc)
-
-    [data,match,ltvm] = P.testing(ts)
-    [bl,th,pr] = nnu.predict(data,match,model,power=pw)
-    pr[mid]=0
+        mids = '{}Midlines/{}.{}.Midline_Indices.mat'.format(dr,ts,hm)
+        mid = ld.loadMat(mids)-1
     
-    myl.darrays[0].data = pr.astype(np.float32)
-    nb.save(myl,outPre)
+        assert os.path.isfile(inFunc)
+        
+        myl = nb.load(inFunc)
+    
+        [data,match,ltvm] = P.testing(ts)
+        [bl,th,pr] = nnu.predict(data,match,model,power=pw)
+        pr[mid]=0
+        
+        myl.darrays[0].data = pr.astype(np.float32)
+        nb.save(myl,outPre)
