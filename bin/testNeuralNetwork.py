@@ -13,7 +13,7 @@ import os
 import pickle
 
 # Parse the input parameters
-parser = argparse.ArgumentParser(Description='Prediction using trained neural networks.')
+parser = argparse.ArgumentParser()
 
 parser.add_argument('--directory',help='Data directory.',type=str,required=True)
 parser.add_argument('--datatype',help='Type of input data.',
