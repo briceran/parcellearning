@@ -89,7 +89,6 @@ assert os.path.isfile(args.train)
 
 try:
     trainList = pcu.loadList(args.train)
-    print trainList
 except:
     raise IOError('Training list does not exist.')
 

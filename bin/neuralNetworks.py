@@ -535,7 +535,7 @@ print 'Building a network with {} hidden layers, each with {} nodes.\n'.format(l
 
 # instantiate model
 model = Sequential()
-model.add(Dense(128, activation='relu', input_dim=input_dim))
+model.add(Dense(nodes, activation='relu', input_dim=input_dim))
 model.add(normalization.BatchNormalization())
 
 c = 0
