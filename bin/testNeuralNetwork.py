@@ -83,7 +83,7 @@ mxt = '{}.{}'.format(dt,ext)
 
 modelBase = 'NeuralNetwork.{}.{}.{}.{}.{}.h5'.format(hm,mxly.lower(),mxep.lower(),mxopt.lower(),mxt)
 model = ''.join([dr,'Models/TestReTest/',modelBase])
-pp
+
 assert os.path.isfile(prep)
 assert os.path.isfile(model)
 
