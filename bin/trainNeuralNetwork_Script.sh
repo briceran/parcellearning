@@ -27,11 +27,6 @@ if [ $hemisphere != "Left" ] && [ $hemisphere != "Right" ]; then
 	exit
 fi
 
-# and if output directory does not exist, created
-if [ ! -d "$outDir" ]; then
-	mkdir ${outDir}
-fi
-
 if [ $kind = "ptx" ]; then
 	ext="ProbTrackX2"
 	feats="pt_cort,pt_subcort,sulcal,myelin,curv,label"
