@@ -58,7 +58,7 @@ except:
 dr = args.directory
 dt = args.datatype
 hm = args.hemisphere
-sp = args.sampling
+sp = args.downsample
 opt = args.optimizer
 ext = args.extension
 
