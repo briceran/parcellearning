@@ -2,116 +2,123 @@ import argparse
 import sys
 sys.path.append('..')
 
-import parcellearning.classifierData as cld
-import parcellearing.classifierUtilities as clu
-
-import loaded as ld
+import parcellearning.classifierUtilities as pcu
+import parcellearning.NeuralNetworkUtilities as nnu
 
 from keras.models import load_model
 
-import glob
-import os
-import pickle
 import nibabel as nb
 import numpy as np
+import os
+import pickle
 
 # Parse the input parameters
 parser = argparse.ArgumentParser(Description='Prediction using trained neural networks.')
-parser.add_argument('--hemisphere',help='Hemisphere of the training data.',
-	required=True,type=str)
-parser.add_argument('--sampling',help='Type of downsample that was performed.',
-	required=False,default='equal',type=str)
 
-parser.add_argument('--layers',help='Number of layers in model.',
-	required=True,type=int)
-parser.add_argument('--nodes',help='Number of nodes per layer.',
-	required=True,type=int)
-parser.add_argument('--epochs',help='Number of training epochs.',
-	equired=True,type=int)
-parser.add_argument('--batchSize',help='Size of training batches.',
-	required=True,type=int)
-parser.add_argument('--rate',help='Training rate.',
-	required=True,type=float)
-parser.add_argument('--power',help='Power of mapping frequencies.',
-	required=False,default=1,type=int)
+parser.add_argument('--directory',help='Data directory.',type=str,required=True)
+parser.add_argument('--datatype',help='Type of input data.',
+                    choices=['Full','RestingState','ProbTrackX2'],type=str,
+                    required=True)
+parser.add_argument('--test',help='List of test subjects.',type=str,required=True)
+parser.add_argument('--hemisphere',help='Hemisphere to proces.',
+                    type=str,required=True)
+parser.add_argument('--extension',help='Output directory and extension (string, separate by comma)',
+                    type=str,required=True)
+parser.add_argument('--power',help='Power to raise matching matrix to.',
+                    type=float,required=False)
 
-parser.add_argument('--training',help='Training subject file.',
-	required=True,type=str)
-parser.add_argument('--testing',help='Testing subject file.',
-	required=True,type=str)
-parser.add_argument('--baseDirectory',help='Base directory where data exists.',
-	required=True,type=str)
-parser.add_argument('--extension',help='Model file extension.',
-	required=True,type=str)
+parser.add_argument('--downsample',help='Type of downsampling to perform.',default='core',
+                    choices=['none','equal','core'],required=False)
+
+# Parameters for network architecture
+parser.add_argument('--layers', help='Layers in network.',type=int,required=True)
+parser.add_argument('--nodes',help='Nodes per layer.',type=int,required=True)
+parser.add_argument('--epochs',help='Number of epochs.',default=50,
+                    type=int,required=False)
+parser.add_argument('--batch',help='Batch size.',default=256,
+                    type=int,required=False)
+
+# Parameters for weight updates
+parser.add_argument('--optimizer',help='Optimization.',type=str,default='rmsprop',
+                    choices=['rmsprop','sgd'],required=False)
+parser.add_argument('--rate',help='Learning rate.',default=0.001,
+                    type=float,required=False)
 
 args = parser.parse_args()
 
+
 # Process the input arguments
+try:
+    testList = pcu.loadList(args.test)
+except:
+    raise IOError
+
 
 # Data-specific parameters
-hemisphere = args.hemisphere
-sampling = args.sampling
-trainFile = args.training
-testFile = args.testing
-baseDir = args.baseDirectory
-extension = args.extension
+dr = args.directory
+dt = args.datatype
+hm = args.hemisphere
+sp = args.sampling
+opt = args.optimizer
+ext = args.extension
 
 # Network architecture parameters
-layers = args.layers
-epochs = args.epochs
-batchSize = args.batchSize
-rate = args.rate
-power = args.power
-nodes = args.nodes
+ly = args.layers
+ep = args.epochs
+bt = args.batchSize
+rt = args.rate
+nd = args.nodes
+
+pw = args.power
 
 
-# Dictionary with file directories and extensions
-dataMap = {'object': {'{}TrainingObjects/FreeSurfer/'.format(baseDir) :
-						'TrainingObject.aparc.a2009s.h5'},
-			'matching' : {'{}MatchingLibraries/Test/MatchingMatrices/'.format(baseDir) :
-						'MatchingMatrix.0.05.Frequencies.mat'},
-			'midline' : {'{}Midlines/'.format(baseDir) :
-						'Midline_Indices.mat'}
-			}
+prepBase = 'Prepared.{}.{}.{}.p'.format(hm,dt,ext)
+prep = ''.join([dr,'Models/TestReTest/',prepBase])
 
-# Dictionary mapping data type to feature types
-featureMap = {'RestingState': ['fs_cort','fs_subcort','sulcal','myelin','curv'],
-				'ProbTrackX2' : ['pt_cort','pt_subcort','sulcal','myelin','curv'],
-				'Full' : ['fs_cort','fs_subcort','pt_cort','pt_subcort','sulcal','myelin','curv']}
+print prep
 
+mxly = 'Layers.{}.Nodes.{}'.format(ly,nd)
+mxep = 'Epochs.{}.Batch.{}.Rate.{}'.format(ep,bt,rt)
+mxopt = 'optimizer.{}'.format(opt)
+mxt = '{}.{}'.format(dt,ext)
 
-# Load training subjects
-with open(trainFile,'r') as inTrain:
-	trainSubjects = inTrain.readlines()
-trainSubjects = [x.strip() for x in trainSubjects]
+modelBase = 'NeuralNetwork.{}.{}.{}.{}.h5'.format(hm,mxly.lower(),mxep.lower(),mxopt.lower(),mxt)
+model = ''.join([dr,'Models/TestReTest/',modelBase])
 
-with open(testFile,'r') as inTest:
-	testSubjects = inTest.readlines()
-testSubjects = [x.strip() for x in testSubjects]
+print model
 
-dataTypes = ['RestingState','ProbTrackX2','Full']
+assert os.path.isfile(prep)
+assert os.ath.isfile(model)
 
-for D in dataTypes:
+"""
+with open(prep,'r') as inP:
+    P = pickle.load(inP)
+model = load_model(model)
+"""
 
-	modelExtension = '{}.{}.h5'.format(D,extension)
-	modelPrefix = 'NeuralNetwork'
+for ts in testList:
+    
+    print 'Test Subject: {}'.format(ts)
+    
+    od = '{}Predictions/TestReTest/NeuralNetwork/{}/'.format(dr,dt)
+    mxSamps = '{}.Sampling.{}.{}.Freq.{}.{}'.format(mxly,sp,mxep,pw,mxt)
+    
+    inFunc = '{}MyelinDensity/{}.{}.MyelinMap.32k_fs_LR.func.gii'.format(od,ts,hm)
+    outPre = '{}{}.{}.{}.func.gii'.format(od,ts,hm,mxSamps)
+    
+    print inFunc
+    print outPre
+    
+    """
+    assert os.path.isfile(inFunc)
+    
+    myl = nb.load(inFunc)
 
-	features = featureMap[D]
-	modelBase = '{}.{}.Layers.{}.Nodes.{}.Sampling.{}.Epochs.{}.Batch.{}.Rate.{}.{}'.format(modelPrefix,
-		hemisphere,layers,nodes,sampling,epochs,batchSize,rate,modelExtension)
-	modelFile = '{}Models/{}'.format(baseDir,modelBase)
-
-	print modelFile
-	print os.path.isfile(modelFile)
-
-	model = load_model(modelFile)
-
-	P = cld.Prepare(dataMap,hemisphere,features)
-	[data,labels,matches] = P.training(trainSubjects)
-
-	for test_subj in testSubjects:
-
-		[x_test,matchingMatrix,ltvm] = P.testing(test_subj)
-		[baseline,thresholded,prediction] = model.predict(x_test)
-
-
+    [data,match,ltvm] = P.testing(ts)
+    [bl,th,pr] = nnu.predict(data,match,model,power=pw)
+    
+    myl.darrays[0].data = pr.astype(np.float32)
+    nb.save(myl,outPre)
+    """
+    
+    
