@@ -75,8 +75,6 @@ pw = args.power
 prepBase = 'Prepared.{}.{}.{}.p'.format(hm,dt,ext)
 prep = ''.join([dr,'Models/TestReTest/',prepBase])
 
-print prep
-
 mxly = 'Layers.{}.Nodes.{}'.format(ly,nd)
 mxep = 'Epochs.{}.Batch.{}.Rate.{}'.format(ep,bt,rt)
 mxopt = 'optimizer.{}'.format(opt)
@@ -84,8 +82,6 @@ mxt = '{}.{}'.format(dt,ext)
 
 modelBase = 'NeuralNetwork.{}.{}.{}.{}.{}.h5'.format(hm,mxly.lower(),mxep.lower(),mxopt.lower(),mxt)
 model = ''.join([dr,'Models/TestReTest/',modelBase])
-
-print model
 
 assert os.path.isfile(prep)
 assert os.path.isfile(model)
@@ -105,11 +101,7 @@ for ts in testList:
     
     inFunc = '{}MyelinDensity/{}.{}.MyelinMap.32k_fs_LR.func.gii'.format(dr,ts,hm)
     outPre = '{}{}.{}.{}.func.gii'.format(od,ts,hm,mxSamps)
-    
-    print inFunc
-    print outPre
-    
-    """
+
     assert os.path.isfile(inFunc)
     
     myl = nb.load(inFunc)
@@ -119,6 +111,3 @@ for ts in testList:
     
     myl.darrays[0].data = pr.astype(np.float32)
     nb.save(myl,outPre)
-    """
-    
-    
