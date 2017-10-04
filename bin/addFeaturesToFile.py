@@ -15,15 +15,28 @@ sys.path.append('..')
 import parcellearning.loaded as ld
 import os
 
-parser = argparse.ArgumentParser(description='Add data to training object.')
-parser.add_argument('-dDir','--dataDirectory',help='Directory where data exists.',required=True)
-parser.add_argument('-aDir','--atlasDirectory',help='Directory for specific atlas data.',required=True)
-parser.add_argument('-aExt','--atlasExtension',help='Atlas-specific data extension',required=True)
+"""
+dataDirectory : main directory where data exists
+subjectList : list of subjects to apply add/remove feature to
+toAddName : names of features to add to training object
+toAddExtension : file extensions of data to add
+toAddDir : sub-directories where new data exists within dataDirectory
+toRemoveName : names of features to remove from training object
+"""
 
-parser.add_argument('-sl','--subjectList',help='List of subjects to include.',nargs='+',required=True)
-parser.add_argument('-f','--featureName',help='Names of new features.',required=True)
-parser.add_argument('-e','--featureExtension',help='Extension of files to be added.',required=True)
-parser.add_argument('-sd','--subDirectory',help='Sub-directories where files exist.',required=True)
+parser = argparse.ArgumentParser(description='Add data to training object.')
+parser.add_argument('--dataDirectory',help='Directory where data exists.',required=True)
+
+parser.add_argument('--hemisphere',help='Hemisphere to process.',type=str,required=True)
+
+parser.add_argument('--subjectList',help='List of subjects to include.',nargs='+',required=True)
+
+parser.add_argument('--toAddName',help='Names of new features.',type=str,required=True)
+parser.add_argument('--toAddExtension',help='Extension of files to be added.',type=str,required=True)
+parser.add_argument('--toAddDir',help='Sub-directories where files exist.',type=str,required=True)
+
+parser.add_argument('--toRemoveName',help='Names of features to remove from training object.',required=False)
+
 args = parser.parse_args()
 
 subjectList = args.subjectList
@@ -46,13 +59,12 @@ else:
 print 'len subjects: ' + str(len(subjects))
 
 dataDir = args.dataDirectory
-atlasDir = args.atlasDirectory
-trainingDirectory = dataDir + atlasDir
-atlasExt = args.atlasExtension
+trainingDirectory = ''.join([dataDir,'TrainingObjects/'])
+trainingExtension = ''.join(['.',args.hemisphere,'.','TrainingObject.h5'])
 
-subDir = args.subDirectory
-feature = args.featureName
-fExt = args.featureExtension
+featureDirectory = ''.join([args.toAddDir,'/'])
+featureExtension = ''.join(['.',args.hemisphere,'.',args.toAddExtension])
+feature = args.toAddName
 
 funcs = {'gii': ld.loadGii,
          'mat': ld.loadMat,
@@ -61,17 +73,16 @@ funcs = {'gii': ld.loadGii,
 
 for s in subjects:
     
-    print s
-    
-    inTrain = trainingDirectory + s + atlasExt
-    inFeatr = dataDir + subDir + s + fExt
-    
-    if os.path.isfile(inTrain) and os.path.isfile(inFeatr):
+    print 'Adding {} to subject {}'.format(feature,s)
+    inObject = ''.join([trainingDirectory,s,trainingExtension])
+    inFeature = ''.join([trainingDirectory,featureDirectory,s,featureExtension])
+
+    if os.path.isfile(inObject) and os.path.isfile(inFeature):
         
-        train = h5py.File(inTrain,mode='r+')
-        fileParts = str.split(inFeatr,'.')
+        train = h5py.File(inObject,mode='r+')
+        fileParts = str.split(inFeature,'.')
         
-        featureData = funcs[fileParts[-1]](inFeatr)
+        featureData = funcs[fileParts[-1]](inFeature)
         train[s].create_dataset(feature,data=featureData)
         
-        train.close()   
+        train.close()

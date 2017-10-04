@@ -8,6 +8,7 @@ layers=$3
 nodes=$4
 hemisphere=$5
 kind=$6
+down=$7
 
 dataDir=/mnt/parcellator/parcellation/parcellearning/Data/
 binDir=/mnt/parcellator/parcellation/GitHub/parcellearning/bin/
@@ -44,7 +45,7 @@ elif [ $hemisphere = 'Right' ]; then
 	H='R'
 fi
 
-downSample='equal'
+downSample=${down}
 logFile=${dataDir}Models/TestReTest/logFile.${layers}.${nodes}.${H}.${kind}.${suffix}.log
 
 nohup ${PYTHON} ${script} --directory ${dataDir} --datatype ${ext} --features ${feats} --train ${subjectList} --hemisphere ${H} --extension ${suffix} --downsample ${downSample} --layers ${layers} --nodes ${nodes} >& ${logFile} 2>&1&
