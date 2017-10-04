@@ -37,7 +37,7 @@ def buildDataMap(dataDir):
     """
     
     dataMap = {}
-    dataMap['object'] = {'{}TrainingObjects/FreeSurfer/'.format(dataDir) : 
+    dataMap['object'] = {'{}TrainingObjects/'.format(dataDir) : 
         'TrainingObject.aparc.a2009s.h5'}
     dataMap['midline'] = {'{}Midlines/'.format(dataDir) : 
         'Midline_Indices.mat'}

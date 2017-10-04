@@ -15,7 +15,7 @@ accessing data in a dictionary -- that is, with key-value pairs.
 
 import loaded as ld
 import classifierUtilities as cu
-
+import dataUtilities as du
 
 import pandas as pd
 import numpy as np
@@ -55,7 +55,7 @@ def loadData(yObject,features):
         tObject.close()
 
         data = parsedData[ID]
-        x_test = cu.mergeFeatures(data,nf)
+        x_test = du.mergeFeatures(data,nf)
 
         return x_test
 
@@ -241,25 +241,26 @@ def testSuite(truth,predicted,featureData):
 
 
 if __name__ == "__main__":
-    
+   
+    samples = 'Core'
+ 
     baseDir = '/mnt/parcellator/parcellation/parcellearning/Data/'
     testFile = '{}TrainTestLists/TestRetest_Test.txt'.format(baseDir)
     
-    predDir =  '{}Predictions/TestReTest/NeuralNetwork/'.format(baseDir)
+    predDir =  '{}Predictions/TestReTest/NeuralNetwork/'.format(baseDir,samples)
     trueDir = '{}Labels/HCP/'.format(baseDir)
     
     dataDir = '{}TrainingObjects/FreeSurfer/'.format(baseDir)
     
     rate = 0.001
-    samples = 'equal'
-    epochs = 40
+    epochs = 50
     batch = 256
     
     midExt = 'Sampling.{}.Epochs.{}.Batch.{}.Rate.{}'.format(samples,epochs,
                        batch,rate)
     
     tRt = [1,2]
-    freqs = [0,1,2,2.5,3,4]
+    freqs = [0,1,2,2.5]
     layers = [2,3]
     nodes = [25,50]
     hemi = ['L','R']
@@ -359,7 +360,7 @@ if __name__ == "__main__":
               'layers','acc_1','acc_2','acc_test']
     dataFrame.columns = pNames
     
-    dataFrame.to_pickle('/mnt/parcellator/parcellation/parcellearning/Data/TestReTestData.p')
+    dataFrame.to_pickle('/mnt/parcellator/parcellation/parcellearning/Data/TestReTestData_{}_0.5.p'.format(samples))
                             
                             
                             

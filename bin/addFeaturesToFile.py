@@ -62,7 +62,7 @@ dataDir = args.dataDirectory
 trainingDirectory = ''.join([dataDir,'TrainingObjects/'])
 trainingExtension = ''.join(['.',args.hemisphere,'.','TrainingObject.h5'])
 
-featureDirectory = ''.join([args.toAddDir,'/'])
+featureDirectory = ''.join([args.toAddDir])
 featureExtension = ''.join(['.',args.hemisphere,'.',args.toAddExtension])
 feature = args.toAddName
 
@@ -75,7 +75,10 @@ for s in subjects:
     
     print 'Adding {} to subject {}'.format(feature,s)
     inObject = ''.join([trainingDirectory,s,trainingExtension])
-    inFeature = ''.join([trainingDirectory,featureDirectory,s,featureExtension])
+    inFeature = ''.join([dataDir,featureDirectory,s,featureExtension])
+
+    print inObject
+    print inFeature
 
     if os.path.isfile(inObject) and os.path.isfile(inFeature):
         
