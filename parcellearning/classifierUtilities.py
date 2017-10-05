@@ -38,7 +38,7 @@ def buildDataMap(dataDir):
     
     dataMap = {}
     dataMap['object'] = {'{}TrainingObjects/'.format(dataDir) : 
-        'TrainingObject.aparc.a2009s.h5'}
+        'TrainingObject.h5'}
     dataMap['midline'] = {'{}Midlines/'.format(dataDir) : 
         'Midline_Indices.mat'}
     dataMap['matching'] = {'{}MatchingLibraries/Test/MatchingMatrices/'.format(dataDir) : 

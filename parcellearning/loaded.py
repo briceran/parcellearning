@@ -231,7 +231,7 @@ def loadPick(inFile,*args):
         return data
 
 
-def parseH5(h5Object,features):
+def parseH5(h5Object,featureNames):
     
     """
     We are loading the H5 objects as read only.  parseH5 copy the contents of
@@ -239,12 +239,13 @@ def parseH5(h5Object,features):
     """
     
     groups = h5Object.keys()
-    parsedData = {str(s): {}.fromkeys(features) for s in groups}
-    
+    parsedData = {str(s): {}.fromkeys(featureNames) for s in groups}
+    'Parsing {} for all subjects.'.format(featureNames)
+ 
     for s in groups:
 
         cond = True
-        for f in features:
+        for f in featureNames:
             if f in h5Object[s].keys():
                 parsedData[str(s)][f] = np.asarray(h5Object[str(s)][f])
             else:

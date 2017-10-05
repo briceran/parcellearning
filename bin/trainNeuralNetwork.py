@@ -40,7 +40,8 @@ def save(pref,suff,network):
 
     outNetwk = ''.join([pref,base,suff,'.h5'])
     outHistr = ''.join([pref,base,suff,'.History.p'])
-    
+    print outNetwk
+    print outHistr 
     network.model.save(outNetwk)
     
     with open(outHistr,'w') as outH:
@@ -105,7 +106,9 @@ datatype = args.datatype
 modelDir = ''.join([args.directory,'Models/TestReTest/'])
 if not os.path.isdir(modelDir):
     os.makedirs(modelDir)
-extension = args.extension
+extension = args.extension.split(',')
+outDir = extension[0]
+outExt = extension[1]
 
 # Load the training data
 P = pcld.Prepare(dataMap,hemi,features)
@@ -113,7 +116,7 @@ trainData = P.training(trainList)
 
 # Save the Prepare object -- contains scaling transformation for new subjects
 # as well as feature names for loading
-outPrep = '{}Prepared.{}.{}.{}.p'.format(modelDir,hemi,datatype,extension)
+outPrep = '{}Prepared.{}.{}.{}.p'.format(modelDir,hemi,datatype,outExt)
 if not os.path.isfile(outPrep):
     with open(outPrep,'w') as outP:
         pickle.dump(P,outP,-1)
@@ -136,6 +139,8 @@ N.set_params(**params)
 N.fit(trainData,valData)
 
 # Save model
-prefix = ''.join([modelDir,'NeuralNetwork.{}'.format(hemi)])
-suffix = ''.join([datatype,'.{}'.format(extension)])
+prefix = ''.join([outDir,'NeuralNetwork.{}'.format(hemi)])
+suffix = ''.join([datatype,'.{}'.format(outExt)])
+print prefix
+print suffix
 save(prefix,suffix,N)

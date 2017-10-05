@@ -48,7 +48,6 @@ def mergeFeatures(dataDict,keyList):
     """
 
     data = []
-
     for k in keyList:
         if k in dataDict.keys():
             data.append(dataDict[k])

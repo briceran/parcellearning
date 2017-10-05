@@ -146,6 +146,18 @@ class Prepare():
         # For each subject, merge the unique feature arrays into an single
         # array, where ordering of the columns is determined by ordering 
         # of names in the features variable.
+        print 'Keys to merge: {}'.format(nf)
+	print 'Keys possible: {}\n'.format(loading)
+
+	count = 0
+	test = dataDict[dataDict.keys()[0]]
+	for f in nf:
+		try:
+			fShape = test[f].shape[1]
+		except:
+			fShape = np.ndim(test[f])
+		count += fShape
+		print '{} shape: {}'.format(f,fShape)
 
         for subj in dataDict.keys():
             mergedData[subj] = du.mergeFeatures(dataDict[subj],nf)
@@ -153,8 +165,16 @@ class Prepare():
             
         supraData = du.mergeValueArrays(mergedData)
         supraLabels = du.mergeValueLists(mergedLabels)
-
-        labInds = np.where(supraLabels != 0)[0]
+	
+	print '\nExpected feature matrix dimensionality: {}'.format(count)
+	print 'Computed feature matrix dimensionality: {}\n'.format(supraData.shape[1])
+	assert count == supraData.shape[1]
+	
+	print 'Computed feature matrix samples: {}'.format(supraData.shape[0])
+	print 'Computed response matrix samples: {}\n'.format(supraLabels.shape[0])
+	assert supraData.shape[0] == supraLabels.shape[0]
+ 
+	labInds = np.where(supraLabels != 0)[0]
 
         # Apply zero-mean, unit-variance scaling
         if self.scale:
