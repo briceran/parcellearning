@@ -12,7 +12,7 @@ import sys
 
 import dataUtilities as du
 
-def byCore(data,response,matches,labels,fraction=0.5):
+def byCore(data,response,matches,labels,fraction=0.7):
     
     """
     Downsample the training data for each subject, for each label, by
