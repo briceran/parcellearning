@@ -30,15 +30,21 @@ vertices do not have any resting-state data association with them.
 ##########
 """
 
-def buildDataMap(dataDir):
+def buildDataMap(dataDir,trDir=None,trExt=None):
     
     """
     Wrapper to construct data map.
     """
     
     dataMap = {}
-    dataMap['object'] = {'{}TrainingObjects/'.format(dataDir) : 
-        'TrainingObject.h5'}
+    
+    if not trDir:
+        trDir = 'TrainingObjects/'
+    if not trExt:
+        trExt = 'TrainingObject.h5'
+
+    dataMap['object'] = {'{}{}'.format(dataDir,trDir): trExt}
+
     dataMap['midline'] = {'{}Midlines/'.format(dataDir) : 
         'Midline_Indices.mat'}
     dataMap['matching'] = {'{}MatchingLibraries/Test/MatchingMatrices/'.format(dataDir) : 

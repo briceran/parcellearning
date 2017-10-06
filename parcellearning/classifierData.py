@@ -147,104 +147,119 @@ class Prepare():
         # array, where ordering of the columns is determined by ordering 
         # of names in the features variable.
         print 'Keys to merge: {}'.format(nf)
-	print 'Keys possible: {}\n'.format(loading)
+    	print 'Keys possible: {}\n'.format(loading)
 
-	count = 0
-	test = dataDict[dataDict.keys()[0]]
-	for f in nf:
-		try:
-			fShape = test[f].shape[1]
-		except:
-			fShape = np.ndim(test[f])
-		count += fShape
-		print '{} shape: {}'.format(f,fShape)
+    	count = 0
+    	test = dataDict[dataDict.keys()[0]]
+    	for f in nf:
+    		try:
+    			fShape = test[f].shape[1]
+    		except:
+    			fShape = np.ndim(test[f])
+    		count += fShape
+    		print '{} shape: {}'.format(f,fShape)
 
-        for subj in dataDict.keys():
-            mergedData[subj] = du.mergeFeatures(dataDict[subj],nf)
-            mergedLabels[subj] = du.mergeFeatures(dataDict[subj],['label'])
+            for subj in dataDict.keys():
+                mergedData[subj] = du.mergeFeatures(dataDict[subj],nf)
+                mergedLabels[subj] = du.mergeFeatures(dataDict[subj],['label'])
+                
+            supraData = du.mergeValueArrays(mergedData)
+            supraLabels = du.mergeValueLists(mergedLabels)
+    	
+    	print '\nExpected feature matrix dimensionality: {}'.format(count)
+    	print 'Computed feature matrix dimensionality: {}\n'.format(supraData.shape[1])
+    	assert count == supraData.shape[1]
+    	
+    	print 'Computed feature matrix samples: {}'.format(supraData.shape[0])
+    	print 'Computed response matrix samples: {}\n'.format(supraLabels.shape[0])
+    	assert supraData.shape[0] == supraLabels.shape[0]
+     
+    	labInds = np.where(supraLabels != 0)[0]
+
+            # Apply zero-mean, unit-variance scaling
+            if self.scale:
+                
+                print 'Standardizing samples.'
+                scaler = preprocessing.StandardScaler(with_mean=True,
+                                                              with_std=True)
+                scaler.fit(supraData[labInds,:])
+                self.scaler = scaler
             
-        supraData = du.mergeValueArrays(mergedData)
-        supraLabels = du.mergeValueLists(mergedLabels)
-	
-	print '\nExpected feature matrix dimensionality: {}'.format(count)
-	print 'Computed feature matrix dimensionality: {}\n'.format(supraData.shape[1])
-	assert count == supraData.shape[1]
-	
-	print 'Computed feature matrix samples: {}'.format(supraData.shape[0])
-	print 'Computed response matrix samples: {}\n'.format(supraLabels.shape[0])
-	assert supraData.shape[0] == supraLabels.shape[0]
- 
-	labInds = np.where(supraLabels != 0)[0]
+            for subj in mergedData.keys():
+                tempInds = np.where(mergedLabels[subj] > 0)[0]
+                
+                mergedData[subj][tempInds,:] = scaler.transform(mergedData[subj][tempInds,:])
 
-        # Apply zero-mean, unit-variance scaling
-        if self.scale:
-            
-            print 'Standardizing samples.'
-            scaler = preprocessing.StandardScaler(with_mean=True,
-                                                          with_std=True)
-            scaler.fit(supraData[labInds,:])
-            self.scaler = scaler
-        
-        for subj in mergedData.keys():
-            tempInds = np.where(mergedLabels[subj] > 0)[0]
-            
-            mergedData[subj][tempInds,:] = scaler.transform(mergedData[subj][tempInds,:])
-
-        return [mergedData,mergedLabels,matchDict]
+            return [mergedData,mergedLabels,matchDict]
     
     
-    def testing(self,subject):
+def testing(prepared,subject,trDir=None,trExt=None,
+            mtDir=None,mtExt=None):
+    
+    """
+    Method to process testing data.  If training data was standardized,
+    we transform the test data using the fitted training model.
+
+    Parameters:
+    - - - - -
+        subject : name of subject to load.  Uses same data map as 
+                    training data, so file format must be the same.
+        trDir : directory where testing objects exist (defaults to dataMap)
+        teExt : extension of testing objects (defaults to dataMap)
+    Returns:
+    - - - -
+        x_test : test data for subject
+        matchingMatrix : thresholded matching matrix for subject.  
+                            The threshold is set to a minimum of 0.05.
+        ltvm : label-to-vertex mapping dictionary.  Keys are label IDs,
+                and values are lists of vertices that map to this label.
+    """
+
+    if not trDir:
+        objDir = prepared.dataMap['object'].keys()[0]
+    else:
+        objDir = trDir
+
+    if not trExt:
+        objExt = prepared.dataMap['object'].values()[0]
+    else:
+        objExt = trExt
+
+    if not mtDir:
+        matDir = prepared.dataMap['matching'].keys()[0]
+    else:
+        matDir = mtDir
+
+    if not mtExt:
+        matExt = prepared.dataMap['matching'].values()[0]
+    else:
+        matExt = mtExt
+
+    features = prepared.features
+    hemisphere = prepared.hemisphere
+    scaler = prepared.scaler
+
+    print 'Test data columns (in order): {}'.format(features)
+
+    dataObject = '{}{}.{}.{}'.format(objDir,subject,hemisphere,objExt)
+    matchingMatrix = '{}{}.{}.{}'.format(matDir,subject,hemisphere,matExt)
+
+    # load test subject data, save as attribtues
+    rawTestData = ld.loadH5(dataObject,*['full'])
+    ID = rawTestData.attrs['ID']
+    
+    parsedData = ld.parseH5(rawTestData,features)
+    rawTestData.close()
+
+    testData = parsedData[ID]
+    testData = du.mergeFeatures(testData,features)
+
+    if prepared.scale:
+        scaler = prepared.scaler
+        x_test = scaler.transform(testData)
         
-        """
-        Method to process testing data.  If training data was standardized,
-        we transform the test data using the fitted training model.
+    matchingMatrix = ld.loadMat(matchingMatrix)
 
-        Parameters:
-        - - - - -
-            subject : name of subject to load.  Uses same data map as 
-                        training data, so file format must be the same.
-        Returns:
-        - - - -
-            x_test : test data for subject
-            matchingMatrix : thresholded matching matrix for subject.  
-                                The threshold is set to a minimum of 0.05.
-            ltvm : label-to-vertex mapping dictionary.  Keys are label IDs,
-                    and values are lists of vertices that map to this label.
-        """
+    ltvm = cu.vertexMemberships(matchingMatrix,180)
 
-        features = self.features
-        hemisphere = self.hemisphere
-        scaler = self.scaler
-
-        print 'Test data columns (in order): {}'.format(features)
-        
-        objDict = self.dataMap['object'].items()
-        objDir = objDict[0][0]
-        objExt = objDict[0][1]
-
-        matDict = self.dataMap['matching'].items()
-        matDir = matDict[0][0]
-        matExt = matDict[0][1]
-        
-        dataObject = '{}{}.{}.{}'.format(objDir,subject,hemisphere,objExt)
-        matchingMatrix = '{}{}.{}.{}'.format(matDir,subject,hemisphere,matExt)
-
-        # load test subject data, save as attribtues
-        rawTestData = ld.loadH5(dataObject,*['full'])
-        ID = rawTestData.attrs['ID']
-        
-        parsedData = ld.parseH5(rawTestData,features)
-        rawTestData.close()
-
-        testData = parsedData[ID]
-        testData = du.mergeFeatures(testData,features)
-
-        if self.scale:
-            scaler = self.scaler
-            x_test = scaler.transform(testData)
-            
-        matchingMatrix = ld.loadMat(matchingMatrix)
-
-        ltvm = cu.vertexMemberships(matchingMatrix,180)
-
-        return [x_test,matchingMatrix,ltvm]
+    return [x_test,matchingMatrix,ltvm]

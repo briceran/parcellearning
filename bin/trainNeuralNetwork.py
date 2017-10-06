@@ -64,6 +64,13 @@ parser.add_argument('--hemisphere',help='Hemisphere to proces.',
 parser.add_argument('--extension',help='Output directory and extension (string, separate by comma)',
                     type=str,required=True)
 
+parser.add_argument('-mld','--modelDirectory',help='Path to specific model directory.',
+                    required=False,default=None)
+parser.add_argument('-trd','--trainObjectDirectory',help='Path to specific training object direcotry -- default is "directory".',
+                    required=False,default=None)
+parser.add_argument('-tre','--trainObjectExtension',help='Training object extension -- default is .TrainingObject.h5'.,
+                    required=False,default=None)
+
 parser.add_argument('--downsample',help='Type of downsampling to perform.',default='core',
                     choices=['none','equal','core'],required=False)
 parser.add_argument('--eval',help='Evaluation dataset size.',
@@ -97,13 +104,18 @@ try:
 except:
     pass
 
-dataMap = pcu.buildDataMap(args.directory)
+dataMap = pcu.buildDataMap(args.directory,trd,tre)
 
 features = args.features.split(',')
 hemi = args.hemisphere
 datatype = args.datatype
 
-modelDir = ''.join([args.directory,'Models/TestReTest/'])
+if not args.modelDirectory:
+    modelSubDir = 'Models/TestReTest/'
+else:
+    modelSubDir = args.modelDirectory
+
+modelDir = ''.join([args.directory,modelSubDir])
 if not os.path.isdir(modelDir):
     os.makedirs(modelDir)
 extension = args.extension.split(',')
