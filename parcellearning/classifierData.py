@@ -176,21 +176,21 @@ class Prepare():
      
     	labInds = np.where(supraLabels != 0)[0]
 
-            # Apply zero-mean, unit-variance scaling
-            if self.scale:
-                
-                print 'Standardizing samples.'
-                scaler = preprocessing.StandardScaler(with_mean=True,
-                                                              with_std=True)
-                scaler.fit(supraData[labInds,:])
-                self.scaler = scaler
+        # Apply zero-mean, unit-variance scaling
+        if self.scale:
             
-            for subj in mergedData.keys():
-                tempInds = np.where(mergedLabels[subj] > 0)[0]
-                
-                mergedData[subj][tempInds,:] = scaler.transform(mergedData[subj][tempInds,:])
+            print 'Standardizing samples.'
+            scaler = preprocessing.StandardScaler(with_mean=True,
+                                                          with_std=True)
+            scaler.fit(supraData[labInds,:])
+            self.scaler = scaler
+        
+        for subj in mergedData.keys():
+            tempInds = np.where(mergedLabels[subj] > 0)[0]
+            
+            mergedData[subj][tempInds,:] = scaler.transform(mergedData[subj][tempInds,:])
 
-            return [mergedData,mergedLabels,matchDict]
+        return [mergedData,mergedLabels,matchDict]
     
     
 def testing(prepared,subject,trDir=None,trExt=None,
