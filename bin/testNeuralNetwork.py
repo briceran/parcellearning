@@ -73,7 +73,6 @@ assert os.path.isdir(outd)
 
 
 prepared = ''.join([prd,pre])
-print prepared
 assert os.path.isfile(prepared)
 with open(prepared,'r') as inPrep:
     P = pickle.load(inPrep)
@@ -81,7 +80,6 @@ with open(prepared,'r') as inPrep:
 
 modelBase = ''.join(['NeuralNetwork','.',hm,'.',me])
 model = ''.join([md,modelBase])
-print model
 assert os.path.isfile(model)
 model = load_model(model)
 
@@ -111,7 +109,6 @@ for test_subj in testList:
         [data,match,ltvm] = pcd.testing(P,test_subj,trDir=objd,trExt=obje)
         # Compute prediction
         [baseline,threshold,predicted] = nnu.predict(data,match,model,power=pw)
-        print set(predicted)
 
         # Set midline predictions to 0
         predicted[mid]=0
