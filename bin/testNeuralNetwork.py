@@ -111,6 +111,7 @@ for test_subj in testList:
         [data,match,ltvm] = pcd.testing(P,test_subj,trDir=objd,trExt=obje)
         # Compute prediction
         [baseline,threshold,predicted] = nnu.predict(data,match,model,power=pw)
+        print set(predicted)
 
         # Set midline predictions to 0
         predicted[mid]=0

@@ -206,6 +206,5 @@ class Network(object):
         baseline = model.predict(x_test,verbose=0)
         thresholded = match*baseline[:,1:]
         predicted = np.argmax(thresholded,axis=1)+1
-        print set(predicted)
         
         return [baseline,thresholded,predicted]
