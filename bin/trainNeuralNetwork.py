@@ -128,6 +128,7 @@ else:
 print modelSubDir
 
 modelDir = ''.join([args.directory,modelSubDir])
+print modelDir
 if not os.path.isdir(modelDir):
     os.makedirs(modelDir)
 extension = args.extension.split(',')
@@ -136,6 +137,8 @@ outExt = extension[1]
 
 # Load the training data
 P = pcld.Prepare(dataMap,hemi,features)
+print vars(P)
+print trainList
 trainData = P.training(trainList)
 
 # Save the Prepare object -- contains scaling transformation for new subjects
