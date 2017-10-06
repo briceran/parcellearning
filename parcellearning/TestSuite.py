@@ -146,11 +146,11 @@ if __name__ == "__main__":
                 
                 print 'True label loaded.'
 
-                test1 = '{}{}.{}.{}.Deep2.TestReTest_1.func.gii'.format(dataTypeDirectory,testSubj,h,d)
+                test1 = '{}{}.{}.{}.Deep2.TestReTest_1.func.gii'.format(dataTypeDirectory,test_subj,h,d)
                 test1 = nb.load(test1)
                 test1 = test1.darrays[0].data
 
-                test2 = '{}{}.{}.{}.Deep2.TestReTest_2.func.gii'.format(dataTypeDirectory,testSubj,h,d)
+                test2 = '{}{}.{}.{}.Deep2.TestReTest_2.func.gii'.format(dataTypeDirectory,test_subj,h,d)
                 test2 = nb.load(test2)
                 test2 = test2.darrays[0].data
 
