@@ -79,7 +79,8 @@ with open(prepared,'r') as inPrep:
     P = pickle.load(inPrep)
 
 
-model = ''.join([md,me])
+modelBase = ''.join(['NeuralNetwork','.',hm,'.',me])
+model = ''.join([md,modelBase])
 print model
 assert os.path.isfile(model)
 model = load_model(model)
