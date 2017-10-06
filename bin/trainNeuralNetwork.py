@@ -68,7 +68,7 @@ parser.add_argument('-mld','--modelDirectory',help='Path to specific model direc
                     required=False,default=None)
 parser.add_argument('-trd','--trainObjectDirectory',help='Path to specific training object direcotry -- default is "directory".',
                     required=False,default=None)
-parser.add_argument('-tre','--trainObjectExtension',help='Training object extension -- default is .TrainingObject.h5'.,
+parser.add_argument('-tre','--trainObjectExtension',help='Training object extension -- default is .TrainingObject.h5.',
                     required=False,default=None)
 
 parser.add_argument('--downsample',help='Type of downsampling to perform.',default='core',
