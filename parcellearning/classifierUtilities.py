@@ -113,6 +113,7 @@ def loadData(subjectList,dataMap,features,hemi):
 
         # Training data
         trainObject = '{}{}.{}.{}'.format(objDir,s,hemi,objExt)
+        print trainObject
         midObject = '{}{}.{}.{}'.format(midDir,s,hemi,midExt)
         matObject = '{}{}.{}.{}'.format(matDir,s,hemi,matExt)
 
