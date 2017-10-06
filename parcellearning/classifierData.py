@@ -159,12 +159,12 @@ class Prepare():
     		count += fShape
     		print '{} shape: {}'.format(f,fShape)
 
-            for subj in dataDict.keys():
-                mergedData[subj] = du.mergeFeatures(dataDict[subj],nf)
-                mergedLabels[subj] = du.mergeFeatures(dataDict[subj],['label'])
-                
-            supraData = du.mergeValueArrays(mergedData)
-            supraLabels = du.mergeValueLists(mergedLabels)
+        for subj in dataDict.keys():
+            mergedData[subj] = du.mergeFeatures(dataDict[subj],nf)
+            mergedLabels[subj] = du.mergeFeatures(dataDict[subj],['label'])
+            
+        supraData = du.mergeValueArrays(mergedData)
+        supraLabels = du.mergeValueLists(mergedLabels)
     	
     	print '\nExpected feature matrix dimensionality: {}'.format(count)
     	print 'Computed feature matrix dimensionality: {}\n'.format(supraData.shape[1])
