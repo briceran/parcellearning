@@ -242,7 +242,10 @@ def testing(prepared,subject,trDir=None,trExt=None,
     print 'Test data columns (in order): {}'.format(features)
 
     dataObject = '{}{}.{}.{}'.format(objDir,subject,hemisphere,objExt)
+    print dataObject
+
     matchingMatrix = '{}{}.{}.{}'.format(matDir,subject,hemisphere,matExt)
+    print matchingMatrix
 
     # load test subject data, save as attribtues
     rawTestData = ld.loadH5(dataObject,*['full'])
@@ -253,12 +256,14 @@ def testing(prepared,subject,trDir=None,trExt=None,
 
     testData = parsedData[ID]
     testData = du.mergeFeatures(testData,features)
+    print testData.shape
 
     if prepared.scale:
         scaler = prepared.scaler
         x_test = scaler.transform(testData)
         
     matchingMatrix = ld.loadMat(matchingMatrix)
+    print matchingMatrix.shape
 
     ltvm = cu.vertexMemberships(matchingMatrix,180)
 
