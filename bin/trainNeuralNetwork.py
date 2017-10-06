@@ -104,6 +104,16 @@ try:
 except:
     pass
 
+if args.trainObjectDirectory:
+	trd = args.trainObjectDirectory
+else:
+	trd = None
+
+if args.trainObjectExtension:
+	tre = args.trainObjectExtension
+else:
+	tre = None
+	
 dataMap = pcu.buildDataMap(args.directory,trd,tre)
 
 features = args.features.split(',')
