@@ -164,7 +164,7 @@ if __name__ == "__main__":
 
                 params.append(acc1)
                 params.append(acc2)
-                params.append(accT)
+                params.append(acct)
 
                 results.append(params)
 
