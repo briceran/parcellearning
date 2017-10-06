@@ -115,15 +115,14 @@ if __name__ == "__main__":
     predictionDirectory = '{}Predictions/TestReTest/NeuralNetwork/Deep/'.format(baseDirectory)
     truthDirectory = '{}Labels/HCP/'.format(baseDirectory)
 
-    testList= '{}TrainTestLists/TestRetest_Test.txt'.format(baseDir)
+    testList= '{}TrainTestLists/TestRetest_Test.txt'.format(baseDirectory)
     testSubjects = cu.loadList(testList)
 
     results = []
 
     hemi = ['L','R']
     dataTypes = ['Full','RestingState','ProbTrackX2']
-    trt = ['TestReTest_1','TestReTest_2']
-    
+
     for d in dataTypes:
         
         print 'DataType: {}'.format(d)
@@ -135,6 +134,8 @@ if __name__ == "__main__":
             print 'Subject: {}'.format(test_subj)
             
             for h in hemi:
+
+                params = [test_subj,d,h]
                 
                 print 'Hemisphere: {}'.format(h)
                 
@@ -144,57 +145,36 @@ if __name__ == "__main__":
                 truth = truth.darrays[0].data
                 
                 print 'True label loaded.'
-                
-                mylFile = '{}MyelinDensity/{}.{}.MyelinMap.32k_fs_LR.func.gii'.format(baseDir,
-                       test_subj,h)
-                mylData = nb.load(mylFile)
-                myl = mylData.darrays[0].data
-                
-                print 'Functional map loaded.'
 
-                for f in freqs:
-                    f = float(f)
+                test1 = '{}{}.{}.{}.Deep2.TestReTest_1.func.gii'.format(dataTypeDirectory,testSubj,h,d)
+                test1 = nb.load(test1)
+                test1 = test1.darrays[0].data
 
-                    for n in nodes:
-                        for l in layers:
+                test2 = '{}{}.{}.{}.Deep2.TestReTest_2.func.gii'.format(dataTypeDirectory,testSubj,h,d)
+                test2 = nb.load(test2)
+                test2 = test2.darrays[0].data
 
-                            params = [test_subj,d,h,f,n,l]
-                            
-                            midPre = '{}.Layers.{}.Nodes.{}'.format(h,l,n)
-                            midSuf = 'Freq.{}.{}.TestReTest_'.format(f,d)
-                            
-                            fullExt = '{}.{}.{}.{}'.format(test_subj,midPre,midExt,midSuf)
-                            
-                            test1 = '{}{}1.func.gii'.format(predDataDir,fullExt)
-                            test1 = nb.load(test1)
-                            test1 = test1.darrays[0].data
-                            
-                            test2 = '{}{}2.func.gii'.format(predDataDir,fullExt)
-                            test2 = nb.load(test2)
-                            test2 = test2.darrays[0].data
+                error1 = errorMap(truth,test1)
+                error2 = errorMap(truth,test2)
+                errort = errorMap(test1,test2)
 
-                            error1 = errorMap(truth,test1)
-                            error2 = errorMap(truth,test2)
-                            errorT = errorMap(test1,test2)
-                            
-                            acc1 = np.mean(error1)
-                            acc2 = np.mean(error2)
-                            accT = np.mean(errorT)
+                acc1 = np.mean(error1)
+                acc2 = np.mean(error2)
+                acct = np.mean(errort)
 
-                            params.append(acc1)
-                            params.append(acc2)
-                            params.append(accT)
+                params.append(acc1)
+                params.append(acc2)
+                params.append(accT)
 
-                            results.append(params)
-    
+                results.append(params)
+
     results = np.row_stack(results)
     dataFrame = pd.DataFrame(results)
     
-    pNames = ['id','data','hemi','freq','nodes',
-              'layers','acc_1','acc_2','acc_test']
+    pNames = ['id','data','hemi','acc_1','acc_2','acc_test']
     dataFrame.columns = pNames
     
-    dataFrame.to_pickle('/mnt/parcellator/parcellation/parcellearning/Data/TestReTestData_{}_0.5.p'.format(samples))
+    dataFrame.to_pickle('/mnt/parcellator/parcellation/parcellearning/Data/TestReTestData.Deep.Core.p'.format(samples))
                             
                             
                             
