@@ -115,6 +115,7 @@ else:
 	tre = None
 	
 dataMap = pcu.buildDataMap(args.directory,trd,tre)
+print dataMap
 
 features = args.features.split(',')
 hemi = args.hemisphere
@@ -124,6 +125,7 @@ if not args.modelDirectory:
     modelSubDir = 'Models/TestReTest/'
 else:
     modelSubDir = args.modelDirectory
+print modelSubDir
 
 modelDir = ''.join([args.directory,modelSubDir])
 if not os.path.isdir(modelDir):
