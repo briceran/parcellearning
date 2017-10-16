@@ -174,7 +174,7 @@ if __name__ == "__main__":
     pNames = ['id','data','hemi','acc_1','acc_2','acc_test']
     dataFrame.columns = pNames
     
-    dataFrame.to_pickle('/mnt/parcellator/parcellation/parcellearning/Data/TestReTestData.Deep.Core.p'.format(samples))
+    dataFrame.to_pickle('/mnt/parcellator/parcellation/parcellearning/Data/TestReTestData.Deep.Core.0.7.Power.3.p'.format(samples))
                             
                             
                             
