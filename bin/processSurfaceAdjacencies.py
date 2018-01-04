@@ -54,6 +54,6 @@ for subj in subjects:
         
         strAdj = {str(k): map(str,S.adj_list[k]) for k in S.adj_list.keys()}
         
-        with open(outAdjList,'r') as outJ:
+        with open(outAdjList,'w') as outJ:
             json.dump(strAdj,outJ)
             
