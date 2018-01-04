@@ -52,10 +52,16 @@ def midline_restingState(inRest,outFile,times):
     
     if restParts[-1] == 'mat':
         print '.mat file'
-        rest = loadMat(inRest)
+        try:
+            rest = loadMat(inRest)
+        except:
+            return
     elif restParts[-1] == 'gii':
         print '.gii file'
-        rest = loadGii(inRest,np.arange(times))
+        try:
+            rest = loadGii(inRest,np.arange(times))
+        except:
+            return
     else:
         raise('Resting state is neither a gifti or .mat file.')
         
