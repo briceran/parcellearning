@@ -7,9 +7,9 @@ Created on Thu Jan  4 12:03:34 2018
 """
 
 import argparse,os,sys
-sys.path.append('..')
+sys.path.insert(0, '../../shortestpath/shortestpath/')
 
-import shortestpath.shortestpath.Adjacency as aj
+import Adjacency as aj
 import json
 
 parser = argparse.ArgumentParser()
