@@ -31,6 +31,9 @@ se = args.surfaceExt
 od = args.outDir
 oe = args.outExt
 
+if not os.path.exists(od):
+    os.makedirs(od)
+
 subjectList = args.subjectList
 with open(subjectList,'r') as inSubj:
     subjects = inSubj.readlines()
