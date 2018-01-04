@@ -49,6 +49,9 @@ se = args.surfExt
 od = args.outDir
 oe = args.outExt
 
+if not os.path.exists(od):
+    os.makedirs(od)
+
 mv = args.maxLabel
 
 with open(args.subjectList,'r') as inSubj:
