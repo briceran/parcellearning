@@ -44,7 +44,7 @@ for subj in subjects:
         
         oriRest = ''.join([restDir,restPref,h.upper(),'.gii'])
         newRest = ''.join([hemiDir,restPref,h.upper(),'.gii'])
-        outMids = '.'.join([hemiDir,hemiMap[h],'Midline_Indices','mat'])
+        outMids = '.'.join([hemiDir,subj,hemiMap[h],'Midline_Indices','mat'])
         
         if os.path.exists(oriRest):
             print oriRest
