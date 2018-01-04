@@ -48,6 +48,15 @@ def midline_restingState(inRest,outFile):
     
     """
     
+    restParts = inRest.split('.')
+    
+    if restParts[-1] == 'mat':
+        rest = loadMat(inRest)
+    elif restParts[-1] == 'gii':
+        rest = loadGii(inRest)
+    else:
+        raise('Resting state is neither a gifti or .mat file.')
+
     rest = loadMat(inRest)
     temp = np.sum(np.abs(rest),axis=1)
     mids = np.squeeze(np.where(temp == 0))
