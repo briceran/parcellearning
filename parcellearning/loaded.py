@@ -30,7 +30,7 @@ def midline(vector):
     
     return coords
 
-def midline_restingState(inRest,outFile):
+def midline_restingState(inRest,outFile,times):
     
     """
     
@@ -51,13 +51,16 @@ def midline_restingState(inRest,outFile):
     restParts = inRest.split('.')
     
     if restParts[-1] == 'mat':
+        print '.mat file'
         rest = loadMat(inRest)
     elif restParts[-1] == 'gii':
-        rest = loadGii(inRest)
+        print '.gii file'
+        rest = loadGii(inRest,np.arange(times))
     else:
         raise('Resting state is neither a gifti or .mat file.')
+        
+    print 'Resting state shape: {}'.format(rest.shape)
 
-    rest = loadMat(inRest)
     temp = np.sum(np.abs(rest),axis=1)
     mids = np.squeeze(np.where(temp == 0))
     

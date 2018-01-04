@@ -50,4 +50,4 @@ for subj in subjects:
             print oriRest
             print newRest
             print outMids
-            ld.midline_restingState(oriRest,outMids)
+            ld.midline_restingState(oriRest,outMids,4800)
