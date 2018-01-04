@@ -68,7 +68,10 @@ def midline_restingState(inRest,outFile,times):
     print 'Resting state shape: {}'.format(rest.shape)
 
     temp = np.sum(np.abs(rest),axis=1)
-    mids = np.squeeze(np.where(temp == 0))
+    
+    # We add one so we can also use these files in matlab -- when loading back
+    # into python, we must take care to subtract 1 again
+    mids = np.squeeze(np.where(temp == 0)) + 1
     
     m = {}
     m['mids'] = mids
