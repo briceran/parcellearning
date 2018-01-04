@@ -18,6 +18,10 @@ from keras.models import Sequential
 from keras.layers import Activation, Dense, normalization
 from keras.utils import to_categorical
 
+"""
+
+"""
+
 class Network(object):
     
     """

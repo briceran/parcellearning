@@ -188,7 +188,7 @@ Methods to compute level structures on a cortical map file
 """
 #####
 
-def coreBoundaryVertices(labelFile,surfaceAdjacency):
+def coreBoundaryVertices(label,surfAdj):
     
     """
     Method to find the border vertices of each label.  These will be stored
@@ -199,9 +199,6 @@ def coreBoundaryVertices(labelFile,surfaceAdjacency):
         labelFile : cortical map file
         surfaceAdjacency : surface adjacency file
     """
-    
-    label = ld.loadGii(labelFile,0)
-    surfAdj = ld.loadPick(surfaceAdjacency)
 
     L = set(label) - set([0])
     
@@ -273,17 +270,23 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
     
     print ('Computing layers for label {}.'.format(lab))
 
+    # get indices of vertices not at border
     internalNodes = list(set(labelIndices).difference(borderIndices))
     
     # compute condensed adjacency list corresponding to vertices in ROI
     regionSurfAdj = {k: [] for k in labelIndices}
     
+    # loop over each vertex in ROI
     for li in labelIndices:
         
+        # get full adjacency list of vertex
         fullNeighbs = surfAdj[li]
+        # constrain adjacency list to only those vertices within the ROI
         regionSurfAdj[li] = list(set(labelIndices).intersection(fullNeighbs))
         
     # generate graph of condensed surface adjacency file
+    # regionSurfAdj is an adjacency list of lists, where each vertex's 
+    # list corresponds to only other vertices in the same region as itself
     G = nx.from_dict_of_lists(regionSurfAdj)
     
     distances = {n: [] for n in internalNodes}
@@ -292,18 +295,24 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
     # here, we allow for connected components in the regions
     for subGraph in nx.connected_component_subgraphs(G):
         
-        # get subgraph nodes
+        # get all subgraph nodes
         sg_nodes = subGraph.nodes()
         
         # make sure subgraph has more than a single component
         if len(sg_nodes) > 1:
             
+            # get vertex IDs of component that are border vertices
             sg_border = list(set(sg_nodes).intersection(borderIndices))
+            # get vertex IDs of component that are internal vertices
             sg_intern = list(set(sg_nodes).intersection(internalNodes))
             
+            # get indices of border indices in sub-graph component
             external = [i for i,j in enumerate(sg_nodes) if j in sg_border]
             
+            # get shortest paths of component as an array
             sp = nx.floyd_warshall_numpy(subGraph)
+            
+            # shortest path of all vertices to only border vertices
             se = sp[:,external]
             se = se.astype(np.int32)
             
@@ -317,10 +326,11 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
                 print minDist
                 print "min24: {}".format(minDist[24])
 
+            # for each of the internal vertex, compute the shortest distance
+            # to a border vertex
             for k,v in enumerate(sg_nodes):
                 if v in sg_intern:
                     distances[v] = int(np.min(list(set(list(np.squeeze(np.asarray(se[k,:])))))))
-                    #distances[v] = int(np.asarray(minDist[k]))
 
     print 'Label {} layers'.format(lab)
     D = distances.values()

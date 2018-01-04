@@ -1,0 +1,40 @@
+"""
+
+Neural Network notes.
+
+
+General Processing:
+    
+Currently, the NN takes in a set of "global" training data -- that is, training
+data corresponding to every possible label in a cortical map.  If there are K labels
+the full cortical map, the prediction vector with be a 1xK vector, where the kth
+index corresponds to the probability of a test vertex being assigned to a region
+with value k.
+
+Generally, we scale the prediction probabilities by a frequency, which acts as
+a prior on the prediction label.  The frequencies are representative of
+multiple surface registrations between the test brain, and a set of training data.
+
+Each test vertex maps to a single vertex in a training brain.  Each vertex in 
+a training brain has an associated label.  The frequency then corresponds to 
+how often test vertex maps to a given label across all of the training brains
+that the test brain is registered to, such that the prior is a 1xK long
+probability vector.  Because the surface registration produce smooth mappings,
+the frequency vector will generally be spase (e.g. a test vertex will only 
+map to a subset of the full set of labels in the trainin data.)
+
+Sub-Region Processing:
+
+Let's say you want to train a network on a subset of regions, for example, on
+those regions that overlap with the Left supramarginal gyrus and inferior
+parietal lobe.  If you're training data consists of cortical maps that are
+hyper-parcellated, you can easily compute which hyper regions interect with
+the supramarginal gyrus and inferior parietal lobe, select out the data for 
+vertices within those hyper regions, and then train a network on that data.
+
+Testing becomes a bit more complicated, however.  Just as above, where we
+use the mapping frequency as a prior, we can do that same -- however, we need
+ensure that our prior frequencies correspond properly with the prediction 
+frequencies -- that is to say, that we are using the correct frequency to weight
+the prediction frequency.
+"""

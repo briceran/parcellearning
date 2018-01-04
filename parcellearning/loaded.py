@@ -162,6 +162,10 @@ def loadGii(inFile,darray=0,*args):
     """
     
     parts = str.split(inFile,'/')
+    if isinstance(darray,int):
+        darray = [darray]
+    else:
+        darray = list(darray)
     
     try:
         data = nibabel.load(inFile)
@@ -170,7 +174,11 @@ def loadGii(inFile,darray=0,*args):
     else:
         # if data is instance of GiftiImage
         if isinstance(data,nibabel.gifti.gifti.GiftiImage):
-            label = np.squeeze(data.darrays[darray].data)
+            label = []
+            for j in darray:
+                label.append(np.squeeze(data.darrays[j].data))
+            label = np.column_stack(label).squeeze()
+            
         # if data is instance of Nifti2Image
         elif isinstance(data,nibabel.nifti2.Nifti2Image):
             label = np.squeeze(np.asarray(data.get_data()))

@@ -1,6 +1,14 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
+Created on Sat Oct 21 01:46:23 2017
+
+@author: kristianeschenburg
+"""
+
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+"""
 Created on Wed Sep 27 11:41:52 2017
 
 @author: kristianeschenburg
@@ -44,6 +52,9 @@ parser = argparse.ArgumentParser()
 # Parameters for input data
 parser.add_argument('--directory',help='Directory where data exists.',
                     type=str,required=True)
+parser.add_argument('--datatype',help='Type of input data.',
+                    choices=['Full','RestingState','ProbTrackX2'],type=str,
+                    required=True)
 parser.add_argument('--features',help='Features to include in model.',nargs='+',
                     type=str,required=True)
 
@@ -51,13 +62,14 @@ parser.add_argument('--train',help='Subjects to train model on.',
                     type=str,required=True)
 parser.add_argument('--hemisphere',help='Hemisphere to proces.',
                     type=str,required=True)
+parser.add_argument('--extension',help='Output directory and extension (string, separate by comma)',
+                    type=str,required=True)
 
-parser.add_argument('--modelDirectory',help='Path to specific model directory.',
+parser.add_argument('-mld','--modelDirectory',help='Path to specific model directory.',
                     required=True,type=str)
-parser.add_argument('--modelName',help='Name of output model.',required=True,type=str)
-parser.add_argument('--trainDirectory',help='Path to specific training object direcotry.',
+parser.add_argument('-trd','--trainObjectDirectory',help='Path to specific training object direcotry.',
                     required=True,type=str)
-parser.add_argument('--trainExtension',help='Training object extension.',
+parser.add_argument('-tre','--trainObjectExtension',help='Training object extension.',
                     required=True,type=str)
 
 parser.add_argument('--downsample',help='Type of downsampling to perform.',default='core',
@@ -110,17 +122,31 @@ dataMap = pcu.buildDataMap(args.directory,trd,tre)
 features = args.features
 # Get hemisphere
 hemi = args.hemisphere
+# Get type of data to process (resting state, full, probtrackx2)
+datatype = args.datatype
 
-modelDir = args.modelDirectory
-modelName = args.modelName
+# 
+if not args.modelDirectory:
+    modelSubDir = 'Models/TestReTest/'
+else:
+    modelSubDir = args.modelDirectory
+
+modelDir = ''.join([args.directory,modelSubDir])
+if not os.path.isdir(modelDir):
+    os.makedirs(modelDir)
+extension = args.extension.split(',')
+outDir = extension[0]
+outExt = extension[1]
 
 # Load the training data
 P = pcld.Prepare(dataMap,hemi,features)
+print vars(P)
+print trainList
 trainData = P.training(trainList)
 
 # Save the Prepare object -- contains scaling transformation for new subjects
 # as well as feature names for loading
-outPrep = '{}Prepared.{}.{}.p'.format(modelDir,hemi,modelName)
+outPrep = '{}Prepared.{}.{}.{}.p'.format(modelDir,hemi,datatype,outExt)
 if not os.path.isfile(outPrep):
     with open(outPrep,'w') as outP:
         pickle.dump(P,outP,-1)
@@ -143,4 +169,8 @@ N.set_params(**params)
 N.fit(trainData,valData)
 
 # Save model
-save(modelDir,modelName,N)
+prefix = ''.join([outDir,'NeuralNetwork.{}'.format(hemi)])
+suffix = ''.join([datatype,'.{}'.format(outExt)])
+print prefix
+print suffix
+save(prefix,suffix,N)

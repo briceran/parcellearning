@@ -77,7 +77,7 @@ class Prepare():
                 if key in args:
                     setattr(self,key,params[key])
 
-    def training(self,subjects,training=True,scale=True):
+    def training(self,subjects,training=True,scale=True:
         
         """
         Parameters:

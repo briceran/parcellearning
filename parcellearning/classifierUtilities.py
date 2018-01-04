@@ -8,6 +8,8 @@ Created on Tue May  9 18:22:13 2017
 
 import copy
 import h5py
+
+import nibabel as nb
 import numpy as np
 import os
 
@@ -354,10 +356,79 @@ def validation(inputData,eval_factor):
 """
 ##########
 
-CLASSIFIER PREDICTIONS
+CLASSIFIER Data Preparation
 
 ##########
 """
+
+def subregionIntersection(highres,lowres,regions):
+    
+    """
+    Select which regions in the high-resolution map intersect with a set of
+    regions in the low-resolution map and return the values of those regions.
+    
+    Parameters:
+    - - - - -
+        highres : high-resolution file
+        lowres : low-resolution file
+        regions : names of regions in low-resolution map
+    """
+    
+    hr = nb.load(highres)
+    hr_data = hr.darrays[0].data
+    
+    lr = nb.load(lowres)
+    
+    lr_indices = regionIndices(lr,regions)
+    
+    hr_regions = list(set(hr_data[lr_indices]))
+    
+    return hr_regions
+    
+def regionIndices(labelImage,region=None):
+    
+    """
+    Extract indices corresponding to region of interest.
+    
+    Parameters:
+    - - - - -
+        labelImage : loaded GiftiImage corresponing to the label file.
+        region : list of region names ([L_inferiorparietal','L_supramarginal'])
+        
+        In the most generic case, if you've created a a custom parcellation,
+        the label names will generally be of the form 'Label_100' or
+        'Label_180', where the names simply correspond to the value.
+    
+    Returns:
+    - - - -
+        indices : list of indices for vertices assigned to region
+    """
+
+    try:
+        assert isinstance(labelImage,nibabel.gifti.gifti.GiftiImage)
+    except:
+        raise ValueError('labelImage must be a GiftImage.')
+    
+    labelTable = labelImage.get_labeltable()
+    labelTable = labelTable.get_labels_as_dict()
+    
+    regionMapping = {k:v for v,k in labelTable.items()}
+    
+    try:
+        for r in region:
+            assert r in regionMapping.keys()
+    except:
+        raise ValueError('{} does not exist in GiftiImage.'.format(region))
+    else:
+        labels = labelImage.darrays[0].data
+        indices = []
+        for r in region:
+            labelValue = regionMapping[r]
+            indices.append(np.where(labels == labelValue)[0])
+        
+        indices = list(np.concatenate(indices))
+
+    return indices
 
 # =============================================================================
 # def saveClassifier(classifier,output):

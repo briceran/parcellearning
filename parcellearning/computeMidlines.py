@@ -5,32 +5,48 @@ Created on Tue Mar 14 16:41:24 2017
 @author: kristianeschenburg
 """
 
-import loaded as ld
-import os
+import argparse,os,sys
+sys.path.append('..')
 
-s = ['285345','298455','310621','352132','365343','382242','397760','433839','465852','486759',
-     '521331','545345','565452','571548','581349','598568','620434','285446','303119','316633',
-     '352738','366042','385450','397861','436239','473952','497865','522434','547046','566454',
-     '573249','583858','599469','622236','289555','303624','329440','355239','366446','386250',
-     '412528','436845','475855','499566','530635','552544','567052','573451','585862','599671',
-     '623844','290136','304020','334635','355542','371843','390645','414229','441939','479762',
-     '500222','531536','559053','567961','579665','586460','601127','627549','293748','307127',
-     '339847','356948','377451','395958','415837','445543','480141','510326','540436','561242',
-     '568963','580044','592455','611231','638049','298051','308331','351938','361941','380036',
-     '397154','422632','448347','485757','519950','541943','562446','570243','580347','594156',
-     '613538','644044']
+import parcellearning.loaded as ld
 
-homeDir = '/mnt/parcellator/parcellation/HCP/Connectome_4/'
+parser = argparse.ArgumentParser()
+parser.add_argument('-hd','--homeDir',help='Home directory where data exists.',
+                    required=True,type=str)
+parser.add_argument('-sd','--subjectList',help='Subject list file.',
+                    required=True,type=str)
 
-for k in s:
+args = parser.parse_args()
+
+homeDir = args.homeDir
+subjectList = args.subjectList
+
+with open(subjectList,'r') as inSubj:
+    subjects = inSubj.readlines()
+subjects = [x.strip() for x in subjects]
+
+hemiMap = {'Left': 'L',
+           'Right':'R'}
+
+restPref = 'rfMRI_Z-Trans_merged_CORTEX_'
+
+for subj in subjects:
     
-    inDir = homeDir + k + '/Resting_State/'
-    inRest = inDir + 'Left_Regional_medianTS.mat'
+    restDir = ''.join([homeDir,subj,'/RestingState/'])
     
-    
-    outFile = inDir + k + '_Midline_Indices.mat'
-    
-    if os.path.isfile(inRest):
-        print(inRest)
-        ld.midline_restingState(inRest,outFile)
-    
+    for h in hemiMap.keys():
+        
+        hemiDir = ''.join([restDir,h,'/'])
+        
+        if not os.path.exists(hemiDir):
+            os.makedirs(hemiDir)
+        
+        oriRest = ''.join([restDir,restPref,h.upper(),'.gii'])
+        newRest = ''.join([hemiDir,restPref,h.upper(),'.gii'])
+        outMids = '.'.join([hemiDir,hemiMap[h],'Midline_Indices','mat'])
+        
+        if os.path.exists(oriRest):
+            print oriRest
+            print newRest
+            print outMids
+            ld.midline_restingState(oriRest,outMids)
