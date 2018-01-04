@@ -20,6 +20,7 @@ args = parser.parse_args()
 
 homeDir = args.homeDir
 subjectList = args.subjectList
+subjectList = ''.join([homeDir,subjectList])
 
 with open(subjectList,'r') as inSubj:
     subjects = inSubj.readlines()
