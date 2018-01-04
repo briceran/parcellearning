@@ -44,6 +44,9 @@ for subj in subjects:
     inSurf = ''.join([sd,subj,se])
     outAdjList = ''.join([od,subj,oe])
     
+    print inSurf
+    print outAdjList
+    
     if os.path.exists(inSurf) and not os.path.exists(outAdjList):
         
         S = aj.SurfaceAdjacency(inSurf)
