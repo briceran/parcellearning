@@ -77,7 +77,7 @@ for subj in subjects:
             
             print 'Computing topological matrix.'
             
-            label = ld.loadGii(labelFile,darrays=0)
+            label = ld.loadGii(labelFile,darray=0)
             
             with open(surfAdj,'r') as inJ:
                 adj = json.load(inJ)
