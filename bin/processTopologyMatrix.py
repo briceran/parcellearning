@@ -67,15 +67,15 @@ for subj in subjects:
     surfAdj = ''.join([sj,subj,se])
     outFile = ''.join([od,subj,se])
     
-    print labelFile
-    print surfAdj
-    print outFile
+    print labelFile.split('/')[-1]
+    print surfAdj.split('/')[-1]
+    print outFile.split('/')[-1]
     
     if os.path.exists(labelFile) and os.path.exists(surfAdj):
         print 'Label file and surface adjacency list exist.'
         if not os.path.exists(outFile):
             
-            print 'Computing topological matrix.'
+            print 'Computing topological matrix.\n'
             
             label = ld.loadGii(labelFile,darray=0)
             
