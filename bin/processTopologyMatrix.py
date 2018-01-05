@@ -28,7 +28,7 @@ parser.add_argument('-sj','--surfAdj',help='Directory where adjacency lists '
 parser.add_argument('-se','--surfExt',help='Extension of adjacency list file.',
                     required=True,type=str)
 
-parser.add_argument('-od','--outDir',hepl='Output directory for topology vectors.',
+parser.add_argument('-od','--outDir',help='Output directory for topology vectors.',
                     required=True,type=str)
 parser.add_argument('-oe','--outExt',help='Toplogy vector file extension.',
                     required=True,type=str)
