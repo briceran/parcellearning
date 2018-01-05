@@ -20,7 +20,7 @@ import topologyVertex as tv
 parser = argparse.ArgumentParser()
 parser.add_argument('-ld','--labelDir',help='Directory where labels exist.',
                     required=True,type=str)
-parser.add_argument('-le','labelExt',help='Label file extension.',required=True,
+parser.add_argument('-le','--labelExt',help='Label file extension.',required=True,
                     type=str)
 
 parser.add_argument('-sj','--surfAdj',help='Directory where adjacency lists '
