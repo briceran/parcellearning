@@ -65,7 +65,7 @@ for subj in subjects:
     
     labelFile = ''.join([lbd,subj,le])
     surfAdj = ''.join([sj,subj,se])
-    outFile = ''.join([od,subj,se])
+    outFile = ''.join([od,subj,oe])
     
     print labelFile.split('/')[-1]
     print surfAdj.split('/')[-1]
