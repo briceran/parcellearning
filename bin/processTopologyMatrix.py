@@ -30,7 +30,7 @@ parser.add_argument('-se','--surfExt',help='Extension of adjacency list file.',
 
 parser.add_argument('-od','--outDir',hepl='Output directory for topology vectors.',
                     required=True,type=str)
-parser.add_argument('-oe','--outExt',hepl='Toplogy vector file extension.',
+parser.add_argument('-oe','--outExt',help='Toplogy vector file extension.',
                     required=True,type=str)
 
 parser.add_argument('-mv','--maxLabel',help='Max label value to consider.',
