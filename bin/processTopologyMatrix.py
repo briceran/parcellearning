@@ -8,13 +8,14 @@ Created on Thu Jan  4 14:59:08 2018
 
 import argparse,os,sys
 sys.path.append('..')
-sys.path.insert(0, '../../tms/tms/')
+sys.path.insert(0, '../../metrics/')
+sys.path.insert(1,'../../io/')
 
 import numpy as np
 import scipy.io as sio
 
 import json
-import parcellearning.loaded as ld
+import loaded as ld
 import topologyVertex as tv
 
 parser = argparse.ArgumentParser()

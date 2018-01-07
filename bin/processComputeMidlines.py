@@ -7,8 +7,9 @@ Created on Tue Mar 14 16:41:24 2017
 
 import argparse,os,sys
 sys.path.append('..')
+sys.path.insert(0,'../../io/')
 
-import parcellearning.loaded as ld
+import loaded as ld
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-hd','--homeDir',help='Home directory where data exists.',
