@@ -7,8 +7,8 @@ Created on Sun Jan  7 15:10:40 2018
 """
 
 import argparse,os,sys
-sys.path.insert('../../io/')
-sys.path.insert('../../metrics/')
+sys.path.insert(0,'../../io/')
+sys.path.insert(1,'../../metrics/')
 
 import loaded as ld
 import topologyVertex as tv
