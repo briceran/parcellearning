@@ -79,7 +79,7 @@ for subj in subjects:
         dataArray = du.mergeValueArrays(dataDict,keys = featureKeys)
         features.close()
         
-        labelFile = ld.loadGii(labelFile,darray=1)
+        labelFile = ld.loadGii(labelFile,darray=np.arange(1))
         
         regSim = hmg.regionalSimilarity(dataArray,labelFile)
         df = df.append(regSim,ignore_index=True)
