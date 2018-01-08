@@ -62,7 +62,7 @@ with open(args.subjectList,'r') as inSubj:
     subjects = inSubj.readlines()
 subjects = [x.strip() for x in subjects]
 
-cols = map(str,np.arange(1,181))
+cols = np.arange(1,181)
 df = pd.DataFrame(columns=cols)
 
 for subj in subjects:
@@ -71,6 +71,8 @@ for subj in subjects:
     labelFile = ''.join([labelDir,subj,labelExt])
     
     if os.path.exists(featureFile) and os.path.exists(labelFile):
+        
+        print 'Processing %s' % subj
         features = h5py.File(featureFile,mode='r')
 
         features = h5py.File(featureFile,mode='r')
