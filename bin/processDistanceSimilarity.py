@@ -76,7 +76,7 @@ print 'Computing distance metrics'
 
 if dim == 1:
     print 'scalars'
-    distanceMaps = distMet.scalarDistance(dataArray,G,samples,maxDist)
+    distanceMap = distMet.scalarDistance(dataArray,G,samples,maxDist)
 elif dim > 1:
     print 'vectors'
     distanceMap = distMet.vectorDistance(dataArray,G,samples,maxDist)
@@ -84,4 +84,4 @@ else:
     raise('Data array is of dimension 0.')
 
 with open(output,'w') as outJ:
-    json.dump(distanceMaps,outJ)
+    json.dump(distanceMap,outJ)
