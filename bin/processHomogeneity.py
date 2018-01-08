@@ -63,7 +63,7 @@ with open(args.subjectList,'r') as inSubj:
 subjects = [x.strip() for x in subjects]
 
 cols = map(str,np.arange(1,181))
-df = pd.DataFrame(colums=cols)
+df = pd.DataFrame(columns=cols)
 
 for subj in subjects:
     
