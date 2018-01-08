@@ -11,7 +11,6 @@ sys.path.insert(0,'../../io/')
 sys.path.insert(1,'../../metrics/')
 
 import loaded as ld
-import topologyVertex as tv
 import tpdMath as tm
 import pandas as pd
 
@@ -58,10 +57,10 @@ for s in subjects:
     if os.path.exists(v1) and os.path.exists(v2):
         
         v1 = ld.loadMat(v1)
-        v1 = tv.tpdVector(v1)
+        v1 = tm.tpdVector(v1)
         
         v2 = ld.loadMat(v2)
-        v2 = tv.tpdVector(v2)
+        v2 = tm.tpdVector(v2)
         
         metric = tm.tpd(v1,v2)
         tpd.append(metric)
