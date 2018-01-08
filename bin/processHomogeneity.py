@@ -57,13 +57,16 @@ labelDir = args.parcellationDir
 labelExt = args.parcellationExt
 
 output = args.output
+f_path,f_ext = os.path.splitext(output)
 
 with open(args.subjectList,'r') as inSubj:
     subjects = inSubj.readlines()
 subjects = [x.strip() for x in subjects]
 
 cols = np.arange(1,181)
-df = pd.DataFrame(columns=cols)
+
+df_hmg = pd.DataFrame(columns=cols)
+df_size = pd.DataFrame(columns=cols)
 
 for subj in subjects:
     
@@ -81,9 +84,17 @@ for subj in subjects:
         dataArray = du.mergeValueArrays(dataDict,keys = featureKeys)
         features.close()
         
-        labelFile = ld.loadGii(labelFile,darray=np.arange(1))
+        label = ld.loadGii(labelFile,darray=np.arange(1))
         
-        regSim = hmg.regionalSimilarity(dataArray,labelFile)
-        df = df.append(regSim,ignore_index=True)
+        regSim = hmg.regionalSimilarity(dataArray,label)
+        regSize = {}.fromkeys(regSim.keys())
         
-df.to_csv(output)
+        for k in regSize.keys():
+            indx = np.where(label == k)[0]
+            regSize[k] = len(indx)
+
+        df_hmg = df_hmg.append(regSim,ignore_index=True)
+        df_size = df_size.append(regSize,ignore_index=True)
+        
+df_hmg.to_csv(output)
+df_size.to_csv(''.join([f_path,'.size',f_ext]))
