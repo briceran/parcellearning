@@ -50,7 +50,7 @@ def mergeFeatures(dataDict,keyList):
     data = []
     for k in keyList:
         if k in dataDict.keys():
-            data.append(dataDict[k])
+            data.append(np.asarray(dataDict[k]))
 
     data = np.column_stack(data)
     
@@ -65,9 +65,9 @@ def mergeValueArrays(inDict,keys=None):
     
     if not keys:
         keys = inDict.keys()
-    
-    data = [inDict[k] for k in keys]
-    data = np.squeeze(np.row_stack(data))
+
+    data = [np.asarray(inDict[k]) for k in keys]
+    data = np.column_stack(data)
     
     return data
 
