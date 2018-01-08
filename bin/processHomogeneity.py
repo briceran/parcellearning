@@ -49,7 +49,7 @@ parser.add_argument('-out','--output',help='Output file.',required=True,type=str
 
 args = parser.parse_args()
 
-featureDir = args.featureData
+featureDir = args.featureDir
 featureExt = args.featureExt
 featureKeys = args.featureKeys
 
