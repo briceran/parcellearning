@@ -48,7 +48,7 @@ if __name__ == "__main__":
                                 header = [m,h,p,d]
                                 header = header + [a]
                                 print header
-                                df.append(dict(zip(cols,header)),ignore_index=True)
+                                df = df.append(dict(zip(cols,header)),ignore_index=True)
 
 df.to_csv(''.join([baseDirectory,'Accuracy.csv']))
                 
