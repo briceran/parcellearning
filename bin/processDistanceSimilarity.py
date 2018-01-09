@@ -14,6 +14,7 @@ sys.path.insert(1,'../../io/')
 import h5py
 import json
 
+import loaded as ld
 import parcellearning.dataUtilities as du
 
 import distanceMetrics as distMet
@@ -25,7 +26,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-fd','--featureData',help='Path to feature matrix.',
                     required=True,type=str)
 parser.add_argument('-fk','--featureKeys',help='Features to use for similarity.',
-                    required=True,type=str,nargs='+')
+                    required=False,type=str,nargs='+')
 
 parser.add_argument('-sf','--surfAdj',help='Surface adjacency file.',
                     required=True,type=str)
@@ -40,24 +41,37 @@ parser.add_argument('-out','--output',help='Output file.',required=True,type=str
 args = parser.parse_args()
 
 featureMap = args.featureData
-featureKeys = args.featureKeys
+fp = featureMap.split('.')
+
+if fp[-1] == 'h5':
+    
+    if not args.featureKeys:
+        raise('Must provide feature names if using HDF5.')
+    else:
+        featureKeys = args.featureKeys
+        
+    # Load data array
+    assert os.path.exists(featureMap)
+    print 'Loading feature map {}.'.format(featureMap)
+    
+    features = h5py.File(featureMap,mode='r')
+    fp = featureMap.split('/')[-1]
+    subject = fp.split('.')[0]
+    dataDict = features[subject]
+    
+    dataArray = du.mergeValueArrays(dataDict,keys = featureKeys)
+    features.close()
+    
+elif fp[-1] == 'mat':
+    dataArray = ld.loadMat(featureMap)
+else:
+    raise('Must provide .mat of .h5 feature file.')
 
 surfAdj = args.surfAdj
 samples = args.samples
 maxDist = args.maxDistance
 output = args.output
 
-# Load data array
-assert os.path.exists(featureMap)
-print 'Loading feature map {}.'.format(featureMap)
-
-features = h5py.File(featureMap,mode='r')
-fp = featureMap.split('/')[-1]
-subject = fp.split('.')[0]
-dataDict = features[subject]
-
-dataArray = du.mergeValueArrays(dataDict,keys = featureKeys)
-features.close()
 
 # Load surface adjacency file and generate graph
 assert os.path.exists(surfAdj)
