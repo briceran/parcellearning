@@ -96,7 +96,7 @@ for subj in subjects:
         df_hmg = df_hmg.append(regSim,ignore_index=True)
         df_size = df_size.append(regSize,ignore_index=True)
 
-if df_hmg.shape[0] == 10:   
+if df_hmg.shape[0] != 0:   
     df_hmg.to_csv(output)
-if df_size.shape[0] == 10:
+if df_size.shape[0] != 0:
     df_size.to_csv(''.join([f_path,'.size',f_ext]))
