@@ -72,11 +72,11 @@ for subj in subjects:
     
     featureFile = ''.join([featureDir,subj,featureExt])
     labelFile = ''.join([labelDir,subj,labelExt])
-    
-    print featureFile
-    print labelFile
-    
+
     if os.path.exists(featureFile) and os.path.exists(labelFile):
+        
+        print featureFile
+        print labelFile
         
         print 'Processing %s' % subj
         features = h5py.File(featureFile,mode='r')
