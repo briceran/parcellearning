@@ -37,7 +37,7 @@ if __name__ == "__main__":
                     for d in datas:
                         
                         baseExt = '.Model_{}.Accuracy.csv'.format(it)
-                        baseName = ''.join([h,'.',m,'.',d,'.Power.',p,baseExt])
+                        baseName = ''.join([h,'.',m,'.',d,'.Power.',str(p),baseExt])
                         inFile = ''.join([iter_dir,baseName])
 
                         header = [m,h,p,d]
@@ -50,6 +50,6 @@ if __name__ == "__main__":
                                 header = header + [a]
                                 df.append(dict(zip(cols,header)),ignore_index=True)
 
-df.to_csv(''.join([baseDirectory,'Accuracy.csv']))
+df.to_csv(''.join([baseDirectorypa,'Accuracy.csv']))
                 
         
