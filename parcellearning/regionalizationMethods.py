@@ -188,7 +188,7 @@ Methods to compute level structures on a cortical map file
 """
 #####
 
-def coreBoundaryVertices(labelFile,surfaceAdjacency):
+def coreBoundaryVertices(label,surfAdj):
     
     """
     Method to find the border vertices of each label.  These will be stored
@@ -199,9 +199,6 @@ def coreBoundaryVertices(labelFile,surfaceAdjacency):
         labelFile : cortical map file
         surfaceAdjacency : surface adjacency file
     """
-    
-    label = ld.loadGii(labelFile,0)
-    surfAdj = ld.loadPick(surfaceAdjacency)
 
     L = set(label) - set([0])
     
@@ -250,11 +247,12 @@ def computeLabelLayers(labelFile,surfaceAdjacency,borderFile):
     """
     
     for i,labelValue in enumerate(L):
+        if borders.has_key(labelValue):
         
-        inds = np.where(label == labelValue)[0]
-        bm = borders[labelValue]
-
-        layers[labelValue] = labelLayers(labelValue,inds,surfAdj,bm)
+            inds = np.where(label == labelValue)[0]
+            bm = borders[labelValue]
+    
+            layers[labelValue] = labelLayers(labelValue,inds,surfAdj,bm)
 
     return layers
 
@@ -272,49 +270,78 @@ def labelLayers(lab,labelIndices,surfAdj,borderIndices):
     
     print ('Computing layers for label {}.'.format(lab))
 
+    # get indices of vertices not at border
     internalNodes = list(set(labelIndices).difference(borderIndices))
     
     # compute condensed adjacency list corresponding to vertices in ROI
     regionSurfAdj = {k: [] for k in labelIndices}
     
+    # loop over each vertex in ROI
     for li in labelIndices:
         
+        # get full adjacency list of vertex
         fullNeighbs = surfAdj[li]
+        # constrain adjacency list to only those vertices within the ROI
         regionSurfAdj[li] = list(set(labelIndices).intersection(fullNeighbs))
         
     # generate graph of condensed surface adjacency file
+    # regionSurfAdj is an adjacency list of lists, where each vertex's 
+    # list corresponds to only other vertices in the same region as itself
     G = nx.from_dict_of_lists(regionSurfAdj)
     
     distances = {n: [] for n in internalNodes}
     
     
-    print 'distances'
     # here, we allow for connected components in the regions
     for subGraph in nx.connected_component_subgraphs(G):
         
-        # get subgraph nodes
+        # get all subgraph nodes
         sg_nodes = subGraph.nodes()
         
         # make sure subgraph has more than a single component
         if len(sg_nodes) > 1:
             
+            # get vertex IDs of component that are border vertices
             sg_border = list(set(sg_nodes).intersection(borderIndices))
+            # get vertex IDs of component that are internal vertices
             sg_intern = list(set(sg_nodes).intersection(internalNodes))
             
+            # get indices of border indices in sub-graph component
             external = [i for i,j in enumerate(sg_nodes) if j in sg_border]
             
+            # get shortest paths of component as an array
             sp = nx.floyd_warshall_numpy(subGraph)
-            se = sp[:,external]
-            minDist = np.min(se,axis=1)
             
+            # shortest path of all vertices to only border vertices
+            se = sp[:,external]
+            se = se.astype(np.int32)
+            
+            for x in np.arange(se.shape[0]):
+                print "X: {}".format(x)
+                print set(list(np.squeeze(np.asarray(se[x,:]))))
+
+            minDist = np.squeeze(np.min(se,axis=1))
+            
+            if lab == 131:
+                print minDist
+                print "min24: {}".format(minDist[24])
+
+            # for each of the internal vertex, compute the shortest distance
+            # to a border vertex
             for k,v in enumerate(sg_nodes):
                 if v in sg_intern:
-                    distances[v] = int(np.asarray(minDist[k]))
+                    distances[v] = int(np.min(list(set(list(np.squeeze(np.asarray(se[k,:])))))))
 
-    print 'layers'
-    layered = {k: [] for k in set(distances.values())}
+    print 'Label {} layers'.format(lab)
+    D = distances.values()
+    md = set()
+    for l in D:
+        if l!=[]:
+            md.add(l)
     
-    for vertex in distances.keys():
+    layered = {k: [] for k in md}
+    
+    for j,vertex in enumerate(distances.keys()):
         dist = distances[vertex]
         layered[dist].append(vertex)
         
