@@ -43,13 +43,14 @@ import pickle
 from keras import callbacks, optimizers
 from keras.models import Sequential
 from keras.layers import Dense,normalization
+from keras.utils import to_categorical
 
 
 ###
 # Hard coded factors:
     
 # default validation set size (fraction of training set)
-EVAL_FACTOR = 0.2
+EVAL_FACTOR = 0.1
 
 # Default DBSCAN fraction of kept points
 DBSCAN_PERC = 0.7
@@ -90,7 +91,12 @@ def loadData(subjectList,dataDir,features,hemi):
     labs = {}
     vlib = {}
     
-    dataFeatures = list(set(features).difference({'label'}))
+    #dataFeatures = list(set(features).difference({'label'}))
+
+    nf = []
+    for f in features:
+        if f != 'label':
+            nf.append(f)
     
     for s in subjectList:
 
@@ -119,7 +125,7 @@ def loadData(subjectList,dataDir,features,hemi):
             uni_subj = unicode(s, "utf-8")
 
             # Get data corresponding to features of interest
-            trainFeatures = ld.parseH5(trainH5,dataFeatures)
+            trainFeatures = ld.parseH5(trainH5,nf)
             print trainH5
             print trainFeatures.keys()
             try:
@@ -132,7 +138,7 @@ def loadData(subjectList,dataDir,features,hemi):
             labelFeatures = labelFeatures[uni_subj]
             
             # Merge training features into single array
-            mergedDataFeatures = cu.mergeFeatures(trainFeatures,dataFeatures)
+            mergedDataFeatures = cu.mergeFeatures(trainFeatures,nf)
             mergedLablFeatures = cu.mergeFeatures(labelFeatures,['label'])
             
             # Get the true data coordiantes (exclude midline coordinates)
@@ -354,7 +360,7 @@ class ConstrainedCallback(callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         
         x = self.x_test
-        y_true = self.y_true
+        y_true = np.squeeze(self.y_true)
         y_oneHot = self.y_oneHot
         mm = self.mm
 
@@ -364,10 +370,12 @@ class ConstrainedCallback(callbacks.Callback):
 
         # Include only those prediction probabilities for classes that the 
         # samples mapped to during surface registration
-        threshed = mm*predProb;
+        threshed = mm*(predProb[:,1:]);
         
         # Find the class with the greatest prediction probability
-        y_pred = np.argmax(threshed,axis=1)
+        y_pred = np.squeeze(np.argmax(threshed,axis=1))
+
+        y_pred = np.squeeze(y_pred + 1)
 
         # Evalute the loss and accuracy of the model
         loss,_ = self.model.evaluate(x, y_oneHot, verbose=0)
@@ -450,17 +458,29 @@ else:
 dataDir = args.dataDirectory
 features = list(args.features.split(','))
 
-print 'Levels: {}'.format(levels)
-print 'Nodes: {}'.format(nodes)
-print 'Epochs: {}'.format(epochs)
-print 'Batch Size: {}'.format(batch)
-print 'Learning rate: {}'.format(rate)
+print 'Parameters:\n'
+print '\tLevels: {}'.format(levels)
+print '\tNodes: {}'.format(nodes)
+print '\tEpochs: {}'.format(epochs)
+print '\tBatch Size: {}'.format(batch)
+print '\tLearning rate: {}\n'.format(rate)
 
 # Load subject data
 subjectFile = args.subjectList
 with open(subjectFile,'r') as inFile:
     subjects = inFile.readlines()
 subjects = [x.strip() for x in subjects]
+
+fullSize = len(subjects)
+valSize = int(np.floor(EVAL_FACTOR*fullSize))
+
+trainingSubjects = list(np.random.choice(subjects,size=(fullSize-valSize),replace=False))
+validationSubjects = list(set(subjects).difference(set(trainingSubjects)))
+intersection = list(set(trainingSubjects).intersection(set(validationSubjects)))
+
+print 'Length training: {}'.format(len(trainingSubjects))
+print 'Length evaluation: {}'.format(len(validationSubjects))
+print 'Number of overlapping subjects (should be zero): {}\n'.format(len(intersection))
 
 #ns = np.min([len(subjects),args.ns])
 #print 'Number of training subjects: {}'.format(ns)
@@ -469,7 +489,10 @@ subjects = [x.strip() for x in subjects]
 # Load training data
 print 'Loading subject data.'
 now = time.time()
-trainingData,labels,mapMatrix = loadData(subjects,dataDir,features,hemi)
+
+trData,trLabels,trMatrix = loadData(trainingSubjects,dataDir,features,hemi)
+evData,evLabels,evMatrix = loadData(validationSubjects,dataDir,features,hemi)
+
 later = time.time()
 print 'Loaded in {} seconds.\n'.format(int(later-now))
 
@@ -478,7 +501,7 @@ print 'Loaded in {} seconds.\n'.format(int(later-now))
 # Currently, only 'equal' works
 print 'Applying {} sample reduction.'.format(args.downSample)
 now = time.time()
-tempX,tempM,tempY = ds_funcs[args.downSample](trainingData,mapMatrix,labels)
+tempX,tempM,tempY = ds_funcs[args.downSample](trData,trMatrix,trLabels)
 later = time.time()
 print 'Reduced in {} seconds.\n'.format(int(later-now))
 
@@ -486,52 +509,33 @@ print 'Reduced in {} seconds.\n'.format(int(later-now))
 # Standardize subject features
 print 'Standardizing.\n'
 S = sklearn.preprocessing.StandardScaler()
-trainTransformed = S.fit_transform(tempX)
+trTransformed = S.fit_transform(tempX)
+evTransformed = S.transform(evData)
 
 # Shuffle features and responses
 print 'Shuffling.\n'
-xTrain,mTrain,yTrain = shuffleData(trainTransformed,tempM,tempY)
+xTrain,mTrain,yTrain = shuffleData(trTransformed,tempM,tempY)
 
+yTrain = np.squeeze(yTrain.astype(np.int32))
+yTrain_OneHotLabels = to_categorical(yTrain,num_classes=181)
 
-yTrain = yTrain.astype(np.int32)
-yTrain.shape+=(1,)
-
-O = sklearn.preprocessing.OneHotEncoder(sparse=False)
-O.fit(yTrain.reshape(-1,1))
-OneHotLabels = O.transform(yTrain.reshape(-1,1))
 
 # Dimensions of training data
 nSamples = xTrain.shape[0]
 input_dim = xTrain.shape[1]
 
-
-# Generate validation data set
-print 'Generating validation set.\n'
-N = np.arange(nSamples);
-dSamples = int(np.floor(nSamples*EVAL_FACTOR))
-evals_coords = np.random.choice(N, size=(dSamples,), replace=False)
-train_coords = np.asarray(list(set(N).difference(set(evals_coords))))
-
-eval_x = xTrain[evals_coords,:]
-eval_y = OneHotLabels[evals_coords,:]
-flat_eval_y = np.argmax(eval_y,axis=1)
-eval_m = mTrain[evals_coords,:]
-
-train_x = xTrain[train_coords,:]
-train_y = OneHotLabels[train_coords,:]
-flat_train_y = np.argmax(train_y,axis=1)
-train_m = mTrain[train_coords,:]
+ev_OneHotLabels = to_categorical(evLabels,num_classes=181)
 
 # final dimensionf of data
-nSamples = train_x.shape[0]
-output_dim = train_y.shape[1]
+nSamples = xTrain.shape[0]
+output_dim = yTrain_OneHotLabels.shape[1]
 
 print 'Training data has {} samples, and {} features.'.format(nSamples,input_dim)
 print 'Building a network with {} hidden layers, each with {} nodes.\n'.format(levels,nodes)
 
 # instantiate model
 model = Sequential()
-model.add(Dense(128, activation='relu', input_dim=input_dim))
+model.add(Dense(nodes, activation='relu', input_dim=input_dim))
 model.add(normalization.BatchNormalization())
 
 c = 0
@@ -550,14 +554,17 @@ model.add(Dense(output_dim, activation='softmax'))
 
 model.compile(loss='categorical_crossentropy',optimizer= opt,metrics=['accuracy'])
 
+print 'Training data size: {}'.format(xTrain.shape)
+print 'Evaluation data size: {}\n'.format(evTransformed.shape)
+
 print 'Model built using {} optimization.  Training now.\n'.format(args.optimizer)
 
 
-ConstrainedTE = ConstrainedCallback(eval_m,eval_x,flat_eval_y,eval_y,['consValLoss','consValAcc'])
-ConstrainedTR = ConstrainedCallback(train_m,train_x,flat_train_y,train_y,['consTrainLoss','consTrainAcc'])
+ConstrainedTE = ConstrainedCallback(evMatrix,evTransformed,evLabels,ev_OneHotLabels,['consValLoss','consValAcc'])
+ConstrainedTR = ConstrainedCallback(mTrain,xTrain,yTrain,yTrain_OneHotLabels,['consTrainLoss','consTrainAcc'])
 
-history = model.fit(train_x, train_y, epochs=epochs,
-          batch_size=batch,verbose=2,shuffle=True,
+history = model.fit(xTrain, yTrain_OneHotLabels, epochs=epochs,
+          batch_size=batch,verbose=0,shuffle=True,
           callbacks=[ConstrainedTE,ConstrainedTR])
 
 outTrained = args.output

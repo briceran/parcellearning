@@ -6,6 +6,7 @@ Created on Sat Jul 29 01:40:23 2017
 @author: kristianeschenburg
 """
 
+import argparse
 import sys
 sys.path.append('..')
 
@@ -15,13 +16,16 @@ import os
 
 import parcellearning.loaded as ld
 
+parser = argparse.ArgumentParser(description='Build training objects.')
+parser.add_argument('-hm','--hemi',help='hemisphere to process.',required=True)
+args = parser.parse_args()
+
 hemiFunc = {}.fromkeys(['Left','Right'])
 hemiFunc['Left'] = 'L'
 hemiFunc['Right'] = 'R'
 
-hemi = 'Right'
+hemi = args.hemi
 hstr = hemiFunc[hemi]
-
 
 
 baseDir = '/mnt/parcellator/parcellation/'
@@ -59,10 +63,13 @@ fsSubCortDir = '{}SubcorticalRegionalization/RestingState/'.format(dataDir)
 fsSubCortExt = 'SubCortical.Regionalization.RestingState.aparc.a2009s.mat'
 
 ptxCortDir = '{}CorticalRegionalization/Destrieux/ProbTrackX2/'.format(dataDir)
-ptxCortExt = 'Cortical.Regionalized.ProbTrackX2.aparc.a2009s.mat'
+ptxCortExt = 'Cortical.Regionalized.ProbTrackX2.LogTransformed.Single.aparc.a2009s.mat'
 
 ptxSubCortDir = '{}SubcorticalRegionalization/ProbTrackX2/'.format(dataDir)
-ptxSubCortExt = 'SubCortical.Regionalization.ProbTrackX2.aparc.a2009s.mat'
+ptxSubCortExt = 'SubCortical.Regionalization.ProbTrackX2.LogTransformed.Single.aparc.a2009s.mat'
+
+midDir = '{}Midlines/'.format(dataDir)
+midExt = 'Midline_Indices.mat'
 
 for s in subjects:
     
@@ -78,6 +85,8 @@ for s in subjects:
     fsSubCortObject = '{}{}.{}.{}'.format(fsSubCortDir,s,hstr,fsSubCortExt)
     ptxCortObject = '{}{}.{}.{}'.format(ptxCortDir,s,hstr,ptxCortExt)
     ptxSubCortObject = '{}{}.{}.{}'.format(ptxSubCortDir,s,hstr,ptxSubCortExt)
+    
+    midObject = '{}{}.{}.{}'.format(midDir,s,hstr,midExt)
     
     cond = True
 
@@ -105,43 +114,108 @@ for s in subjects:
     if not os.path.isfile(ptxSubCortObject):
         print ptxSubCortObject
         cond = False
+    if not os.path.isfile(midObject):
+        print midObject
+        cond = False
         
     if not cond:
         print s + ' has missing files.'
         
     if cond:
         
+        mid = ld.loadMat(midObject) - 1
+        
         curv = ld.loadGii(curvObject)
+        if curv.ndim == 1:
+            curv.shape+=(1,)
+        curv[mid] = 0;
+        infInd = np.isinf(curv)
+        nanInd = np.isnan(curv)
+        curv[infInd] = 0
+        curv[nanInd] = 0
+        
+            
         myl = ld.loadGii(mylObject)
+        if myl.ndim == 1:
+            myl.shape+=(1,)
+            
+        myl[mid] = 0
+        
         sul = ld.loadGii(sulObject)
+        if sul.ndim == 1:
+            sul.shape+=(1,)
+        sul[mid] = 0
+        infInd = np.isinf(sul)
+        nanInd = np.isnan(sul)
+        sul[infInd] = 0
+        sul[nanInd] = 0
+        
         lab = ld.loadGii(labObject)
+        if lab.ndim == 1:
+            lab.shape+=(1,)
+        lab[mid] = 0
+        infInd = np.isinf(lab)
+        nanInd = np.isnan(lab)
+        lab[infInd] = 0
+        lab[nanInd] = 0
+        
         
         fsCort = ld.loadMat(fsCortObject)
+        fsCort[mid,:] = 0
+        infInd = np.isinf(fsCort)
+        nanInd = np.isnan(fsCort)
+        fsCort[infInd] = 0
+        fsCort[nanInd] = 0
+        
         fsSubCort = ld.loadMat(fsSubCortObject)
+        fsSubCort[mid,:] = 0
+        infInd = np.isinf(fsSubCort)
+        nanInd = np.isnan(fsSubCort)
+        fsSubCort[infInd] = 0
+        fsSubCort[nanInd] = 0
         
         ptxCort = np.log(ld.loadMat(ptxCortObject))
-        inds = np.isinf(ptxCort)
-        ptxCort[inds] = 0
-        
+        ptxCort[mid,:] = 0
+        infInd = np.isinf(ptxCort)
+        nanInd = np.isnan(ptxCort)
+        ptxCort[infInd] = 0
+        ptxCort[nanInd] = 0
+
         ptxSubCort = np.log(ld.loadMat(ptxSubCortObject))
-        inds = np.isinf(ptxSubCort)
-        ptxSubCort[inds] = 0
-        
-        if not os.path.isfile(trainingObject):
-            data = h5py.File(trainingObject,mode='w')
-        else:
-            data = h5py.File(trainingObject,mode='r+')
+        ptxSubCort[mid,:] = 0;
+        infInd = np.isinf(ptxSubCort)
+        nanInd = np.isnan(ptxSubCort)
+        ptxSubCort[infInd] = 0
+        ptxSubCort[nanInd] = 0
+
+        data = h5py.File(trainingObject,mode='w')
             
         data.create_group(s)
+        data.attrs['ID'] = s
         
         data[s].create_dataset('curv',data=curv)
+        print data[s]['curv'].shape
+        
         data[s].create_dataset('myelin',data=myl)
+        print data[s]['myelin'].shape
+        
         data[s].create_dataset('sulcal',data=sul)
+        print data[s]['sulcal'].shape
+        
         data[s].create_dataset('label',data=lab)
+        print data[s]['label'].shape
+        
         data[s].create_dataset('fs_cort',data=fsCort)
+        print data[s]['fs_cort'].shape
+        
         data[s].create_dataset('fs_subcort',data=fsSubCort)
+        print data[s]['fs_subcort'].shape
+        
         data[s].create_dataset('pt_cort',data=ptxCort)
+        print data[s]['pt_cort'].shape
+        
         data[s].create_dataset('pt_subcort',data=ptxSubCort)
+        print data[s]['pt_subcort'].shape
         
         data.close()
     

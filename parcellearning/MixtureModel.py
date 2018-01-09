@@ -44,15 +44,12 @@ class GMM(object):
             
     """
     
-    def __init__(self,features,scale=True,thresh_test=0.05,exclude_testing=None,
+    def __init__(self,scale=True,exclude_testing=None,
                  random=None,load=None,save=None,power=None):
 
         if not isinstance(scale,bool):
             raise ValueError('Scale must be boolean.')
 
-        if thresh_test < 0 or thresh_test > 1:
-            raise ValueError('Threshold value must be within [0,1].')
-            
         if exclude_testing is not None and not isinstance(exclude_testing,str):
             raise ValueError('exclude_testing must by a string or None.')
             
@@ -118,6 +115,9 @@ class GMM(object):
         
         modelArgs = cu.parseKwargs(args,kwargs)
         model.set_params(**modelArgs)
+        
+        print 'covariance type: {}'.format(model.covariance_type)
+        print 'n components type: {}'.format(model.n_components)
 
         mixtures = {}.fromkeys(self.labels)
 
@@ -130,8 +130,7 @@ class GMM(object):
         self._fitted = True
         
         
-    def loadTraining(self,trainObject,neighborhoodMap,dataDir,hemisphere,
-                     features):
+    def loadTraining(self,trainObject,dataDir,hemisphere,features):
         
         """
         Parameters:
@@ -192,9 +191,17 @@ class GMM(object):
         training = []
         labels = []
         
-        trainFeatures = list(set(self.features).difference('label'))
+        #trainFeatures = list(set(self.features).difference({'label'}))
+        
+        print 'Model features: {}'.format(features)
+        
+        nf = []
+        for f in self.features:
+            if f != 'label':
+                nf.append(f)
+        
         for subj in trainData.keys():
-            training.append(cu.mergeFeatures(trainData[subj],trainFeatures))
+            training.append(cu.mergeFeatures(trainData[subj],nf))
             labels.append(cu.mergeFeatures(trainData[subj],['label']))
         
         trainData = np.squeeze(np.row_stack(training))
@@ -220,11 +227,11 @@ class GMM(object):
         # all response vectors have the same number of samples, and that all training data
         # has the same features
         cond = True
-        if not self._compareTrainingDataKeys(labelData,response):
+        if not compareTrainingDataKeys(labelData,response):
             print('WARNING: Label data and label response do not have same keys.')
             cond = False
 
-        if not self._compareTrainingDataSize(labelData,response):
+        if not compareTrainingDataSize(labelData,response):
             print('WARNING: Label data and label response are not same shape.')
             cond = False
 
@@ -250,21 +257,16 @@ class GMM(object):
                     in the training data
 
         """
-        
-        load = self.load
-        save = self.save
-        
-        features = self.features
- 
+
         # load test subject data, save as attribtues
         tObject = ld.loadH5(y,*['full'])
         ID = tObject.attrs['ID']
         
-        parsedData = ld.parseH5(tObject,features)
+        parsedData = ld.parseH5(tObject,self.features)
         tObject.close()
 
         data = parsedData[ID]
-        mtd = cu.mergeFeatures(data,features)
+        mtd = cu.mergeFeatures(data,self.features)
         print 'Testing shape: {}'.format(mtd.shape)
 
         if self.scaled:
@@ -273,30 +275,12 @@ class GMM(object):
             
         threshed = ld.loadMat(yMatch)
 
-        # Computing label-vertex memberships is time consuming
-        # If already precomputed for given test data at specified threshold,
-        # can supply path to load file.
-        if load:
-            if os.path.isfile(load):
-                ltvm = ld.loadPick(load)
-        # Otherwise, compute label-vertex memberships.
-        else:
-            ltvm = cu.vertexMemberships(threshed,180)
-        
-        self.ltvm = ltvm
+        ltvm = cu.vertexMemberships(threshed,180)
 
-        # if save is provided, save label-vertex memberships to file
-        if save:
-            try:
-                with open(save,"wb") as outFile:
-                    pickle.dump(self.labelToVertexMaps,outFile,-1)
-            except IOError:
-                print('Cannot save label-vertex memberships to file.')
-                
         return [threshed,mtd,ltvm]
 
 
-    def predict(self,y,yMatch,yMids):
+    def predict(self,mtd,ltvm,mm,**kwargs):
         
         """
         Method to compute Mahalanobis distance of test data from the
@@ -310,18 +294,17 @@ class GMM(object):
                     surface vertices
         """
         
+        if kwargs:
+            if 'power' in kwargs.keys():
+                p = kwargs['power']
+            else:
+                p = 1
+        else:
+            p = 1
+
         R = 180
         labels = self.labels
-        # load the testing datamap
-        [mm,mtd,ltvm] = self.loadTest(y,yMatch)
-        
-        # Python is 0-indexed, while Matlab is not
-        # We adjust the Matlab coordinates by subtracting 1
-        midline = ld.loadMat(yMids)-1
-        
-        mm[midline,:] = 0
-        mtd[midline,:] = 0
-        
+
         xTest,yTest = mtd.shape
         if yTest != self.input_dim:
             raise Warning('Test data does not have the same number \
@@ -344,103 +327,13 @@ class GMM(object):
                 # save results in self.predict
                 baseline[members,lab] = scores
                 
-        predicted = np.argmax(baseline,axis=1)
-        
+        mm = np.power(mm,p)
+        baseline = mm*(1.*baseline[:,1:])
+        predicted = np.argmin(baseline,axis=1)
+
         self.baseline = baseline
         self.predicted = predicted
-        self._classified = True
-        
-        """
-        if self.power:
-            weightedLL = self.weight(baseline,self.power)
-            self.weighted = self._classify(weightedLL)
-        """
-    
-    def weight(self,baseline,power):
-        
-        """
-        Method to weight the score by the frequency with which
-        the test vertex mapped to the training labels.
-        
-        Parameters:
-        - - - - -
-        
-            base : likehoods computed without mapping frequency
-            
-            power : mapping frequency exponent
-            
-        """
-        
-        vertLib = self.testMatch
 
-        weighted = {}
-        weighted = weighted.fromkeys(vertLib.keys())
-    
-        # for each vertex in test brain, and its mapped labels
-        for vert,mapped in vertLib.items():
-            vert = np.int(vert)
-            
-            # if vertex is mapped to labels
-            if mapped:
-
-                # get log-likelihood for each label mixture model a vertex 
-                # is mapped to
-                logScore = baseline[vert]
-
-                # return weighted log-likelihoods
-                weighted[vert] = self._weightPoint(mapped,logScore,power)
-                
-        return weighted
-            
-    def _weightPoint(self,mapLabels,labelScore,power):
-        
-        """
-        Method to weight the scores of a single vertex.  Since we want the 
-        maximum log-liklihood, weighting by the frequency will upweight labels 
-        that are mapped to more frequently.
-        
-        If weight != 0, we weight the distances by 
-            
-            (mapCount / sumCounts)^power
-        
-        Parameters:
-        - - - - -
-        
-            mapLabels : dictionary of labels to which the test vertex is mapped
-                        and frequency with which those labels are mapped to
-                        
-            labelScore : dictionary of labels to which a test vertex is mapped
-                        and log-likelihood between vertex test point given 
-                        that labels mixture model
-                        
-            power : power to which the raise the mapping frequency to
-                        
-        Returns:
-        - - - -
-            
-            weight : dictionary of weighted log-likelihoods for each of 
-                        the mapped-to labels
-        """
-        
-        mappedSum = np.float(np.sum(mapLabels.values()))
-        labels = mapLabels.keys()
-        
-        weight = {}
-
-        for l in labels:
-            
-            if l > 0:
-                
-                # get mapping frequency
-                inv = (1/mappedSum)*mapLabels[l]
-                # raise frequency to power
-                lWeight = np.power(inv,power)
-                # apply weight to log-likelihood score
-                weight[l] = lWeight*labelScore[l]
-                
-        return weight
-    
-    
     def assignComponent(self,predicted):
         
         """
@@ -607,6 +500,40 @@ def loadDataFromList(subjectList,dataDir,features,hemi):
             data[s] = subjData[s]
 
     return data
+
+def compareTrainingDataSize(labelData,response):
+    
+    """
+    Method to ensure that the length of the response vector is the same 
+    length as the number of observations in the training feature data.
+    
+    This must be true in order to actually train the classifiers for each
+    label.
+    """
+    cond = True
+
+    for f,r in zip(set(labelData.keys()),set(response.keys())):
+        
+        sf = labelData[f].shape[0]
+        sr = response[r].shape[0]
+        
+        if sf != sr:
+            cond = False
+    
+    return cond
+        
+def compareTrainingDataKeys(labelData,response):
+    
+    """
+    Method to ensure that the keys for the training data for the response
+    vectors are the same.  These must be the same in order to properly
+    access the training data for training the classifiers.
+    """
+
+    sf = set(labelData.keys())
+    sr = set(response.keys())
+    
+    return sf == sr
     
     
     
