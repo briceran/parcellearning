@@ -74,10 +74,7 @@ for subj in subjects:
     labelFile = ''.join([labelDir,subj,labelExt])
 
     if os.path.exists(featureFile) and os.path.exists(labelFile):
-        
-        print featureFile
-        print labelFile
-        
+
         print 'Processing %s' % subj
         features = h5py.File(featureFile,mode='r')
 
@@ -99,8 +96,7 @@ for subj in subjects:
         df_hmg = df_hmg.append(regSim,ignore_index=True)
         df_size = df_size.append(regSize,ignore_index=True)
 
-print df_hmg.shape
-print df_size.shape
-        
-df_hmg.to_csv(output)
-df_size.to_csv(''.join([f_path,'.size',f_ext]))
+if df_hmg.shape[0] == 10:   
+    df_hmg.to_csv(output)
+if df_size.shape[0] == 10:
+    df_size.to_csv(''.join([f_path,'.size',f_ext]))
