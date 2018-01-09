@@ -37,7 +37,7 @@ if __name__ == "__main__":
                     for d in datas:
                         
                         baseExt = '.Model_{}.Accuracy.csv'.format(it)
-                        baseName = ''.join([h,'.',m,'.',d,'.Power.',str(p),baseExt])
+                        baseName = ''.join([h,'.',m,'.',dataMap[d],'.Power.',str(p),baseExt])
                         inFile = ''.join([iter_dir,baseName])
 
                         header = [m,h,p,d]
