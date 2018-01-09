@@ -20,7 +20,7 @@ parser.add_argument('-labDir','--labelDir',help='Directory where predicted label
                     required=True,type=str)
 parser.add_argument('-labExt','--labelExt',help='Predicted label extension.',
                     required=True,type=str)
-parser.add_arugement('-truDir','--trueDir',help='Directory where true labels exist.',
+parser.add_argument('-truDir','--trueDir',help='Directory where true labels exist.',
                      required=True,type=str)
 parser.add_argument('-truExt','--trueExt',help='True label extension.',
                     required=True,type=str)
