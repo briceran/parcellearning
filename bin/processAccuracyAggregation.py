@@ -37,7 +37,7 @@ if __name__ == "__main__":
                     for d in datas:
                         
                         baseExt = '.Model_{}.Accuracy.csv'.format(it)
-                        baseName = ''.join([h,'.',m,'.',dataMap[d],'.Power.',str(p),baseExt])
+                        baseName = ''.join([h,'.',m,'.',d,'.Power.',str(p),baseExt])
                         inFile = ''.join([iter_dir,baseName])
 
                         if os.path.exists(inFile):
@@ -45,7 +45,7 @@ if __name__ == "__main__":
                             tempDF = pd.read_csv(inFile)
                             
                             for a in tempDF['accuracy']:
-                                header = [m,h,p,d]
+                                header = [m,h,p,dataMap[d]]
                                 header = header + [a]
                                 print header
                                 df = df.append(dict(zip(cols,header)),ignore_index=True)
