@@ -39,6 +39,7 @@ if __name__ == "__main__":
                         baseExt = '.Model_{}.Accuracy.csv'.format(it)
                         baseName = ''.join([h,'.',m,'.',d,'.Power.',str(p),baseExt])
                         inFile = ''.join([iter_dir,baseName])
+                        print inFile
 
                         if os.path.exists(inFile):
                             
