@@ -98,8 +98,6 @@ for subj in subjects:
 
         df_hmg = df_hmg.append(regSim,ignore_index=True)
         df_size = df_size.append(regSize,ignore_index=True)
-    else:
-        print 'Files do not exist.'
 
 print df_hmg.shape
 print df_size.shape
