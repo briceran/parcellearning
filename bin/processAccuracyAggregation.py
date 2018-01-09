@@ -40,16 +40,14 @@ if __name__ == "__main__":
                         baseName = ''.join([h,'.',m,'.',dataMap[d],'.Power.',str(p),baseExt])
                         inFile = ''.join([iter_dir,baseName])
 
-                        header = [m,h,p,d]
-
                         if os.path.exists(inFile):
                             
                             tempDF = pd.read_csv(inFile)
                             
                             for a in tempDF['accuracy']:
+                                header = [m,h,p,d]
                                 header = header + [a]
                                 print header
-                                print zip(cols,header)
                                 df.append(dict(zip(cols,header)),ignore_index=True)
 
 df.to_csv(''.join([baseDirectory,'Accuracy.csv']))
