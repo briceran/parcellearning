@@ -73,6 +73,9 @@ for subj in subjects:
     featureFile = ''.join([featureDir,subj,featureExt])
     labelFile = ''.join([labelDir,subj,labelExt])
     
+    print featureFile
+    print labelFile
+    
     if os.path.exists(featureFile) and os.path.exists(labelFile):
         
         print 'Processing %s' % subj
@@ -95,6 +98,11 @@ for subj in subjects:
 
         df_hmg = df_hmg.append(regSim,ignore_index=True)
         df_size = df_size.append(regSize,ignore_index=True)
+    else:
+        print 'Files do not exist.'
+
+print df_hmg.shape
+print df_size.shape
         
 df_hmg.to_csv(output)
 df_size.to_csv(''.join([f_path,'.size',f_ext]))
