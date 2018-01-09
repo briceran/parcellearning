@@ -50,6 +50,6 @@ if __name__ == "__main__":
                                 header = header + [a]
                                 df.append(dict(zip(cols,header)),ignore_index=True)
 
-df.to_csv(''.join([baseDirectorypa,'Accuracy.csv']))
+df.to_csv(''.join([baseDirectory,'Accuracy.csv']))
                 
         
