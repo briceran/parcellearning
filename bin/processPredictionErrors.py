@@ -84,7 +84,7 @@ for subj in subjects:
         
 errorList = np.asarray(np.concatenate(errorList))
 
-h5 = h5py.File(output,mode='r')
+h5 = h5py.File(output,mode='a')
 h5.create_dataset('distances',data=errorList)
 h5.close()
     
