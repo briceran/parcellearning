@@ -11,7 +11,7 @@ import numpy as np
 
 power = [0,1.0]
 hemi = ['L','R']
-models = ['GMM','NeuralNetwork','RandoMForest']
+models = ['GMM','NeuralNetwork','RandomForest']
 data = ['Full','RestingState','ProbTrackX2']
 x = np.arange(5)
 
