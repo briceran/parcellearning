@@ -19,8 +19,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-td','--trueDir',help='True label directory.',required=True,type=str)
 parser.add_argument('-te','--trueExt',help='True label file extension.',required=True,type=str)
 
-parser.add_argument('-pd','--predDir',help='Predicted label directory.',required=True,type=str)
-parser.add_argument('-pe','--predExt',help='Predicted label file extension.',required=True,type)
+parser.add_argument('-pd','--predDir',help='Predicted label directory.',
+                    required=True,type=str)
+parser.add_argument('-pe','--predExt',help='Predicted label file extension.',
+                    required=True,type=str)
 
 parser.add_argument('-sd','--surfAdjDir',help='Surface adjacency directory.',
                     required=True,type=str)
