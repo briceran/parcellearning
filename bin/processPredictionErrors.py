@@ -60,9 +60,7 @@ subjects = [x.strip() for x in subjects]
 print '{} subjects to process.'.format(len(subjects))
 
 for subj in subjects:
-    
-    print subj
-    
+
     inTrue = ''.join([trueDir,subj,trueExt])
     inPred = ''.join([predDir,subj,predExt])
     
@@ -70,12 +68,7 @@ for subj in subjects:
     inMid = ''.join([midDir,subj,midExt])
     
     errorList = []
-    
-    print inTrue
-    print inPred
-    print inAdj
-    print inMid
-    
+
     if os.path.exists(inTrue) and os.path.exists(inPred):
         if os.path.exists(inAdj) and os.path.exists(inMid):
         
