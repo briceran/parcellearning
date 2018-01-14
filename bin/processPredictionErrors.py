@@ -57,7 +57,11 @@ with open(args.subjectList,'r') as inSubj:
     subjects = inSubj.readlines()
 subjects = [x.strip() for x in subjects]
 
+print '{} subjects to process.'.format(len(subjects))
+
 for subj in subjects:
+    
+    print subj
     
     inTrue = ''.join([trueDir,subj,trueExt])
     inPred = ''.join([predDir,subj,predExt])
@@ -78,9 +82,9 @@ for subj in subjects:
             errorDistances = la.labelErrorDistances(inAdj,inTrue,inMid,inPred)
             errorList.append(errorDistances)
         
-    errorList = np.asarray(np.concatenate(errorList))
-    
-    h5 = h5py.File(output,mode='r')
-    h5.create_dataset('distances',data=errorList)
-    h5.close()
+errorList = np.asarray(np.concatenate(errorList))
+
+h5 = h5py.File(output,mode='r')
+h5.create_dataset('distances',data=errorList)
+h5.close()
     
