@@ -6,7 +6,6 @@ Created on Sun Jan 14 14:14:32 2018
 @author: kristianeschenburg
 """
 
-import os
 import pandas as pd
 import numpy as np
 
@@ -29,7 +28,7 @@ for p in power:
                     for iters in x:
                         
                         mDir = ''.join([inDir,'Model_{}/Homogeneneity/'.format(iters)])
-                        fExt = 'Homogeneity.{}.{}.train.{}.hmg.{}.Power.{}.Iteration_{}.csv'.format(h,m,dt,dH,p,iters)
+                        fExt = 'Homogeneity.{}.{}.train.{}.hmg.{}.Power.{}.Iteration_{}.csv'.format(h,m,dT,dH,p,iters)
                         fExtS = 'Homogeneity.{}.{}.train.{}.hmg.{}.Power.{}.Iteration_{}.size.csv'.format(h,m,dT,dH,p,iters)
                         inFile = ''.join([mDir,fExt])
                         inFileS = ''.join([mDir,fExtS])
@@ -37,7 +36,13 @@ for p in power:
                         df.append(pd.read_csv(inFile))
                         dfs.append(pd.read_csv(inFileS))
                     
-                    outFile = 
+                    outExt = 'Homogeneity.{}.{}.train.{}.hmg.{}.Power.{}.csv'.format(h,m,dT,dH,p)
+                    outExtS = 'Homogeneity.{}.{}.train.{}.hmg.{}.Power.{}.size.csv'.format(h,m,dT,dH,p)
+                    
+                    DF = pd.concat(df)
+                    DF.to_csv(''.join([inDir,outExt]))
+                    DFS = pd.concat(dfs)
+                    DFS.to_csv(''.join([inDir,outExtS]))
                         
                         
                         
