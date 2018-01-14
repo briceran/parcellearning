@@ -9,7 +9,7 @@ Created on Sun Jan 14 14:14:32 2018
 import pandas as pd
 import numpy as np
 
-power = [0,1.0]
+power = [0,1]
 hemi = ['L','R']
 models = ['GMM','NeuralNetwork','RandomForest']
 data = ['Full','RestingState','ProbTrackX2']
