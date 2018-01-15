@@ -46,5 +46,5 @@ for p in power:
                 
                 DF = np.concatenate(df)
                 outFile = h5py.File(''.join([inDir,'ErrorDistances/',outExt]),mode='a')
-                outFile.create_dataset('distances',DF)
+                outFile.create_dataset('distances',data = DF)
                 outFile.close()
