@@ -34,7 +34,7 @@ for p in power:
                     fRead = h5py.File(inFile,mode='r')
                     print 'read'
                     dataVector = np.asarray(fRead['distances']).squeeze()
-                    print 'vectorized'
+                    print 'vectorized, shape: {}'.format(dataVector.shape)
                     df.append(dataVector)
                     print 'appended'
                     fRead.close()
