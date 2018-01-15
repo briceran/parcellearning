@@ -32,9 +32,11 @@ for p in power:
                     print inFile
                     
                     fRead = h5py.File(inFile,mode='r')
-                    k = fRead.keys()[0]
-                    data = np.asarray(fRead[k]).squeeze()
-                    df.append(data)
+                    print 'read'
+                    dataVector = np.asarray(fRead['distances']).squeeze()
+                    print 'vectorized'
+                    df.append(dataVector)
+                    print 'appended'
 
                 outExt = 'ErrorDistances.{}.{}.train.{}.Power.{}.csv'.format(h,m,dT,p)
                 
