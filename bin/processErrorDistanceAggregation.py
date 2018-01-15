@@ -36,7 +36,7 @@ for p in power:
 
                 outExt = 'ErrorDistances.{}.{}.train.{}.Power.{}.csv'.format(h,m,dT,p)
                 
-                DF = np.concat(df)
+                DF = np.concatenate(df)
                 outFile = h5py.File(''.join([inDir,'ErrorDistances/',outExt]),mode='a')
                 outFile.create_dataset('distances',DF)
                 outFile.close()
