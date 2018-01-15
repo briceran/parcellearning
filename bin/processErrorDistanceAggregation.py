@@ -31,7 +31,8 @@ for p in power:
                     inFile = ''.join([mDir,fExt])
                     
                     fRead = h5py.File(inFile,mode='r')
-                    data = np.asarray(fRead['distances']).squeeze()
+                    k = fRead.keys()[0]
+                    data = np.asarray(fRead[k]).squeeze()
                     df.append(data)
 
                 outExt = 'ErrorDistances.{}.{}.train.{}.Power.{}.csv'.format(h,m,dT,p)
