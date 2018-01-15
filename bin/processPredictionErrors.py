@@ -59,6 +59,7 @@ subjects = [x.strip() for x in subjects]
 
 print '{} subjects to process.'.format(len(subjects))
 
+errorList = []
 for subj in subjects:
 
     inTrue = ''.join([trueDir,subj,trueExt])
@@ -66,15 +67,11 @@ for subj in subjects:
     
     inAdj = ''.join([surfAdjDir,subj,surfAdjExt])
     inMid = ''.join([midDir,subj,midExt])
-    
-    errorList = []
 
     if os.path.exists(inTrue) and os.path.exists(inPred):
         if os.path.exists(inAdj) and os.path.exists(inMid):
         
             errorDistances = la.labelErrorDistances(inAdj,inTrue,inMid,inPred,180)
-            print len(errorDistances)
-            print type(errorDistances)
             errorList.append(errorDistances)
             print len(errorList)
 

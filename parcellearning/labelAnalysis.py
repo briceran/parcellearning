@@ -37,6 +37,8 @@ def labelErrorDistances(surfaceAdjFile,trueFile,midlineFile,predictedFile,maxVal
     true = ld.loadGii(trueFile,0).astype(np.int32)
     errors = np.where(true != pred)[0]
     
+    print len(errors)
+    
     L = aj.LabelAdjacency(trueFile,surfaceAdjFile,midlineFile)
     L.generate_adjList()
     
