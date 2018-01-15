@@ -13,7 +13,7 @@ power = [0,1]
 hemi = ['L','R']
 models = ['GMM','NeuralNetwork','RandomForest']
 data = ['Full','RestingState','ProbTrackX2']
-x = np.arange(5)
+x = np.arange(6)
 
 inDir = '/mnt/parcellator/parcellation/parcellearning/Data/Predictions/'
 
