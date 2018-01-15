@@ -72,7 +72,7 @@ for subj in subjects:
     if os.path.exists(inTrue) and os.path.exists(inPred):
         if os.path.exists(inAdj) and os.path.exists(inMid):
         
-            errorDistances = la.labelErrorDistances(inAdj,inTrue,inMid,inPred)
+            errorDistances = la.labelErrorDistances(inAdj,inTrue,inMid,inPred,180)
             errorList.append(errorDistances)
         
 errorList = np.asarray(np.concatenate(errorList))
