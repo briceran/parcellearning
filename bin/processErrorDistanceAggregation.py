@@ -29,21 +29,14 @@ for p in power:
                     mDir = ''.join([inDir,'Model_{}/ErrorMaps/'.format(iters)])   
                     fExt = 'ErrorDistances.{}.{}.{}.Power.{}.h5'.format(m,h,dT,p)
                     inFile = ''.join([mDir,fExt])
-                    print inFile
                     
                     fRead = h5py.File(inFile,mode='r')
-                    print 'read'
                     dataVector = np.asarray(fRead['distances']).squeeze()
-                    print 'vectorized, shape: {}'.format(dataVector.shape)
                     df.append(dataVector)
-                    print 'appended'
                     fRead.close()
 
                 outExt = 'ErrorDistances.{}.{}.train.{}.Power.{}.csv'.format(h,m,dT,p)
-                print len(df)
-                for k in df:
-                    print len(k)
-                
+
                 DF = np.concatenate(df)
                 DF = DF[~np.isnan(DF)]
                 outFile = h5py.File(''.join([inDir,'ErrorDistances/',outExt]),mode='a')
