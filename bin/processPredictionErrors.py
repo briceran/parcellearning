@@ -68,17 +68,11 @@ for subj in subjects:
     inMid = ''.join([midDir,subj,midExt])
     
     errorList = []
-    
-    print os.path.exists(inTrue)
-    print os.path.exists(inPred)
-    print os.path.exists(inAdj)
-    print os.path.exists(inMid)
 
     if os.path.exists(inTrue) and os.path.exists(inPred):
         if os.path.exists(inAdj) and os.path.exists(inMid):
         
             errorDistances = la.labelErrorDistances(inAdj,inTrue,inMid,inPred,180)
-            print errorDistances
             errorList.append(errorDistances)
         
 errorList = np.asarray(np.concatenate(errorList))
