@@ -73,7 +73,6 @@ for subj in subjects:
         
             errorDistances = la.labelErrorDistances(inAdj,inTrue,inMid,inPred,180)
             errorList.append(errorDistances)
-            print len(errorList)
 
 print len(errorList)    
 errorList = np.asarray(np.concatenate(errorList))
