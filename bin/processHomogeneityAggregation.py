@@ -28,8 +28,8 @@ for p in power:
                     for iters in x:
                         
                         mDir = ''.join([inDir,'Model_{}/Homogeneity/'.format(iters)])
-                        fExt = 'Homogeneity.{}.GMM.Power.{}.train.{}.hmg.{}.csv'.format(h,m,p,dT,dH)
-                        fExtS = 'Homogeneity.{}.GMM.Power.{}.train.{}.hmg.{}.size.csv'.format(h,m,p,dT,dH)                        
+                        fExt = 'Homogeneity.{}.{}.Power.{}.train.{}.hmg.{}.csv'.format(h,m,p,dT,dH)
+                        fExtS = 'Homogeneity.{}.{}.Power.{}.train.{}.hmg.{}.size.csv'.format(h,m,p,dT,dH)                        
                         inFile = ''.join([mDir,fExt])
                         inFileS = ''.join([mDir,fExtS])
                         
