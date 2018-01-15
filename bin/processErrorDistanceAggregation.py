@@ -45,6 +45,7 @@ for p in power:
                     print len(k)
                 
                 DF = np.concatenate(df)
+                DF = DF[~np.isnan(DF)]
                 outFile = h5py.File(''.join([inDir,'ErrorDistances/',outExt]),mode='a')
                 outFile.create_dataset('distances',data = DF)
                 outFile.close()
