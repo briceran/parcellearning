@@ -37,8 +37,12 @@ for p in power:
                     print 'vectorized'
                     df.append(dataVector)
                     print 'appended'
+                    fRead.close()
 
                 outExt = 'ErrorDistances.{}.{}.train.{}.Power.{}.csv'.format(h,m,dT,p)
+                print len(df)
+                for k in df:
+                    print len(k)
                 
                 DF = np.concatenate(df)
                 outFile = h5py.File(''.join([inDir,'ErrorDistances/',outExt]),mode='a')
