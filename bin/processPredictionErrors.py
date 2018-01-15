@@ -69,10 +69,10 @@ for subj in subjects:
     
     errorList = []
     
-    print inTrue
-    print inPred
-    print inAdj
-    print inMid
+    print os.path.exists(inTrue)
+    print os.path.exists(inPred)
+    print os.path.exists(inAdj)
+    print os.path.exists(inMid)
 
     if os.path.exists(inTrue) and os.path.exists(inPred):
         if os.path.exists(inAdj) and os.path.exists(inMid):
