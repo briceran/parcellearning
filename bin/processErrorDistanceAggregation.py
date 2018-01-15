@@ -29,6 +29,7 @@ for p in power:
                     mDir = ''.join([inDir,'Model_{}/ErrorMaps/'.format(iters)])   
                     fExt = 'ErrorDistances.{}.{}.{}.Power.{}.h5'.format(m,h,dT,p)
                     inFile = ''.join([mDir,fExt])
+                    print inFile
                     
                     fRead = h5py.File(inFile,mode='r')
                     k = fRead.keys()[0]
