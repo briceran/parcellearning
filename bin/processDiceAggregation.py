@@ -20,7 +20,7 @@ import numpy as np
 power = [0,1]
 hemi = ['L','R']
 models = ['GMM','NeuralNetwork','RandomForest']
-data = ['RestingState','ProbTrackX2']
+data = ['RestingState','ProbTrackX2','Full']
 x = np.arange(5)
 
 inDir = '/mnt/parcellator/parcellation/parcellearning/Data/Predictions/'
